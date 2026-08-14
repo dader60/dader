@@ -984,7 +984,7 @@
 
   <script>
     // ============================================================
-    // 1. ⚙️ 設定區（全部已填入）
+    // 1. ⚙️ 設定區
     // ============================================================
 
     const firebaseConfig = {
@@ -1020,7 +1020,7 @@
     ];
 
     // ============================================================
-    // 2. 初始化 Firebase
+    // 2. 初始化
     // ============================================================
 
     firebase.initializeApp(firebaseConfig);
@@ -1082,7 +1082,7 @@
       window.toastTimer = setTimeout(() => {
         toast.classList.remove('show');
         toast.style.opacity = '0';
-      }, 3000);
+      }, 3500);
     }
 
     // ============================================================
@@ -1278,26 +1278,24 @@
     }
 
     // ============================================================
-    // 8. 發送 Email 通知
+    // 8. 發送 Email 通知（不阻塞主流程）
     // ============================================================
 
     async function sendEmail(complaint) {
-      const imageCount = complaint.imageUrls ? complaint.imageUrls.length : 0;
-      const subject = `【新投訴 #${complaint.id}】${complaint.title}`;
-      
-      const message = `
-        姓名：${complaint.userName}
-        IG 名稱：${complaint.igName || '未提供'}
-        類別：${complaint.category}
-        嚴重程度：${complaint.priority}
-        標題：${complaint.title}
-        內容：${complaint.description}
-        提交時間：${complaint.date} ${complaint.time || ''}
-        狀態：${complaint.status || '待處理'}
-        圖片數量：${imageCount} 張
-      `;
-
       try {
+        const imageCount = complaint.imageUrls ? complaint.imageUrls.length : 0;
+        const message = `
+          姓名：${complaint.userName}
+          IG 名稱：${complaint.igName || '未提供'}
+          類別：${complaint.category}
+          嚴重程度：${complaint.priority}
+          標題：${complaint.title}
+          內容：${complaint.description}
+          提交時間：${complaint.date} ${complaint.time || ''}
+          狀態：${complaint.status || '待處理'}
+          圖片數量：${imageCount} 張
+        `;
+
         await emailjs.send(
           emailjsConfig.serviceID,
           emailjsConfig.templateID,
@@ -1311,6 +1309,7 @@
         console.log('✅ Email 通知發送成功');
       } catch (error) {
         console.error('❌ Email 發送失敗:', error);
+        // 不影響主流程，只記錄錯誤
       }
     }
 
@@ -1323,13 +1322,12 @@
       const filterStatus = document.getElementById('filterStatus').value;
       const totalSpan = document.getElementById('totalCount');
 
-      // 管理員可以看到所有投訴，一般用戶只能看到自己的
+      // 管理員可以看到所有投訴
       let filtered = complaints;
+
+      // 一般用戶過濾
       if (!isAdmin && currentUser) {
         filtered = complaints.filter(c => c.userId === currentUser.uid);
-      } else if (!isAdmin && !currentUser) {
-        // 訪客可以看到所有投訴（唯讀）
-        filtered = complaints;
       }
 
       if (filterStatus !== 'all') {
@@ -1657,7 +1655,7 @@
       }
     });
 
-    // ----- 12f. 提交投訴 -----
+    // ----- 12f. 提交投訴（修正：Email 不阻塞主流程）-----
     document.getElementById('complaintForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -1678,7 +1676,7 @@
       }
 
       if (!name || !category || !title || !description) {
-        showToast('請填寫所有必填欄位（姓名、類別、標題、內容）', true);
+        showToast('請填寫所有必填欄位', true);
         return;
       }
 
@@ -1687,43 +1685,54 @@
       const newId = maxId + 1;
 
       const submitBtn = document.getElementById('submitBtn');
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上傳圖片中...';
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送出中...';
       submitBtn.disabled = true;
 
-      let imageUrls = [];
-      if (selectedFiles.length > 0) {
-        imageUrls = await uploadMultipleImages(selectedFiles);
+      try {
+        // 1. 上傳圖片
+        let imageUrls = [];
+        if (selectedFiles.length > 0) {
+          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上傳圖片中...';
+          imageUrls = await uploadMultipleImages(selectedFiles);
+        }
+
+        // 2. 儲存投訴
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 儲存中...';
+        const newComplaint = {
+          id: newId,
+          userName: name,
+          igName: igName,
+          category: category,
+          priority: priority,
+          title: title,
+          description: description,
+          status: '待處理',
+          date: getToday(),
+          time: getNowTime(),
+          imageUrls: imageUrls
+        };
+
+        const success = await addComplaint(newComplaint);
+
+        if (success) {
+          // 3. 發送 Email（不阻塞，失敗不影響）
+          sendEmail(newComplaint).catch(err => console.error('Email 發送失敗:', err));
+          
+          // 4. 重置表單
+          document.getElementById('complaintForm').reset();
+          selectedFiles = [];
+          updateImagePreview();
+          document.getElementById('customCategoryGroup').classList.remove('show');
+          showToast(`✅ 投訴 #${newId} 已送出，狀態：待處理`);
+        }
+
+      } catch (error) {
+        console.error('提交失敗:', error);
+        showToast('提交失敗，請稍後再試', true);
+      } finally {
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送出投訴';
+        submitBtn.disabled = false;
       }
-
-      const newComplaint = {
-        id: newId,
-        userName: name,
-        igName: igName,
-        category: category,
-        priority: priority,
-        title: title,
-        description: description,
-        status: '待處理',
-        date: getToday(),
-        time: getNowTime(),
-        imageUrls: imageUrls
-      };
-
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 儲存中...';
-
-      const success = await addComplaint(newComplaint);
-
-      if (success) {
-        await sendEmail(newComplaint);
-        document.getElementById('complaintForm').reset();
-        selectedFiles = [];
-        updateImagePreview();
-        document.getElementById('customCategoryGroup').classList.remove('show');
-        showToast(`投訴 #${newId} 已送出，狀態：🟡 待處理`);
-      }
-
-      submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送出投訴';
-      submitBtn.disabled = false;
     });
 
     // ----- 12g. 狀態變更（管理員下拉選單）-----
@@ -1744,7 +1753,7 @@
 
       const success = await updateStatus(docId, newStatus);
       if (success) {
-        showToast(`已更新狀態為：${newStatus}`);
+        showToast(`✅ 已更新狀態為：${newStatus}`);
       }
     });
 
@@ -1801,7 +1810,8 @@
         adminLoginBtn.className = 'btn-admin-login';
       }
       updateUI(user);
-      render();
+      // 重新渲染確保正確顯示
+      setTimeout(render, 100);
     });
 
     // ============================================================
