@@ -10,14 +10,12 @@
   <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 
   <!-- EmailJS -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
-    /* ===== 基本樣式 ===== */
     * {
       margin: 0;
       padding: 0;
@@ -77,8 +75,6 @@
       margin-right: 6px;
       color: #c22d2d;
     }
-
-    /* 頂部導航 */
     .top-nav {
       display: flex;
       justify-content: space-between;
@@ -172,8 +168,6 @@
     .btn-admin-login.active {
       background: #c52a2a;
     }
-
-    /* 主內容雙欄 */
     .row {
       display: grid;
       grid-template-columns: 1fr 1.4fr;
@@ -264,21 +258,104 @@
         gap: 0.5rem;
       }
     }
-    .file-upload-wrapper {
-      position: relative;
+    .custom-category-group {
+      display: none;
+      margin-top: -0.5rem;
+      margin-bottom: 1.25rem;
+    }
+    .custom-category-group.show {
+      display: block;
+    }
+    .custom-category-group input {
+      border-color: #b32b2b;
+      background: #fffbfb;
+    }
+    .custom-category-group label i {
+      color: #c52a2a;
+    }
+    .image-upload-area {
       border: 2px dashed #d7dfe9;
       border-radius: 16px;
-      padding: 1.5rem;
-      text-align: center;
-      cursor: pointer;
-      transition: 0.15s;
+      padding: 1.5rem 1.5rem 0.5rem 1.5rem;
       background: #fafcff;
+      transition: 0.15s;
     }
-    .file-upload-wrapper:hover {
+    .image-upload-area.dragover {
       border-color: #b32b2b;
       background: #f8f4f4;
     }
-    .file-upload-wrapper input[type="file"] {
+    .image-upload-area .upload-icon {
+      font-size: 2rem;
+      color: #8a9db0;
+      text-align: center;
+    }
+    .image-upload-area .upload-text {
+      color: #6b8097;
+      font-size: 0.9rem;
+      text-align: center;
+    }
+    .image-upload-area .upload-hint {
+      color: #8a9db0;
+      font-size: 0.75rem;
+      text-align: center;
+      margin-top: 2px;
+    }
+    .image-preview-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .image-preview-item {
+      position: relative;
+      width: 80px;
+      height: 80px;
+      border-radius: 12px;
+      border: 1px solid #e6ecf5;
+      overflow: hidden;
+    }
+    .image-preview-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .image-preview-item .remove-btn {
+      position: absolute;
+      top: -6px;
+      right: -6px;
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #c52a2a;
+      color: white;
+      border: none;
+      cursor: pointer;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.15s;
+    }
+    .image-preview-item .remove-btn:hover {
+      background: #a81f1f;
+      transform: scale(1.1);
+    }
+    .image-preview-item .file-index {
+      position: absolute;
+      bottom: 2px;
+      right: 4px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      font-size: 0.6rem;
+      padding: 0 6px;
+      border-radius: 10px;
+    }
+    .image-upload-area .file-input-wrapper {
+      position: relative;
+      display: inline-block;
+      width: 100%;
+    }
+    .image-upload-area .file-input-wrapper input[type="file"] {
       position: absolute;
       top: 0;
       left: 0;
@@ -287,31 +364,31 @@
       opacity: 0;
       cursor: pointer;
     }
-    .file-upload-wrapper .upload-icon {
-      font-size: 2rem;
-      color: #8a9db0;
+    .image-upload-area .add-more-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0.4rem 1.2rem;
+      border: 1px dashed #b32b2b;
+      border-radius: 40px;
+      color: #b32b2b;
+      background: transparent;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: 0.15s;
+      margin-top: 8px;
     }
-    .file-upload-wrapper .upload-text {
+    .image-upload-area .add-more-btn:hover {
+      background: #fff3f3;
+    }
+    .image-upload-area .add-more-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+    .image-count-badge {
+      font-size: 0.75rem;
       color: #6b8097;
-      font-size: 0.9rem;
-      margin-top: 4px;
-    }
-    .file-upload-wrapper .file-name {
-      color: #1a2c44;
-      font-weight: 500;
-      font-size: 0.9rem;
-      margin-top: 4px;
-    }
-    .file-preview {
-      margin-top: 10px;
-      max-width: 200px;
-      max-height: 150px;
-      border-radius: 12px;
-      border: 1px solid #e6ecf5;
-      display: none;
-    }
-    .file-preview.show {
-      display: inline-block;
+      margin-left: 8px;
     }
     .btn-primary {
       background: #c52a2a;
@@ -344,8 +421,6 @@
     .btn-primary i {
       font-size: 1rem;
     }
-
-    /* 列表 */
     .list-header {
       display: flex;
       justify-content: space-between;
@@ -430,26 +505,43 @@
       gap: 8px;
       flex-wrap: wrap;
     }
-    .complaint-title .status-badge {
-      font-size: 0.65rem;
+    .status-badge {
+      font-size: 0.7rem;
       font-weight: 600;
-      padding: 0.2rem 0.8rem;
+      padding: 0.2rem 0.9rem;
       border-radius: 30px;
-      background: #e2e9f2;
-      color: #2b4a6a;
       letter-spacing: 0.3px;
+      white-space: nowrap;
     }
-    .status-badge.new {
-      background: #ffe2e2;
-      color: #a52323;
+    .status-badge.待處理 {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffc107;
     }
-    .status-badge.progress {
-      background: #fff1d6;
-      color: #a8681c;
+    .status-badge.調查中 {
+      background: #cce5ff;
+      color: #004085;
+      border: 1px solid #007bff;
     }
-    .status-badge.resolved {
-      background: #ddf0e0;
-      color: #1d7540;
+    .status-badge.已處理 {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #28a745;
+    }
+    .status-badge.不予受理 {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #dc3545;
+    }
+    .status-badge.需要補充資料 {
+      background: #fff3cd;
+      color: #856404;
+      border: 1px solid #ffc107;
+    }
+    .status-badge.已轉交相關人員 {
+      background: #d6d8db;
+      color: #383d41;
+      border: 1px solid #6c757d;
     }
     .complaint-meta {
       font-size: 0.8rem;
@@ -463,17 +555,36 @@
       width: 16px;
       color: #7d93ab;
     }
-    .complaint-image {
-      max-width: 120px;
-      max-height: 100px;
-      border-radius: 12px;
-      border: 1px solid #e6ecf5;
+    .complaint-images {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
       margin-top: 6px;
-      cursor: pointer;
-      object-fit: cover;
     }
-    .complaint-image:hover {
+    .complaint-images img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 10px;
+      border: 1px solid #e6ecf5;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .complaint-images img:hover {
       opacity: 0.8;
+      transform: scale(1.05);
+    }
+    .complaint-images .more-badge {
+      width: 60px;
+      height: 60px;
+      border-radius: 10px;
+      background: #eef3f9;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      color: #4f657c;
+      font-weight: 500;
     }
     .complaint-actions {
       display: flex;
@@ -496,14 +607,6 @@
       align-items: center;
       gap: 5px;
     }
-    .complaint-actions .btn-resolve {
-      background: #e8f3eb;
-      border-color: #b2cfbb;
-      color: #1d6e3c;
-    }
-    .complaint-actions .btn-resolve:hover {
-      background: #d0e8d7;
-    }
     .complaint-actions .btn-delete {
       border-color: #f5d8d8;
       color: #b43b3b;
@@ -512,15 +615,24 @@
     .complaint-actions .btn-delete:hover {
       background: #fde2e2;
     }
-    .complaint-actions .btn-status {
-      background: #edf3fa;
-      border-color: #c8d6e8;
+    .status-select {
+      padding: 0.2rem 0.6rem;
+      border-radius: 30px;
+      border: 1px solid #d0dbe9;
+      font-size: 0.7rem;
+      background: white;
+      cursor: pointer;
+      outline: none;
     }
-    .complaint-actions .btn-status:hover {
-      background: #dfe9f5;
+    .status-select:focus {
+      border-color: #b32b2b;
     }
-
-    /* Toast */
+    .status-select.待處理 { background: #fff3cd; color: #856404; }
+    .status-select.調查中 { background: #cce5ff; color: #004085; }
+    .status-select.已處理 { background: #d4edda; color: #155724; }
+    .status-select.不予受理 { background: #f8d7da; color: #721c24; }
+    .status-select.需要補充資料 { background: #fff3cd; color: #856404; }
+    .status-select.已轉交相關人員 { background: #d6d8db; color: #383d41; }
     .toast-message {
       background: #1f3a57;
       color: white;
@@ -553,7 +665,7 @@
     }
     hr {
       border: none;
-      border-top: 1px solid #e6ecf5;
+      border-top: 1px solid #eef3f9;
       margin: 0.5rem 0 1.2rem;
     }
     ::-webkit-scrollbar {
@@ -565,7 +677,6 @@
       background: #cbd6e4;
       border-radius: 10px;
     }
-
     .admin-badge {
       background: #2a405b;
       color: white;
@@ -574,8 +685,6 @@
       font-size: 0.7rem;
       margin-left: 8px;
     }
-
-    /* 登入彈窗 */
     .login-overlay {
       display: none;
       position: fixed;
@@ -611,14 +720,6 @@
       width: 100%;
       margin-top: 0;
     }
-    .login-box .hint {
-      margin-top: 1rem;
-      font-size: 0.8rem;
-      color: #8a9db0;
-    }
-    .login-box .hint strong {
-      color: #c52a2a;
-    }
     .login-box .error-msg {
       color: #c52a2a;
       font-size: 0.85rem;
@@ -628,8 +729,6 @@
     .login-box .error-msg.show {
       display: block;
     }
-
-    /* 圖片預覽燈箱 */
     .lightbox {
       display: none;
       position: fixed;
@@ -652,6 +751,75 @@
       border-radius: 16px;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
     }
+    .lightbox .image-counter {
+      position: fixed;
+      bottom: 2rem;
+      color: white;
+      background: rgba(0,0,0,0.5);
+      padding: 0.3rem 1rem;
+      border-radius: 40px;
+      font-size: 0.9rem;
+    }
+    .lightbox .nav-btn {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: 0.15s;
+      z-index: 2001;
+    }
+    .lightbox .nav-btn:hover {
+      background: rgba(255,255,255,0.4);
+    }
+    .lightbox .nav-btn.prev {
+      left: 1rem;
+    }
+    .lightbox .nav-btn.next {
+      right: 1rem;
+    }
+    @media (max-width: 600px) {
+      .lightbox .nav-btn {
+        width: 36px;
+        height: 36px;
+        font-size: 1rem;
+      }
+      .lightbox .nav-btn.prev { left: 0.5rem; }
+      .lightbox .nav-btn.next { right: 0.5rem; }
+    }
+    .status-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem 1.5rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid #eef3f9;
+      margin-top: 0.8rem;
+    }
+    .status-legend .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: #4f657c;
+    }
+    .status-legend .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    .legend-dot.待處理 { background: #ffc107; }
+    .legend-dot.調查中 { background: #007bff; }
+    .legend-dot.已處理 { background: #28a745; }
+    .legend-dot.不予受理 { background: #dc3545; }
+    .legend-dot.需要補充資料 { background: #ffc107; }
+    .legend-dot.已轉交相關人員 { background: #6c757d; }
   </style>
 </head>
 <body>
@@ -665,7 +833,6 @@
       </div>
     </header>
 
-    <!-- ===== 頂部導航 ===== -->
     <div class="top-nav">
       <div class="user-info" id="userInfo">
         <div class="user-avatar" id="userAvatar">👤</div>
@@ -683,7 +850,6 @@
     </div>
 
     <div class="row">
-      <!-- ===== 左欄：投訴表單（訪客可直接填寫） ===== -->
       <div class="card">
         <div class="card-title"><i class="fas fa-pen"></i> 新增投訴</div>
         <form id="complaintForm">
@@ -703,10 +869,8 @@
               <select id="category" required>
                 <option value="">請選擇</option>
                 <option value="服務品質">服務品質</option>
-                <option value="商品問題">商品問題</option>
-                <option value="環境衛生">環境衛生</option>
                 <option value="人員態度">人員態度</option>
-                <option value="其他">其他</option>
+                <option value="其他">其他（請自訂）</option>
               </select>
             </div>
             <div class="form-group">
@@ -718,6 +882,10 @@
               </select>
             </div>
           </div>
+          <div class="custom-category-group" id="customCategoryGroup">
+            <label><i class="fas fa-pencil-alt"></i> 請輸入自訂類別 <span class="required">*</span></label>
+            <input type="text" id="customCategory" placeholder="請輸入您的類別名稱" />
+          </div>
           <div class="form-group">
             <label><i class="fas fa-heading"></i> 標題 <span class="required">*</span></label>
             <input type="text" id="title" placeholder="簡述投訴重點" required />
@@ -727,13 +895,21 @@
             <textarea id="description" placeholder="請描述具體情況..." required></textarea>
           </div>
           <div class="form-group">
-            <label><i class="fas fa-image"></i> 圖片（選擇性）</label>
-            <div class="file-upload-wrapper" id="fileUploadWrapper">
-              <input type="file" id="imageFile" accept="image/*" />
+            <label><i class="fas fa-images"></i> 圖片（最多10張，選擇性）</label>
+            <div class="image-upload-area" id="imageUploadArea">
               <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
               <div class="upload-text">點擊或拖曳上傳圖片</div>
-              <div class="file-name" id="fileName">尚未選擇檔案</div>
-              <img id="filePreview" class="file-preview" />
+              <div class="upload-hint">支援 JPG、PNG、GIF，最多 10 張</div>
+              <div class="image-preview-grid" id="imagePreviewGrid"></div>
+              <div style="display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:10px;">
+                <div class="file-input-wrapper" style="flex:1; min-width:120px;">
+                  <input type="file" id="imageInput" accept="image/*" multiple />
+                  <button type="button" class="add-more-btn" id="addMoreBtn">
+                    <i class="fas fa-plus"></i> 新增圖片
+                  </button>
+                </div>
+                <span class="image-count-badge" id="imageCountBadge">已選 0 / 10</span>
+              </div>
             </div>
           </div>
           <button type="submit" class="btn-primary" id="submitBtn">
@@ -745,7 +921,6 @@
         </div>
       </div>
 
-      <!-- ===== 右欄：投訴列表 ===== -->
       <div class="card">
         <div class="list-header">
           <div class="card-title" style="margin-bottom:0;">
@@ -754,9 +929,12 @@
           <div class="filter-bar">
             <select id="filterStatus">
               <option value="all">全部狀態</option>
-              <option value="新案件">新案件</option>
-              <option value="處理中">處理中</option>
-              <option value="已結案">已結案</option>
+              <option value="待處理">🟡 待處理</option>
+              <option value="調查中">🔵 調查中</option>
+              <option value="已處理">🟢 已處理</option>
+              <option value="不予受理">🔴 不予受理</option>
+              <option value="需要補充資料">⚪ 需要補充資料</option>
+              <option value="已轉交相關人員">📌 已轉交相關人員</option>
             </select>
             <button class="clear-btn" id="clearAllBtn"><i class="fas fa-trash-alt"></i> 清空</button>
           </div>
@@ -765,11 +943,13 @@
         <div id="complaintListContainer">
           <div class="complaint-list" id="complaintList"></div>
         </div>
-        <div style="margin-top: 1rem; font-size:0.8rem; color:#7e93ab; display: flex; gap: 1rem; flex-wrap: wrap; border-top: 1px solid #eef3f9; padding-top: 1rem;">
-          <span><i class="fas fa-circle" style="color:#d93c3c; font-size:0.5rem;"></i> 新案件</span>
-          <span><i class="fas fa-circle" style="color:#e68a2e; font-size:0.5rem;"></i> 處理中</span>
-          <span><i class="fas fa-circle" style="color:#2b8c4a; font-size:0.5rem;"></i> 已結案</span>
-          <span style="margin-left:auto;"><i class="fas fa-chevron-circle-down"></i> 管理員可變更狀態</span>
+        <div class="status-legend">
+          <span class="legend-item"><span class="legend-dot 待處理"></span> 🟡 待處理</span>
+          <span class="legend-item"><span class="legend-dot 調查中"></span> 🔵 調查中</span>
+          <span class="legend-item"><span class="legend-dot 已處理"></span> 🟢 已處理</span>
+          <span class="legend-item"><span class="legend-dot 不予受理"></span> 🔴 不予受理</span>
+          <span class="legend-item"><span class="legend-dot 需要補充資料"></span> ⚪ 需要補充資料</span>
+          <span class="legend-item"><span class="legend-dot 已轉交相關人員"></span> 📌 已轉交相關人員</span>
         </div>
       </div>
     </div>
@@ -784,15 +964,15 @@
       <input type="text" id="adminUsername" placeholder="管理員帳號" />
       <input type="password" id="adminPassword" placeholder="管理員密碼" />
       <button class="btn-primary" id="adminLoginConfirmBtn"><i class="fas fa-sign-in-alt"></i> 登入</button>
-      <div class="hint">
-        預設帳號：<strong>admin</strong> ｜ 密碼：<strong>admin123</strong>
-      </div>
     </div>
   </div>
 
   <!-- ===== 圖片燈箱 ===== -->
   <div class="lightbox" id="lightbox">
+    <button class="nav-btn prev" id="lightboxPrev"><i class="fas fa-chevron-left"></i></button>
     <img id="lightboxImg" src="" alt="投訴圖片" />
+    <button class="nav-btn next" id="lightboxNext"><i class="fas fa-chevron-right"></i></button>
+    <div class="image-counter" id="lightboxCounter">1 / 1</div>
   </div>
 
   <!-- Toast -->
@@ -800,27 +980,39 @@
 
   <script>
     // ============================================================
-    // 1. ⚙️ 設定區（請填入您的金鑰）
+    // 1. ⚙️ 設定區（全部已填入）
     // ============================================================
 
     const firebaseConfig = {
-      apiKey: "請填入您的 apiKey",
-      authDomain: "請填入您的 authDomain",
-      projectId: "請填入您的 projectId",
-      storageBucket: "請填入您的 storageBucket",
-      messagingSenderId: "請填入您的 messagingSenderId",
-      appId: "請填入您的 appId"
+      apiKey: "AIzaSyDKltRWzp2DH2nbzfDL4BI4JWZXRH-ekFQ",
+      authDomain: "dader-c8f22.firebaseapp.com",
+      projectId: "dader-c8f22",
+      storageBucket: "dader-c8f22.firebasestorage.app",
+      messagingSenderId: "4677472502",
+      appId: "1:4677472502:web:6f7ab3c621a27842af1cd7",
+      measurementId: "G-GP9F39N0LS"
     };
 
     const emailjsConfig = {
-      serviceID: "請填入您的 Service ID",
-      templateID: "請填入您的 Template ID",
-      publicKey: "請填入您的 Public Key"
+      serviceID: "service_6vu945a",
+      templateID: "6f2xzro",
+      publicKey: "KU2Ya4rXsyHXopGAM"
     };
 
-    // 管理員帳號
     const ADMIN_ACCOUNTS = [
-      { username: "admin", password: "admin123" }
+      { username: "dader60dader60", password: "dader60dader0909575253h@" }
+    ];
+
+    const MAX_IMAGES = 10;
+    const IMGBB_API_KEY = "e36eefa56ac3084d8b981ee390bcba27";
+
+    const STATUS_LIST = [
+      '待處理',
+      '調查中',
+      '已處理',
+      '不予受理',
+      '需要補充資料',
+      '已轉交相關人員'
     ];
 
     // ============================================================
@@ -829,7 +1021,6 @@
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
-    const storage = firebase.storage();
     const auth = firebase.auth();
 
     db.enablePersistence({ synchronizeTabs: true }).catch(err => console.warn(err));
@@ -843,7 +1034,7 @@
     let isAdmin = false;
     let complaints = [];
     let unsubscribeSnapshot = null;
-    let selectedFile = null;
+    let selectedFiles = [];
 
     // ============================================================
     // 4. 工具函數
@@ -891,53 +1082,95 @@
     }
 
     // ============================================================
-    // 5. 發送 Email 通知
+    // 5. ImgBB 圖片上傳
     // ============================================================
 
-    async function sendEmail(complaint) {
-      const subject = `【新投訴 #${complaint.id}】${complaint.title}`;
-      const body = `
-        姓名：${complaint.userName}
-        IG 名稱：${complaint.igName || '未提供'}
-        類別：${complaint.category}
-        嚴重程度：${complaint.priority}
-        標題：${complaint.title}
-        內容：${complaint.description}
-        提交時間：${complaint.date} ${complaint.time || ''}
-        狀態：${complaint.status}
-        圖片：${complaint.imageUrl || '無'}
-      `;
+    async function uploadToImgBB(file) {
+      const formData = new FormData();
+      formData.append('image', file);
 
       try {
-        await emailjs.send(
-          emailjsConfig.serviceID,
-          emailjsConfig.templateID,
-          { subject: subject, message: body }
-        );
-        console.log('✅ Email 通知發送成功');
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          return data.data.url;
+        } else {
+          console.error('ImgBB 上傳失敗:', data);
+          return null;
+        }
       } catch (error) {
-        console.error('❌ Email 發送失敗:', error);
+        console.error('ImgBB 上傳錯誤:', error);
+        return null;
       }
     }
 
+    async function uploadMultipleImages(files) {
+      if (!files || files.length === 0) return [];
+
+      const urls = [];
+      for (let i = 0; i < files.length; i++) {
+        const url = await uploadToImgBB(files[i]);
+        if (url) {
+          urls.push(url);
+        } else {
+          showToast(`第 ${i+1} 張圖片上傳失敗`, true);
+        }
+      }
+      return urls;
+    }
+
     // ============================================================
-    // 6. 圖片上傳
+    // 6. 圖片管理
     // ============================================================
 
-    async function uploadImage(file, complaintId) {
-      if (!file) return null;
+    function updateImagePreview() {
+      const grid = document.getElementById('imagePreviewGrid');
+      const badge = document.getElementById('imageCountBadge');
+      const addBtn = document.getElementById('addMoreBtn');
 
-      const storageRef = storage.ref();
-      const imageRef = storageRef.child(`complaints/${complaintId}_${Date.now()}_${file.name}`);
+      grid.innerHTML = '';
+      selectedFiles.forEach((file, index) => {
+        const div = document.createElement('div');
+        div.className = 'image-preview-item';
+        const img = document.createElement('img');
+        const reader = new FileReader();
+        reader.onload = (e) => { img.src = e.target.result; };
+        reader.readAsDataURL(file);
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.onclick = (e) => {
+          e.stopPropagation();
+          selectedFiles.splice(index, 1);
+          updateImagePreview();
+        };
+        const idxLabel = document.createElement('span');
+        idxLabel.className = 'file-index';
+        idxLabel.textContent = index + 1;
+        div.appendChild(img);
+        div.appendChild(removeBtn);
+        div.appendChild(idxLabel);
+        grid.appendChild(div);
+      });
 
-      try {
-        const snapshot = await imageRef.put(file);
-        const downloadUrl = await snapshot.ref.getDownloadURL();
-        return downloadUrl;
-      } catch (error) {
-        console.error('圖片上傳失敗:', error);
-        showToast('圖片上傳失敗，但投訴已送出', true);
-        return null;
+      badge.textContent = `已選 ${selectedFiles.length} / ${MAX_IMAGES}`;
+      addBtn.disabled = selectedFiles.length >= MAX_IMAGES;
+    }
+
+    function handleFileSelect(files) {
+      const remaining = MAX_IMAGES - selectedFiles.length;
+      const toAdd = Math.min(files.length, remaining);
+      for (let i = 0; i < toAdd; i++) {
+        selectedFiles.push(files[i]);
+      }
+      updateImagePreview();
+      if (files.length > toAdd) {
+        showToast(`已超過上限，僅新增 ${toAdd} 張`, true);
       }
     }
 
@@ -963,10 +1196,10 @@
               priority: data.priority || '',
               title: data.title || '',
               description: data.description || '',
-              status: data.status || '新案件',
+              status: data.status || '待處理',
               date: data.date || '',
               time: data.time || '',
-              imageUrl: data.imageUrl || '',
+              imageUrls: data.imageUrls || [],
               createdAt: data.createdAt || 0
             });
           });
@@ -987,10 +1220,10 @@
           priority: complaint.priority,
           title: complaint.title,
           description: complaint.description,
-          status: complaint.status,
+          status: complaint.status || '待處理',
           date: complaint.date,
           time: complaint.time,
-          imageUrl: complaint.imageUrl || '',
+          imageUrls: complaint.imageUrls || [],
           createdAt: Date.now()
         });
         return true;
@@ -1039,7 +1272,45 @@
     }
 
     // ============================================================
-    // 8. 渲染
+    // 8. 發送 Email 通知
+    // ============================================================
+
+    async function sendEmail(complaint) {
+      const imageCount = complaint.imageUrls ? complaint.imageUrls.length : 0;
+      const subject = `【新投訴 #${complaint.id}】${complaint.title}`;
+      
+      // 建立完整的郵件內容
+      const message = `
+        姓名：${complaint.userName}
+        IG 名稱：${complaint.igName || '未提供'}
+        類別：${complaint.category}
+        嚴重程度：${complaint.priority}
+        標題：${complaint.title}
+        內容：${complaint.description}
+        提交時間：${complaint.date} ${complaint.time || ''}
+        狀態：${complaint.status || '待處理'}
+        圖片數量：${imageCount} 張
+      `;
+
+      try {
+        await emailjs.send(
+          emailjsConfig.serviceID,
+          emailjsConfig.templateID,
+          {
+            name: complaint.userName,
+            time: `${complaint.date} ${complaint.time || ''}`,
+            message: message,
+            title: complaint.title
+          }
+        );
+        console.log('✅ Email 通知發送成功');
+      } catch (error) {
+        console.error('❌ Email 發送失敗:', error);
+      }
+    }
+
+    // ============================================================
+    // 9. 渲染
     // ============================================================
 
     function render() {
@@ -1063,19 +1334,40 @@
       } else {
         let html = '';
         filtered.forEach(item => {
-          const statusClass =
-            item.status === '新案件' ? 'new' :
-            item.status === '處理中' ? 'progress' : 'resolved';
+          const status = item.status || '待處理';
+          const statusClass = status;
+
+          let statusControl = '';
+          if (isAdmin) {
+            const options = STATUS_LIST.map(s => 
+              `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`
+            ).join('');
+            statusControl = `
+              <select class="status-select ${statusClass}" data-action="statusChange" data-docid="${item.docId}" data-id="${item.id}">
+                ${options}
+              </select>
+            `;
+          } else {
+            statusControl = `<span class="status-badge ${statusClass}">${status}</span>`;
+          }
 
           const adminButtons = isAdmin ? `
-            <button class="btn-status" data-action="status" data-docid="${item.docId}" data-id="${item.id}"><i class="fas fa-sync-alt"></i> 狀態</button>
-            <button class="btn-resolve" data-action="resolve" data-docid="${item.docId}" data-id="${item.id}"><i class="fas fa-check"></i> 結案</button>
             <button class="btn-delete" data-action="delete" data-docid="${item.docId}" data-id="${item.id}"><i class="fas fa-times"></i></button>
           ` : '';
 
-          const imageHtml = item.imageUrl ? `
-            <img class="complaint-image" src="${item.imageUrl}" alt="投訴圖片" onclick="openLightbox('${item.imageUrl}')" />
-          ` : '';
+          let imagesHtml = '';
+          if (item.imageUrls && item.imageUrls.length > 0) {
+            const showUrls = item.imageUrls.slice(0, 4);
+            const remaining = item.imageUrls.length - 4;
+            imagesHtml = '<div class="complaint-images">';
+            showUrls.forEach((url, idx) => {
+              imagesHtml += `<img src="${url}" alt="投訴圖片" onclick="openLightbox('${item.docId}', ${idx})" />`;
+            });
+            if (remaining > 0) {
+              imagesHtml += `<div class="more-badge">+${remaining}</div>`;
+            }
+            imagesHtml += '</div>';
+          }
 
           const igHtml = item.igName ? `<span><i class="fab fa-instagram"></i> ${escapeHtml(item.igName)}</span>` : '';
 
@@ -1084,7 +1376,7 @@
               <div class="complaint-content">
                 <div class="complaint-title">
                   <span>${escapeHtml(item.title)}</span>
-                  <span class="status-badge ${statusClass}">${item.status}</span>
+                  ${statusControl}
                   ${isAdmin ? '<span class="admin-badge">管理</span>' : ''}
                 </div>
                 <div class="complaint-meta">
@@ -1093,9 +1385,10 @@
                   <span><i class="fas fa-tag"></i> ${escapeHtml(item.category)}</span>
                   <span><i class="fas fa-exclamation-triangle"></i> ${escapeHtml(item.priority)}</span>
                   <span><i class="far fa-calendar-alt"></i> ${item.date || '未知'} ${item.time || ''}</span>
+                  ${item.imageUrls && item.imageUrls.length > 0 ? `<span><i class="fas fa-image"></i> ${item.imageUrls.length}張</span>` : ''}
                 </div>
                 <div style="margin-top: 6px; font-size:0.9rem; color:#2b405b;">${escapeHtml(item.description)}</div>
-                ${imageHtml}
+                ${imagesHtml}
               </div>
               <div class="complaint-actions">
                 ${adminButtons}
@@ -1110,7 +1403,64 @@
     }
 
     // ============================================================
-    // 9. UI 更新
+    // 10. 圖片燈箱
+    // ============================================================
+
+    let lightboxImages = [];
+    let lightboxIndex = 0;
+
+    window.openLightbox = function(docId, index) {
+      const complaint = complaints.find(c => c.docId === docId);
+      if (!complaint || !complaint.imageUrls || complaint.imageUrls.length === 0) return;
+
+      lightboxImages = complaint.imageUrls;
+      lightboxIndex = index || 0;
+
+      const img = document.getElementById('lightboxImg');
+      const counter = document.getElementById('lightboxCounter');
+      const prevBtn = document.getElementById('lightboxPrev');
+      const nextBtn = document.getElementById('lightboxNext');
+
+      img.src = lightboxImages[lightboxIndex];
+      counter.textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+
+      prevBtn.style.display = lightboxImages.length > 1 ? 'block' : 'none';
+      nextBtn.style.display = lightboxImages.length > 1 ? 'block' : 'none';
+
+      document.getElementById('lightbox').classList.add('active');
+    };
+
+    function navigateLightbox(delta) {
+      const newIndex = lightboxIndex + delta;
+      if (newIndex < 0 || newIndex >= lightboxImages.length) return;
+      lightboxIndex = newIndex;
+      document.getElementById('lightboxImg').src = lightboxImages[lightboxIndex];
+      document.getElementById('lightboxCounter').textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+    }
+
+    document.getElementById('lightboxPrev').addEventListener('click', (e) => {
+      e.stopPropagation();
+      navigateLightbox(-1);
+    });
+
+    document.getElementById('lightboxNext').addEventListener('click', (e) => {
+      e.stopPropagation();
+      navigateLightbox(1);
+    });
+
+    document.getElementById('lightbox').addEventListener('click', function() {
+      this.classList.remove('active');
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('lightbox').classList.contains('active')) return;
+      if (e.key === 'ArrowLeft') navigateLightbox(-1);
+      if (e.key === 'ArrowRight') navigateLightbox(1);
+      if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+    });
+
+    // ============================================================
+    // 11. UI 更新
     // ============================================================
 
     function updateUI(user) {
@@ -1137,7 +1487,6 @@
         googleBtn.style.display = 'none';
         logoutBtn.style.display = 'inline-block';
 
-        // 自動填入姓名
         const nameInput = document.getElementById('userName');
         if (displayName && !nameInput.value) {
           nameInput.value = displayName;
@@ -1159,10 +1508,10 @@
     }
 
     // ============================================================
-    // 10. 事件處理
+    // 12. 事件處理
     // ============================================================
 
-    // ----- 10a. Google 登入 -----
+    // ----- 12a. Google 登入 -----
     async function googleLogin() {
       try {
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -1178,7 +1527,7 @@
 
     document.getElementById('googleLoginBtn').addEventListener('click', googleLogin);
 
-    // ----- 10b. 登出 -----
+    // ----- 12b. 登出 -----
     document.getElementById('logoutBtn').addEventListener('click', async function() {
       try {
         await auth.signOut();
@@ -1191,7 +1540,7 @@
       }
     });
 
-    // ----- 10c. 管理員登入 -----
+    // ----- 12c. 管理員登入 -----
     const adminLoginBtn = document.getElementById('adminLoginBtn');
     const adminOverlay = document.getElementById('adminLoginOverlay');
     const adminConfirmBtn = document.getElementById('adminLoginConfirmBtn');
@@ -1246,40 +1595,68 @@
       if (e.target === this) this.classList.remove('active');
     });
 
-    // ----- 10d. 圖片上傳預覽 -----
-    const fileInput = document.getElementById('imageFile');
-    const fileNameDisplay = document.getElementById('fileName');
-    const filePreview = document.getElementById('filePreview');
-
-    fileInput.addEventListener('change', function(e) {
-      const file = this.files[0];
-      if (file) {
-        selectedFile = file;
-        fileNameDisplay.textContent = `📎 ${file.name} (${(file.size / 1024).toFixed(1)} KB)`;
-
-        const reader = new FileReader();
-        reader.onload = function(e) {
-          filePreview.src = e.target.result;
-          filePreview.classList.add('show');
-        };
-        reader.readAsDataURL(file);
+    // ----- 12d. 類別切換 -----
+    document.getElementById('category').addEventListener('change', function() {
+      const customGroup = document.getElementById('customCategoryGroup');
+      if (this.value === '其他') {
+        customGroup.classList.add('show');
       } else {
-        selectedFile = null;
-        fileNameDisplay.textContent = '尚未選擇檔案';
-        filePreview.classList.remove('show');
+        customGroup.classList.remove('show');
       }
     });
 
-    // ----- 10e. 提交投訴（訪客可直接提交） -----
+    // ----- 12e. 圖片上傳 -----
+    const imageInput = document.getElementById('imageInput');
+    const addMoreBtn = document.getElementById('addMoreBtn');
+    const uploadArea = document.getElementById('imageUploadArea');
+
+    addMoreBtn.addEventListener('click', () => {
+      imageInput.click();
+    });
+
+    imageInput.addEventListener('change', function(e) {
+      if (this.files && this.files.length > 0) {
+        handleFileSelect(this.files);
+        this.value = '';
+      }
+    });
+
+    uploadArea.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      uploadArea.classList.add('dragover');
+    });
+
+    uploadArea.addEventListener('dragleave', () => {
+      uploadArea.classList.remove('dragover');
+    });
+
+    uploadArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      uploadArea.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        handleFileSelect(e.dataTransfer.files);
+      }
+    });
+
+    // ----- 12f. 提交投訴 -----
     document.getElementById('complaintForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
       const name = document.getElementById('userName').value.trim();
       const igName = document.getElementById('igName').value.trim();
-      const category = document.getElementById('category').value;
+      let category = document.getElementById('category').value;
       const priority = document.getElementById('priority').value;
       const title = document.getElementById('title').value.trim();
       const description = document.getElementById('description').value.trim();
+
+      if (category === '其他') {
+        const custom = document.getElementById('customCategory').value.trim();
+        if (!custom) {
+          showToast('請輸入自訂類別名稱', true);
+          return;
+        }
+        category = custom;
+      }
 
       if (!name || !category || !title || !description) {
         showToast('請填寫所有必填欄位（姓名、類別、標題、內容）', true);
@@ -1291,10 +1668,14 @@
       const newId = maxId + 1;
 
       const submitBtn = document.getElementById('submitBtn');
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 傳送中...';
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上傳圖片中...';
       submitBtn.disabled = true;
 
-      // 先儲存投訴取得 ID
+      let imageUrls = [];
+      if (selectedFiles.length > 0) {
+        imageUrls = await uploadMultipleImages(selectedFiles);
+      }
+
       const newComplaint = {
         id: newId,
         userName: name,
@@ -1303,47 +1684,52 @@
         priority: priority,
         title: title,
         description: description,
-        status: '新案件',
+        status: '待處理',
         date: getToday(),
         time: getNowTime(),
-        imageUrl: ''
+        imageUrls: imageUrls
       };
 
-      // 儲存到 Firestore
+      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 儲存中...';
+
       const success = await addComplaint(newComplaint);
 
       if (success) {
-        // 如果有圖片，上傳圖片
-        let imageUrl = '';
-        if (selectedFile) {
-          const uploadResult = await uploadImage(selectedFile, newId);
-          if (uploadResult) {
-            imageUrl = uploadResult;
-            // 更新該筆投訴的圖片 URL
-            const docRef = await db.collection('complaints')
-              .where('id', '==', newId)
-              .get();
-            if (!docRef.empty) {
-              await docRef.docs[0].ref.update({ imageUrl: imageUrl });
-            }
-          }
-        }
-
-        // 發送 Email 通知
-        await sendEmail({ ...newComplaint, imageUrl: imageUrl });
-
+        await sendEmail(newComplaint);
         document.getElementById('complaintForm').reset();
-        document.getElementById('fileName').textContent = '尚未選擇檔案';
-        document.getElementById('filePreview').classList.remove('show');
-        selectedFile = null;
-        showToast(`投訴 #${newId} 已送出，管理員將收到通知`);
+        selectedFiles = [];
+        updateImagePreview();
+        document.getElementById('customCategoryGroup').classList.remove('show');
+        showToast(`投訴 #${newId} 已送出，狀態：🟡 待處理`);
       }
 
       submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送出投訴';
       submitBtn.disabled = false;
     });
 
-    // ----- 10f. 列表按鈕 -----
+    // ----- 12g. 狀態變更（管理員下拉選單）-----
+    document.getElementById('complaintList').addEventListener('change', async function(e) {
+      const target = e.target.closest('select');
+      if (!target) return;
+      if (target.dataset.action !== 'statusChange') return;
+
+      const docId = target.dataset.docid;
+      const id = parseInt(target.dataset.id);
+      const newStatus = target.value;
+
+      if (!docId || !id) return;
+      if (!isAdmin) {
+        showToast('請先登入管理模式', true);
+        return;
+      }
+
+      const success = await updateStatus(docId, newStatus);
+      if (success) {
+        showToast(`已更新狀態為：${newStatus}`);
+      }
+    });
+
+    // ----- 12h. 刪除按鈕 -----
     document.getElementById('complaintList').addEventListener('click', async function(e) {
       const target = e.target.closest('button');
       if (!target) return;
@@ -1354,51 +1740,22 @@
 
       if (!docId || !id) return;
 
-      if (!isAdmin) {
-        showToast('請先登入管理模式', true);
-        return;
-      }
-
       if (action === 'delete') {
+        if (!isAdmin) {
+          showToast('請先登入管理模式', true);
+          return;
+        }
         if (confirm(`確定刪除投訴 #${id} 嗎？`)) {
           const success = await deleteComplaint(docId);
           if (success) showToast(`已刪除投訴 #${id}`);
         }
-      } else if (action === 'resolve') {
-        const item = complaints.find(c => c.docId === docId);
-        if (!item) return;
-        if (item.status === '已結案') {
-          showToast('此案件已經結案', true);
-          return;
-        }
-        const success = await updateStatus(docId, '已結案');
-        if (success) showToast(`案件 #${id} 已結案`);
-      } else if (action === 'status') {
-        const item = complaints.find(c => c.docId === docId);
-        if (!item) return;
-        let newStatus;
-        if (item.status === '新案件') newStatus = '處理中';
-        else if (item.status === '處理中') newStatus = '已結案';
-        else newStatus = '新案件';
-        const success = await updateStatus(docId, newStatus);
-        if (success) showToast(`狀態變更為：${newStatus}`);
       }
     });
 
-    // ----- 10g. 圖片燈箱 -----
-    window.openLightbox = function(url) {
-      document.getElementById('lightboxImg').src = url;
-      document.getElementById('lightbox').classList.add('active');
-    };
-
-    document.getElementById('lightbox').addEventListener('click', function() {
-      this.classList.remove('active');
-    });
-
-    // ----- 10h. 過濾 -----
+    // ----- 12i. 過濾 -----
     document.getElementById('filterStatus').addEventListener('change', render);
 
-    // ----- 10i. 清空全部 -----
+    // ----- 12j. 清空全部 -----
     document.getElementById('clearAllBtn').addEventListener('click', async function() {
       if (!isAdmin) {
         showToast('請先登入管理模式', true);
@@ -1414,7 +1771,7 @@
     });
 
     // ============================================================
-    // 11. Firebase Auth 監聽
+    // 13. Firebase Auth 監聽
     // ============================================================
 
     auth.onAuthStateChanged((user) => {
@@ -1428,12 +1785,12 @@
     });
 
     // ============================================================
-    // 12. 啟動
+    // 14. 啟動
     // ============================================================
 
     listenComplaints();
-    console.log('✅ 投訴系統已啟動（訪客可投訴）');
-    console.log('👤 管理員帳號:', ADMIN_ACCOUNTS.map(a => a.username).join(', '));
+    console.log('✅ 投訴系統已啟動');
+    console.log('📊 狀態選項:', STATUS_LIST.join(', '));
   </script>
 </body>
 </html>
