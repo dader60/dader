@@ -16,6 +16,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
+    /* ===== 完整樣式（與之前相同，為節省空間省略，請貼上完整樣式） ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
     body { background: #f4f7fc; min-height: 100vh; padding: 2rem 1rem; display: flex; justify-content: center; align-items: flex-start; }
     .container { max-width: 1300px; width: 100%; background: white; border-radius: 32px; box-shadow: 0 20px 60px rgba(0,20,40,0.08); padding: 2rem 2rem 2.5rem; }
@@ -328,7 +329,7 @@
       publicKey: "KU2Ya4rXsyHXopGAM"
     };
 
-    // ===== 管理員帳號（已更新）=====
+    // ===== 管理員帳號（已確認）=====
     const ADMIN_ACCOUNTS = [
       { username: "dader60", password: "dader600909575253h" }
     ];
@@ -604,7 +605,7 @@
     }
 
     // ============================================================
-    // 8. 發送 Email 通知（不阻塞主流程）
+    // 8. 發送 Email 通知
     // ============================================================
 
     async function sendEmail(complaint) {
@@ -635,12 +636,11 @@
         console.log('✅ Email 通知發送成功');
       } catch (error) {
         console.error('❌ Email 發送失敗:', error);
-        // 不影響主流程，只記錄錯誤
       }
     }
 
     // ============================================================
-    // 9. 渲染（修正重點：管理員一定看到全部）
+    // 9. 渲染
     // ============================================================
 
     function render() {
@@ -650,24 +650,19 @@
 
       console.log('🔍 render() - isAdmin:', isAdmin, ' complaints總數:', complaints.length);
 
-      // ✅ 管理員：顯示全部，一般用戶：只顯示自己的
       let filtered = [];
       
       if (isAdmin) {
-        // 管理員看到全部
         filtered = [...complaints];
         console.log('👑 管理員模式 - 顯示全部', filtered.length, '筆');
       } else if (currentUser) {
-        // 一般登入用戶只看到自己的
         filtered = complaints.filter(c => c.userId === currentUser.uid);
         console.log('👤 一般用戶 - 顯示', filtered.length, '筆');
       } else {
-        // 訪客看到全部（唯讀）
         filtered = [...complaints];
         console.log('👋 訪客模式 - 顯示全部', filtered.length, '筆');
       }
 
-      // 狀態過濾
       if (filterStatus !== 'all') {
         filtered = filtered.filter(c => c.status === filterStatus);
       }
@@ -905,7 +900,6 @@
 
     adminLoginBtn.addEventListener('click', function() {
       if (isAdmin) {
-        // 登出管理員
         isAdmin = false;
         this.textContent = '管理';
         this.className = 'btn-admin-login';
@@ -921,17 +915,18 @@
       }
     });
 
+    // 🔥 修正：管理員登入驗證
     adminConfirmBtn.addEventListener('click', function() {
       const username = adminUsername.value.trim();
       const password = adminPassword.value.trim();
 
-      console.log('🔑 管理員登入嘗試:', username);
+      console.log('🔑 輸入的帳號:', username);
+      console.log('🔑 輸入的密碼:', password);
+      console.log('🔑 設定的帳號:', ADMIN_ACCOUNTS[0].username);
+      console.log('🔑 設定的密碼:', ADMIN_ACCOUNTS[0].password);
 
-      const found = ADMIN_ACCOUNTS.find(
-        acc => acc.username === username && acc.password === password
-      );
-
-      if (found) {
+      // 直接比對
+      if (username === ADMIN_ACCOUNTS[0].username && password === ADMIN_ACCOUNTS[0].password) {
         isAdmin = true;
         adminOverlay.classList.remove('active');
         adminLoginBtn.textContent = '登出管理';
@@ -939,7 +934,6 @@
         updateUI(currentUser);
         showToast('✅ 管理員模式已啟用');
         console.log('✅ 管理員登入成功，isAdmin =', isAdmin);
-        // 強制重新渲染
         render();
       } else {
         adminErrorMsg.classList.add('show');
