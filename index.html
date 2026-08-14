@@ -1003,8 +1003,9 @@
       publicKey: "KU2Ya4rXsyHXopGAM"
     };
 
+    // ===== 管理員帳號（已更新）=====
     const ADMIN_ACCOUNTS = [
-      { username: "dader60dader60", password: "dader60dader0909575253h@" }
+      { username: "dader60", password: "dader600909575253h" }
     ];
 
     const MAX_IMAGES = 10;
@@ -1655,7 +1656,7 @@
       }
     });
 
-    // ----- 12f. 提交投訴（修正：Email 不阻塞主流程）-----
+    // ----- 12f. 提交投訴 -----
     document.getElementById('complaintForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -1735,7 +1736,7 @@
       }
     });
 
-    // ----- 12g. 狀態變更（管理員下拉選單）-----
+    // ----- 12g. 狀態變更 -----
     document.getElementById('complaintList').addEventListener('change', async function(e) {
       const target = e.target.closest('select');
       if (!target) return;
@@ -1810,7 +1811,6 @@
         adminLoginBtn.className = 'btn-admin-login';
       }
       updateUI(user);
-      // 重新渲染確保正確顯示
       setTimeout(render, 100);
     });
 
