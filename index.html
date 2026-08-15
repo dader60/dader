@@ -3,12 +3,16 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>投訴系統</title>
+  <title>靠北達德投訴系統</title>
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
+  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+
+  <!-- EmailJS -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
@@ -36,7 +40,7 @@
     .btn-admin-login:hover { background: #1a2c44; }
     .btn-admin-login.active { background: #c52a2a; }
     .row { display: grid; grid-template-columns: 1fr 1.4fr; gap: 2rem; margin-top: 0.5rem; }
-    @media (max-width: 820px) { .row { grid-template-columns: 1fr; gap: 2.5rem; } .container { padding: 1.5rem; } }
+    @media (max-width: 820px) { .row { grid-template-columns: 1fr; gap: 1.5rem; } .container { padding: 1.5rem; } }
     .card { background: #ffffff; border-radius: 24px; padding: 1.6rem 1.8rem 2rem; box-shadow: 0 6px 20px rgba(0,0,0,0.02); border: 1px solid #e9edf4; }
     .card-title { font-size: 1.25rem; font-weight: 600; color: #1a2c44; display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; }
     .card-title i { color: #c52a2a; width: 28px; text-align: center; }
@@ -46,13 +50,9 @@
     label .required { color: #c52a2a; margin-left: 2px; }
     input, select, textarea { width: 100%; padding: 0.7rem 1rem; border: 1px solid #d7dfe9; border-radius: 16px; font-size: 0.95rem; background: #fafcff; transition: 0.15s; outline: none; }
     input:focus, select:focus, textarea:focus { border-color: #b32b2b; box-shadow: 0 0 0 3px rgba(179,43,43,0.08); background: white; }
-    textarea { resize: vertical; min-height: 100px; }
+    textarea { resize: vertical; min-height: 80px; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
     @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; gap: 0.5rem; } }
-    .custom-category-group { display: none; margin-top: -0.5rem; margin-bottom: 1.25rem; }
-    .custom-category-group.show { display: block; }
-    .custom-category-group input { border-color: #b32b2b; background: #fffbfb; }
-    .custom-category-group label i { color: #c52a2a; }
     .image-upload-area { border: 2px dashed #d7dfe9; border-radius: 16px; padding: 1.5rem 1.5rem 0.5rem 1.5rem; background: #fafcff; transition: 0.15s; }
     .image-upload-area.dragover { border-color: #b32b2b; background: #f8f4f4; }
     .image-upload-area .upload-icon { font-size: 2rem; color: #8a9db0; text-align: center; }
@@ -145,13 +145,39 @@
     .legend-dot.不予受理 { background: #dc3545; }
     .legend-dot.需要補充資料 { background: #ffc107; }
     .legend-dot.已轉交相關人員 { background: #6c757d; }
+
+    .notice-full-width { grid-column: 1 / -1; margin: -0.5rem 0 0 0; }
+    .notice-box { background: #fff8e1; border-left: 4px solid #ffc107; padding: 10px 16px; border-radius: 8px; font-size: 0.9rem; color: #6d5a00; display: flex; align-items: center; gap: 10px; }
+    .notice-box i { color: #f9a825; font-size: 1.1rem; flex-shrink: 0; }
+    @media (max-width: 600px) { .notice-box { font-size: 0.8rem; flex-wrap: wrap; } }
+
+    .radio-group {
+      display: flex;
+      gap: 1.5rem;
+      padding-top: 4px;
+    }
+    .radio-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 400;
+      font-size: 0.95rem;
+      color: #2a405b;
+      cursor: pointer;
+    }
+    .radio-group input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #c52a2a;
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
     <header>
-      <h1><i class="fas fa-megaphone"></i> 投訴系統</h1>
+      <h1><i class="fas fa-megaphone"></i> 靠北達德投訴系統</h1>
       <div class="subhead">
         <span><i class="fas fa-flag" style="color:#c52a2a; margin-right: 6px;"></i> 訪客可直接投訴，管理員將即時處理</span>
         <span class="badge-count"><i class="fas fa-list-ul"></i> 總投訴 <span id="totalCount">0</span></span>
@@ -175,19 +201,23 @@
     </div>
 
     <div class="row">
+      <!-- ===== 左欄：表單 ===== -->
       <div class="card">
         <div class="card-title"><i class="fas fa-pen"></i> 新增投訴</div>
         <form id="complaintForm">
-          <div class="form-row">
-            <div class="form-group">
-              <label><i class="fas fa-user"></i> 姓名 <span class="required">*</span></label>
-              <input type="text" id="userName" placeholder="請輸入您的姓名" required />
-            </div>
-            <div class="form-group">
-              <label><i class="fab fa-instagram"></i> IG 名稱</label>
-              <input type="text" id="igName" placeholder="@ 或 暱稱" />
-            </div>
+          <!-- 姓名 -->
+          <div class="form-group">
+            <label><i class="fas fa-user"></i> 姓名 <span class="required">*</span></label>
+            <input type="text" id="userName" placeholder="請輸入您的姓名" required />
           </div>
+
+          <!-- IG 名稱 -->
+          <div class="form-group">
+            <label><i class="fab fa-instagram"></i> IG 名稱 <span class="required">*</span></label>
+            <input type="text" id="igName" placeholder="請輸入您的 IG 名稱" required />
+          </div>
+
+          <!-- 類別 + 嚴重程度 -->
           <div class="form-row">
             <div class="form-group">
               <label><i class="fas fa-tag"></i> 類別 <span class="required">*</span></label>
@@ -207,20 +237,40 @@
               </select>
             </div>
           </div>
-          <div class="custom-category-group" id="customCategoryGroup">
+
+          <!-- 其他類別自訂輸入 -->
+          <div class="custom-category-group" id="customCategoryGroup" style="display:none; margin-top:-0.5rem; margin-bottom:1.25rem;">
             <label><i class="fas fa-pencil-alt"></i> 請輸入自訂類別 <span class="required">*</span></label>
             <input type="text" id="customCategory" placeholder="請輸入您的類別名稱" />
           </div>
+
+          <!-- 標題 -->
           <div class="form-group">
             <label><i class="fas fa-heading"></i> 標題 <span class="required">*</span></label>
-            <input type="text" id="title" placeholder="簡述投訴重點" required />
+            <input type="text" id="title" placeholder="請輸入投訴標題" required />
           </div>
+
+          <!-- 事件發生時間 -->
+          <div class="form-group">
+            <label><i class="fas fa-calendar-alt"></i> 事件發生時間 <span class="required">*</span></label>
+            <input type="datetime-local" id="eventTime" required />
+          </div>
+
+          <!-- 投訴內容 -->
           <div class="form-group">
             <label><i class="fas fa-comment"></i> 投訴內容 <span class="required">*</span></label>
-            <textarea id="description" placeholder="請描述具體情況..." required></textarea>
+            <textarea id="description" placeholder="請詳細描述具體情況..." required></textarea>
           </div>
+
+          <!-- 相關貼文／留言連結（非必填） -->
           <div class="form-group">
-            <label><i class="fas fa-images"></i> 圖片（最多10張，選擇性）</label>
+            <label><i class="fas fa-link"></i> 相關貼文／留言連結</label>
+            <input type="url" id="postLink" placeholder="請貼上相關貼文或留言的網址" />
+          </div>
+
+          <!-- 圖片（非必填） -->
+          <div class="form-group">
+            <label><i class="fas fa-images"></i> 圖片（選擇性，最多10張）</label>
             <div class="image-upload-area" id="imageUploadArea">
               <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
               <div class="upload-text">點擊或拖曳上傳圖片</div>
@@ -237,6 +287,22 @@
               </div>
             </div>
           </div>
+
+          <!-- 希望如何處理（非必填） -->
+          <div class="form-group">
+            <label><i class="fas fa-handshake"></i> 希望如何處理</label>
+            <input type="text" id="expectedResolution" placeholder="請說明您希望如何處理此投訴" />
+          </div>
+
+          <!-- 是否需要版主回覆（是 / 否） -->
+          <div class="form-group">
+            <label><i class="fas fa-reply"></i> 是否需要版主回覆 <span class="required">*</span></label>
+            <div class="radio-group">
+              <label><input type="radio" name="needReply" value="是" checked /> 是</label>
+              <label><input type="radio" name="needReply" value="否" /> 否</label>
+            </div>
+          </div>
+
           <button type="submit" class="btn-primary" id="submitBtn">
             <i class="fas fa-paper-plane"></i> 送出投訴
           </button>
@@ -246,6 +312,15 @@
         </div>
       </div>
 
+      <!-- ===== 提醒文字（全寬） ===== -->
+      <div class="notice-full-width">
+        <div class="notice-box">
+          <i class="fas fa-exclamation-triangle"></i>
+          <span><strong>請勿惡意投訴、捏造事實或利用投訴功能進行人身攻擊；</strong>所有投訴內容將由管理團隊依版規公平處理。</span>
+        </div>
+      </div>
+
+      <!-- ===== 右欄：投訴紀錄 ===== -->
       <div class="card">
         <div class="list-header">
           <div class="card-title" style="margin-bottom:0;">
@@ -268,6 +343,7 @@
         <div id="complaintListContainer">
           <div class="complaint-list" id="complaintList"></div>
         </div>
+
         <div class="status-legend">
           <span class="legend-item"><span class="legend-dot 待處理"></span> 🟡 待處理</span>
           <span class="legend-item"><span class="legend-dot 調查中"></span> 🔵 調查中</span>
@@ -324,7 +400,6 @@
       publicKey: "KU2Ya4rXsyHXopGAM"
     };
 
-    // ===== 管理員帳號 =====
     const ADMIN_USERNAME = "dader60";
     const ADMIN_PASSWORD = "dader600909575253h";
 
@@ -352,16 +427,14 @@
     emailjs.init(emailjsConfig.publicKey);
 
     // ============================================================
-    // 3. 全域變數（🔥 修正：從 sessionStorage 讀取）
+    // 3. 全域變數
     // ============================================================
 
     let currentUser = null;
-    let isAdmin = sessionStorage.getItem('isAdmin') === 'true';  // 🔥 關鍵修正！
+    let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
     let complaints = [];
     let unsubscribeSnapshot = null;
     let selectedFiles = [];
-
-    console.log('🔑 初始 isAdmin (從 sessionStorage 讀取):', isAdmin);
 
     // ============================================================
     // 4. 工具函數
@@ -523,6 +596,10 @@
               priority: data.priority || '',
               title: data.title || '',
               description: data.description || '',
+              eventTime: data.eventTime || '',
+              postLink: data.postLink || '',
+              expectedResolution: data.expectedResolution || '',
+              needReply: data.needReply || '',
               status: data.status || '待處理',
               date: data.date || '',
               time: data.time || '',
@@ -548,6 +625,10 @@
           priority: complaint.priority,
           title: complaint.title,
           description: complaint.description,
+          eventTime: complaint.eventTime || '',
+          postLink: complaint.postLink || '',
+          expectedResolution: complaint.expectedResolution || '',
+          needReply: complaint.needReply || '',
           status: complaint.status || '待處理',
           date: complaint.date,
           time: complaint.time,
@@ -614,6 +695,10 @@
           嚴重程度：${complaint.priority}
           標題：${complaint.title}
           內容：${complaint.description}
+          事件時間：${complaint.eventTime || '未提供'}
+          相關連結：${complaint.postLink || '未提供'}
+          希望如何處理：${complaint.expectedResolution || '未提供'}
+          需要版主回覆：${complaint.needReply || '未提供'}
           提交時間：${complaint.date} ${complaint.time || ''}
           狀態：${complaint.status || '待處理'}
           圖片數量：${imageCount} 張
@@ -644,19 +729,14 @@
       const filterStatus = document.getElementById('filterStatus').value;
       const totalSpan = document.getElementById('totalCount');
 
-      console.log('🔍 render() - isAdmin:', isAdmin, ' complaints總數:', complaints.length);
-
       let filtered = [];
       
       if (isAdmin === true) {
         filtered = [...complaints];
-        console.log('👑 管理員模式 - 顯示全部', filtered.length, '筆');
       } else if (currentUser) {
         filtered = complaints.filter(c => c.userId === currentUser.uid);
-        console.log('👤 一般用戶 - 顯示', filtered.length, '筆');
       } else {
         filtered = [...complaints];
-        console.log('👋 訪客模式 - 顯示全部', filtered.length, '筆');
       }
 
       if (filterStatus !== 'all') {
@@ -710,6 +790,7 @@
           }
 
           const igHtml = item.igName ? `<span><i class="fab fa-instagram"></i> ${escapeHtml(item.igName)}</span>` : '';
+          const replyHtml = item.needReply ? `<span><i class="fas fa-reply"></i> 需要回覆：${item.needReply}</span>` : '';
 
           html += `
             <div class="complaint-item" data-id="${item.id}" data-docid="${item.docId}">
@@ -725,6 +806,7 @@
                   <span><i class="fas fa-tag"></i> ${escapeHtml(item.category)}</span>
                   <span><i class="fas fa-exclamation-triangle"></i> ${escapeHtml(item.priority)}</span>
                   <span><i class="far fa-calendar-alt"></i> ${item.date || '未知'} ${item.time || ''}</span>
+                  ${replyHtml}
                   ${item.imageUrls && item.imageUrls.length > 0 ? `<span><i class="fas fa-image"></i> ${item.imageUrls.length}張</span>` : ''}
                 </div>
                 <div style="margin-top: 6px; font-size:0.9rem; color:#2b405b;">${escapeHtml(item.description)}</div>
@@ -838,9 +920,6 @@
         roleDisplay.className = 'user-role';
         googleBtn.style.display = 'inline-flex';
         logoutBtn.classList.remove('show');
-
-        // 如果使用者登出，但不影響管理員狀態
-        // 只有當管理員主動登出時才會清除
       }
     }
 
@@ -874,7 +953,6 @@
       try {
         await auth.signOut();
         currentUser = null;
-        // 登出時不自動清除管理員狀態，讓用戶決定是否保留
         updateUI(null);
         showToast('已登出');
         render();
@@ -893,7 +971,6 @@
 
     adminLoginBtn.addEventListener('click', function() {
       if (isAdmin === true) {
-        // 登出管理員
         isAdmin = false;
         sessionStorage.setItem('isAdmin', 'false');
         this.textContent = '管理';
@@ -914,11 +991,7 @@
       const username = adminUsername.value.trim();
       const password = adminPassword.value.trim();
 
-      console.log('🔑 輸入的帳號:', username);
-      console.log('🔑 輸入的密碼:', password);
-
       if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-        // 🔥 設定管理員狀態
         isAdmin = true;
         sessionStorage.setItem('isAdmin', 'true');
         adminOverlay.classList.remove('active');
@@ -926,13 +999,11 @@
         adminLoginBtn.className = 'btn-admin-login active';
         updateUI(currentUser);
         showToast('✅ 管理員模式已啟用');
-        console.log('✅ 管理員登入成功，isAdmin =', isAdmin);
         render();
       } else {
         adminErrorMsg.classList.add('show');
         adminPassword.value = '';
         adminPassword.focus();
-        console.log('❌ 管理員登入失敗');
       }
     });
 
@@ -947,9 +1018,9 @@
     document.getElementById('category').addEventListener('change', function() {
       const customGroup = document.getElementById('customCategoryGroup');
       if (this.value === '其他') {
-        customGroup.classList.add('show');
+        customGroup.style.display = 'block';
       } else {
-        customGroup.classList.remove('show');
+        customGroup.style.display = 'none';
       }
     });
 
@@ -996,7 +1067,12 @@
       const priority = document.getElementById('priority').value;
       const title = document.getElementById('title').value.trim();
       const description = document.getElementById('description').value.trim();
+      const eventTime = document.getElementById('eventTime').value;
+      const postLink = document.getElementById('postLink').value.trim();
+      const expectedResolution = document.getElementById('expectedResolution').value.trim();
+      const needReply = document.querySelector('input[name="needReply"]:checked')?.value || '';
 
+      // 檢查自訂類別
       if (category === '其他') {
         const custom = document.getElementById('customCategory').value.trim();
         if (!custom) {
@@ -1006,8 +1082,9 @@
         category = custom;
       }
 
-      if (!name || !category || !title || !description) {
-        showToast('請填寫所有必填欄位', true);
+      // 驗證所有必填欄位（排除 postLink 和 expectedResolution）
+      if (!name || !igName || !category || !priority || !title || !eventTime || !description || !needReply) {
+        showToast('請填寫所有必填欄位（標示 * 的欄位）', true);
         return;
       }
 
@@ -1035,6 +1112,10 @@
           priority: priority,
           title: title,
           description: description,
+          eventTime: eventTime,
+          postLink: postLink || '',
+          expectedResolution: expectedResolution || '',
+          needReply: needReply,
           status: '待處理',
           date: getToday(),
           time: getNowTime(),
@@ -1048,7 +1129,7 @@
           document.getElementById('complaintForm').reset();
           selectedFiles = [];
           updateImagePreview();
-          document.getElementById('customCategoryGroup').classList.remove('show');
+          document.getElementById('customCategoryGroup').style.display = 'none';
           showToast(`✅ 投訴 #${newId} 已送出，狀態：待處理`);
         }
 
@@ -1130,16 +1211,9 @@
 
     auth.onAuthStateChanged((user) => {
       currentUser = user;
-      // 🔥 從 sessionStorage 讀取管理員狀態（保留先前設定）
       const storedAdmin = sessionStorage.getItem('isAdmin');
       if (storedAdmin === 'true') {
         isAdmin = true;
-      } else {
-        // 不覆蓋 isAdmin，保留現有值
-      }
-      // 如果使用者登出且沒有管理員權限，才清除管理員狀態
-      if (!user && isAdmin === false) {
-        // 保持現狀
       }
       updateUI(user);
       setTimeout(render, 100);
@@ -1153,8 +1227,6 @@
     console.log('✅ 投訴系統已啟動');
     console.log('📊 狀態選項:', STATUS_LIST.join(', '));
     console.log('👑 管理員帳號:', ADMIN_USERNAME);
-    console.log('🔑 管理員狀態 (sessionStorage):', sessionStorage.getItem('isAdmin'));
-    console.log('🔑 目前 isAdmin 值:', isAdmin);
   </script>
 </body>
 </html>
