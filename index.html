@@ -483,8 +483,8 @@
       publicKey: "KU2Ya4rXsyHXopGAM"
     };
 
-    // ===== 固定管理員帳號 =====
-    const ADMIN_ACCOUNTS = [
+    // ===== 固定管理員帳號（改為 let 以支援變更密碼） =====
+    let ADMIN_ACCOUNTS = [
       { username: "dader60", password: "dader600909575253h", role: "moderator", roleName: "版主", displayName: "版主" },
       { username: "dader01", password: "dader600909575253h", role: "editor", roleName: "小編", displayName: "小編01" },
       { username: "dader02", password: "dader600909575253h", role: "editor", roleName: "小編", displayName: "小編02" },
@@ -602,6 +602,39 @@
         return true;
       }
       return false;
+    }
+
+    // ============================================================
+    // 4b. 儲存/載入管理員密碼（永久儲存）
+    // ============================================================
+
+    function saveAdmins() {
+      localStorage.setItem('adminAccounts', JSON.stringify(ADMIN_ACCOUNTS));
+      console.log('✅ 管理員密碼已儲存');
+    }
+
+    function loadAdmins() {
+      const stored = localStorage.getItem('adminAccounts');
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored);
+          if (parsed && parsed.length > 0) {
+            // 更新 ADMIN_ACCOUNTS 的密碼
+            parsed.forEach(p => {
+              const existing = ADMIN_ACCOUNTS.find(a => a.username === p.username);
+              if (existing) {
+                existing.password = p.password;
+              }
+            });
+            console.log('✅ 管理員密碼已載入');
+            return;
+          }
+        } catch (e) {
+          console.error('載入密碼失敗:', e);
+        }
+      }
+      // 如果沒有儲存，使用預設並儲存
+      saveAdmins();
     }
 
     // ============================================================
@@ -1248,7 +1281,7 @@
     });
 
     // ============================================================
-    // 12. UI 更新（🔧 修正：管理員登入顯示角色名稱）
+    // 12. UI 更新
     // ============================================================
 
     function updateUI(user) {
@@ -1498,7 +1531,7 @@
     });
 
     // ============================================================
-    // 13d. 變更密碼功能
+    // 13d. 變更密碼功能（版主/小編變更自己的密碼）
     // ============================================================
 
     const changePwdBtn = document.getElementById('changePasswordBtn');
@@ -1568,7 +1601,11 @@
         return;
       }
 
+      // 🔥 更新密碼
       updateAdminPassword(currentAdminUsername, newPwd);
+      // 🔥 儲存到 localStorage
+      saveAdmins();
+      
       cpSuccessMsg.textContent = '✅ 密碼變更成功！請使用新密碼登入';
       cpSuccessMsg.classList.add('show');
       
@@ -1617,7 +1654,7 @@
       });
     }
 
-    // 🔥 變更小編密碼（不發送 Email）
+    // 🔥 變更小編密碼（版主變更，不發送 Email）
     function handleChangePwd(e) {
       const btn = e.currentTarget;
       const username = btn.dataset.username;
@@ -1639,11 +1676,13 @@
 
       const admin = ADMIN_ACCOUNTS.find(a => a.username === username);
       if (admin) {
+        // 🔥 更新密碼
         admin.password = newPwd;
         currentPwdEl.textContent = newPwd;
+        // 🔥 儲存到 localStorage
+        saveAdmins();
         showToast(`✅ 「${username}」密碼已變更為：${newPwd}`);
         console.log(`✅ 密碼已變更：${username} → ${newPwd}`);
-        // 🔥 不發送任何 Email 通知
       }
     }
 
@@ -1887,6 +1926,9 @@
     // 15. 啟動
     // ============================================================
 
+    // 🔥 載入儲存的管理員密碼
+    loadAdmins();
+    
     listenComplaints();
     console.log('✅ 靠北達德投訴系統已啟動');
     console.log('📊 狀態選項:', STATUS_LIST.join(', '));
@@ -1896,6 +1938,7 @@
     console.log('📧 管理員回覆 → 投訴者信箱');
     console.log('🔑 版主可變更小編密碼（無 Email 通知）');
     console.log('👤 管理員登入顯示角色名稱（無需 Google）');
+    console.log('💾 密碼變更會永久儲存');
   </script>
 </body>
 </html>
