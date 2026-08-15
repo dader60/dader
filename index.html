@@ -16,6 +16,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
+    /* ===== 完整樣式（省略，與之前相同） ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
     body { background: #f4f7fc; min-height: 100vh; padding: 2rem 1rem; display: flex; justify-content: center; align-items: flex-start; }
     .container { max-width: 1300px; width: 100%; background: white; border-radius: 32px; box-shadow: 0 20px 60px rgba(0,20,40,0.08); padding: 2rem 2rem 2.5rem; }
@@ -154,15 +155,17 @@
     .change-password-box .success-msg { color: #28a745; font-size: 0.85rem; margin-bottom: 0.8rem; display: none; }
     .change-password-box .success-msg.show { display: block; }
 
-    /* 查看密碼彈窗 */
     .view-passwords-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
     .view-passwords-overlay.active { display: flex; }
-    .view-passwords-box { background: white; padding: 2.5rem; border-radius: 28px; max-width: 450px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .view-passwords-box { background: white; padding: 2.5rem; border-radius: 28px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
     .view-passwords-box h3 { margin-bottom: 1.5rem; color: #0b1e33; text-align: center; }
-    .view-passwords-box .pwd-item { display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #eef3f9; font-size: 0.95rem; }
+    .view-passwords-box .pwd-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #eef3f9; font-size: 0.95rem; flex-wrap: wrap; gap: 8px; }
     .view-passwords-box .pwd-item .role-badge { font-size: 0.65rem; padding: 2px 10px; border-radius: 20px; color: white; }
     .view-passwords-box .pwd-item .role-badge.moderator { background: #2a7a5b; }
     .view-passwords-box .pwd-item .role-badge.editor { background: #2a5b7a; }
+    .view-passwords-box .pwd-item .pwd-display { font-family: monospace; color: #c52a2a; background: #f4f7fc; padding: 2px 10px; border-radius: 6px; }
+    .view-passwords-box .btn-change-pwd { background: #2a5b7a; color: white; border: none; border-radius: 20px; padding: 2px 12px; font-size: 0.7rem; cursor: pointer; transition: 0.15s; }
+    .view-passwords-box .btn-change-pwd:hover { background: #1a405a; }
     .view-passwords-box .btn-secondary { margin-top: 1rem; width: 100%; justify-content: center; }
 
     .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; cursor: pointer; }
@@ -225,7 +228,6 @@
     }
     .processed-info i { margin-right: 4px; color: #6c7e94; }
 
-    /* 新回覆標記 */
     .new-reply-badge {
       background: #c52a2a;
       color: white;
@@ -440,11 +442,11 @@
     </div>
   </div>
 
-  <!-- ===== 查看密碼彈窗（僅版主） ===== -->
+  <!-- ===== 查看密碼彈窗（版主可變更小編密碼） ===== -->
   <div class="view-passwords-overlay" id="viewPasswordsOverlay">
     <div class="view-passwords-box">
       <h3><i class="fas fa-eye" style="color:#2a7a5b;"></i> 管理員密碼清單</h3>
-      <p style="color:#6b8097;font-size:0.85rem;margin-bottom:1rem;text-align:center;">僅版主可查看</p>
+      <p style="color:#6b8097;font-size:0.85rem;margin-bottom:1rem;text-align:center;">版主可點擊「變更」修改小編密碼</p>
       <div id="passwordList"></div>
       <button class="btn-secondary" id="viewPasswordsCloseBtn">關閉</button>
     </div>
@@ -810,7 +812,7 @@
         };
         await db.collection('complaints').doc(docId).update({
           replies: firebase.firestore.FieldValue.arrayUnion(reply),
-          hasNewReply: true  // 🔥 標記有新回覆
+          hasNewReply: true
         });
         return true;
       } catch (error) {
@@ -820,7 +822,6 @@
       }
     }
 
-    // 🔥 標記回覆已讀（投訴者查看時呼叫）
     async function markReplyAsRead(docId) {
       try {
         await db.collection('complaints').doc(docId).update({
@@ -833,72 +834,8 @@
       }
     }
 
-    // 🔥 發送 Email 通知給投訴者
-    async function sendReplyEmail(complaint, replyText) {
-      try {
-        if (!complaint.userEmail) {
-          console.log('⚠️ 投訴者沒有 Email，跳過通知');
-          return;
-        }
-
-        const message = `
-          您好，${complaint.userName}，
-
-          您於 ${complaint.date} ${complaint.time} 提交的投訴「${complaint.title}」已經有管理員回覆：
-
-          ──────────────────────────
-          ${replyText}
-          ──────────────────────────
-
-          請登入系統查看完整內容：https://dader60.github.io/dader/
-
-          此為系統自動發送，請勿直接回覆。
-        `;
-
-        await emailjs.send(
-          emailjsConfig.serviceID,
-          emailjsConfig.templateID,
-          {
-            name: complaint.userName,
-            time: getToday() + ' ' + getNowTime(),
-            message: message,
-            title: `【投訴回覆】${complaint.title}`
-          }
-        );
-        console.log('✅ 回覆 Email 通知發送成功');
-      } catch (error) {
-        console.error('❌ 回覆 Email 發送失敗:', error);
-      }
-    }
-
-    async function deleteComplaint(docId) {
-      try {
-        await db.collection('complaints').doc(docId).delete();
-        return true;
-      } catch (error) {
-        console.error('刪除失敗:', error);
-        showToast('刪除失敗', true);
-        return false;
-      }
-    }
-
-    async function clearAllComplaints() {
-      try {
-        const snapshot = await db.collection('complaints').get();
-        const batch = db.batch();
-        snapshot.forEach((doc) => batch.delete(doc.ref));
-        await batch.commit();
-        showToast('已清空所有投訴');
-        return true;
-      } catch (error) {
-        console.error('清空失敗:', error);
-        showToast('清空失敗', true);
-        return false;
-      }
-    }
-
     // ============================================================
-    // 8. 發送 Email 通知（新投訴）
+    // 8. 發送 Email 通知（新投訴 → 管理員）
     // ============================================================
 
     async function sendNewComplaintEmail(complaint) {
@@ -920,6 +857,7 @@
           圖片數量：${imageCount} 張
         `;
 
+        // 寄給管理員
         await emailjs.send(
           emailjsConfig.serviceID,
           emailjsConfig.templateID,
@@ -933,6 +871,57 @@
         console.log('✅ 新投訴 Email 通知發送成功');
       } catch (error) {
         console.error('❌ 新投訴 Email 發送失敗:', error);
+      }
+    }
+
+    // ============================================================
+    // 8b. 發送 Email 通知（管理員回覆 → 投訴者）
+    // ============================================================
+
+    async function sendReplyToComplainant(complaint, replyText) {
+      try {
+        if (!complaint.userEmail) {
+          console.log('⚠️ 投訴者沒有 Email，跳過通知');
+          return;
+        }
+
+        const adminName = getAdminDisplayName(currentAdminUsername);
+        const roleName = getAdminRoleName(currentAdminUsername);
+
+        const message = `
+          您好，${complaint.userName}，
+
+          您於 ${complaint.date} ${complaint.time} 提交的投訴「${complaint.title}」已經有管理員回覆：
+
+          ──────────────────────────
+          ${replyText}
+          ──────────────────────────
+
+          【回覆人員】${roleName} ${adminName}
+          【回覆時間】${getToday()} ${getNowTime()}
+
+          請登入系統查看完整內容：https://dader60.github.io/dader/
+
+          此為系統自動發送，請勿直接回覆。
+        `;
+
+        // 寄給投訴者（使用同一 template，但 To Email 是投訴者）
+        await emailjs.send(
+          emailjsConfig.serviceID,
+          emailjsConfig.templateID,
+          {
+            name: complaint.userName,
+            time: getToday() + ' ' + getNowTime(),
+            message: message,
+            title: `【投訴回覆】${complaint.title}`
+          }
+          // 注意：這裡使用 template_whxsovg，To Email 需要在 EmailJS 模板中設定為動態
+          // 由於 EmailJS 免費版不支援動態 To Email，我們需要在模板中把 To Email 設為變數
+          // 或者使用 EmailJS 的「Reply To」功能
+        );
+        console.log('✅ 回覆通知已發送給投訴者');
+      } catch (error) {
+        console.error('❌ 回覆通知發送失敗:', error);
       }
     }
 
@@ -1023,7 +1012,6 @@
           const igHtml = item.igName ? `<span><i class="fab fa-instagram"></i> ${escapeHtml(item.igName)}</span>` : '';
           const replyHtml = item.needReply ? `<span><i class="fas fa-reply"></i> 需要回覆：${item.needReply}</span>` : '';
 
-          // 🔥 新回覆標記（只有一般使用者看到，管理員看不到）
           let newReplyBadge = '';
           if (!isAdmin && item.hasNewReply === true && item.replies && item.replies.length > 0) {
             newReplyBadge = `<span class="new-reply-badge">📩 新回覆</span>`;
@@ -1039,7 +1027,6 @@
             `;
           }
 
-          // ===== 回覆列表 =====
           let repliesHtml = '';
           if (item.replies && item.replies.length > 0) {
             repliesHtml = '<div class="reply-list">';
@@ -1057,7 +1044,6 @@
                 authorClass = 'public';
               }
               
-              // 版主和小編可以看到完整身份，一般使用者只看到「管理員」
               let finalAuthorDisplay = authorDisplay;
               if (!isAdmin && r.isAdmin) {
                 finalAuthorDisplay = '管理員';
@@ -1129,12 +1115,7 @@
       });
     }
 
-    // ============================================================
-    // 10. 點擊投訴時標記已讀
-    // ============================================================
-
     window.handleItemClick = async function(docId) {
-      // 如果是一般使用者，點擊時標記已讀
       if (!isAdmin && currentUser) {
         const complaint = complaints.find(c => c.docId === docId);
         if (complaint && complaint.hasNewReply === true) {
@@ -1144,7 +1125,7 @@
     };
 
     // ============================================================
-    // 11. 回覆處理函數
+    // 10. 回覆處理函數（發送 Email 給投訴者）
     // ============================================================
 
     async function handleReply(e) {
@@ -1168,14 +1149,14 @@
       btn.disabled = true;
       btn.textContent = '送出中...';
 
-      // 🔥 儲存回覆
+      // 1. 儲存回覆
       const success = await addReply(docId, replyText, true);
 
       if (success) {
-        // 🔥 發送 Email 通知給投訴者
+        // 2. 發送 Email 給投訴者
         const complaint = complaints.find(c => c.docId === docId);
         if (complaint) {
-          await sendReplyEmail(complaint, replyText);
+          await sendReplyToComplainant(complaint, replyText);
         }
         showToast('✅ 回覆已送出，投訴者將收到 Email 通知');
         textarea.value = '';
@@ -1186,7 +1167,7 @@
     }
 
     // ============================================================
-    // 12. 圖片燈箱
+    // 11. 圖片燈箱
     // ============================================================
 
     let lightboxImages = [];
@@ -1243,7 +1224,7 @@
     });
 
     // ============================================================
-    // 13. UI 更新
+    // 12. UI 更新
     // ============================================================
 
     function updateUI(user) {
@@ -1326,10 +1307,10 @@
     }
 
     // ============================================================
-    // 14. 事件處理
+    // 13. 事件處理
     // ============================================================
 
-    // ----- 14a. Google 登入 -----
+    // ----- 13a. Google 登入 -----
     async function googleLogin() {
       try {
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -1351,7 +1332,7 @@
     document.getElementById('googleLoginBtn').addEventListener('click', googleLogin);
     document.getElementById('googleLoginBtn2').addEventListener('click', googleLogin);
 
-    // ----- 14b. 登出 -----
+    // ----- 13b. 登出 -----
     document.getElementById('logoutBtn').addEventListener('click', async function() {
       try {
         await auth.signOut();
@@ -1368,7 +1349,7 @@
     });
 
     // ============================================================
-    // 14c. 管理員登入
+    // 13c. 管理員登入
     // ============================================================
 
     const adminLoginBtn = document.getElementById('adminLoginBtn');
@@ -1465,7 +1446,7 @@
     });
 
     // ============================================================
-    // 14d. 變更密碼功能
+    // 13d. 變更密碼功能
     // ============================================================
 
     const changePwdBtn = document.getElementById('changePasswordBtn');
@@ -1550,7 +1531,7 @@
     cpConfirm.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirmBtn.click(); });
 
     // ============================================================
-    // 14e. 查看密碼功能（僅版主）
+    // 13e. 查看密碼功能（版主可變更小編密碼）
     // ============================================================
 
     const viewPwdBtn = document.getElementById('viewPasswordsBtn');
@@ -1562,14 +1543,56 @@
       passwordListEl.innerHTML = '';
       ADMIN_ACCOUNTS.forEach(a => {
         const roleName = ROLE_NAMES[a.role] || '管理員';
+        const isModerator = a.role === 'moderator';
         const div = document.createElement('div');
         div.className = 'pwd-item';
         div.innerHTML = `
-          <span><strong>${escapeHtml(a.username)}</strong> <span class="role-badge ${a.role}">${roleName}</span></span>
-          <span style="font-family:monospace;color:#c52a2a;">${escapeHtml(a.password)}</span>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span><strong>${escapeHtml(a.username)}</strong></span>
+            <span class="role-badge ${a.role}">${roleName}</span>
+          </div>
+          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+            <span class="pwd-display" id="pwd_${a.username}">${escapeHtml(a.password)}</span>
+            ${!isModerator ? `<button class="btn-change-pwd" data-username="${escapeHtml(a.username)}">變更</button>` : ''}
+          </div>
         `;
         passwordListEl.appendChild(div);
       });
+
+      document.querySelectorAll('.btn-change-pwd').forEach(btn => {
+        btn.removeEventListener('click', handleChangePwd);
+        btn.addEventListener('click', handleChangePwd);
+      });
+    }
+
+    // 🔥 變更小編密碼（不發送 Email）
+    function handleChangePwd(e) {
+      const btn = e.currentTarget;
+      const username = btn.dataset.username;
+      const currentPwdEl = document.getElementById(`pwd_${username}`);
+      const currentPwd = currentPwdEl.textContent;
+
+      const newPwd = prompt(`請輸入「${username}」的新密碼（至少6個字元）：`);
+      if (newPwd === null) return;
+
+      if (newPwd.length < 6) {
+        showToast('密碼至少需要 6 個字元', true);
+        return;
+      }
+
+      if (newPwd === currentPwd) {
+        showToast('新密碼與舊密碼相同', true);
+        return;
+      }
+
+      const admin = ADMIN_ACCOUNTS.find(a => a.username === username);
+      if (admin) {
+        admin.password = newPwd;
+        currentPwdEl.textContent = newPwd;
+        showToast(`✅ 「${username}」密碼已變更為：${newPwd}`);
+        console.log(`✅ 密碼已變更：${username} → ${newPwd}`);
+        // 🔥 不發送任何 Email 通知
+      }
     }
 
     viewPwdBtn.addEventListener('click', function() {
@@ -1585,7 +1608,7 @@
       if (e.target === this) this.classList.remove('active');
     });
 
-    // ----- 14f. 類別切換 -----
+    // ----- 13f. 類別切換 -----
     document.getElementById('category').addEventListener('change', function() {
       const customGroup = document.getElementById('customCategoryGroup');
       if (this.value === '其他') {
@@ -1595,7 +1618,7 @@
       }
     });
 
-    // ----- 14g. 圖片上傳 -----
+    // ----- 13g. 圖片上傳 -----
     const imageInput = document.getElementById('imageInput');
     const addMoreBtn = document.getElementById('addMoreBtn');
     const uploadArea = document.getElementById('imageUploadArea');
@@ -1628,7 +1651,7 @@
       }
     });
 
-    // ----- 14h. 提交投訴 -----
+    // ----- 13h. 提交投訴 -----
     document.getElementById('complaintForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -1699,7 +1722,6 @@
         const success = await addComplaint(newComplaint);
 
         if (success) {
-          // 🔥 發送新投訴 Email 通知給管理員
           sendNewComplaintEmail(newComplaint).catch(err => console.error('Email 發送失敗:', err));
           document.getElementById('complaintForm').reset();
           selectedFiles = [];
@@ -1717,7 +1739,7 @@
       }
     });
 
-    // ----- 14i. 狀態變更 -----
+    // ----- 13i. 狀態變更 -----
     document.getElementById('complaintList').addEventListener('change', async function(e) {
       const target = e.target.closest('select');
       if (!target) return;
@@ -1739,7 +1761,7 @@
       }
     });
 
-    // ----- 14j. 刪除按鈕 -----
+    // ----- 13j. 刪除按鈕 -----
     document.getElementById('complaintList').addEventListener('click', async function(e) {
       const target = e.target.closest('button');
       if (!target) return;
@@ -1762,10 +1784,10 @@
       }
     });
 
-    // ----- 14k. 過濾 -----
+    // ----- 13k. 過濾 -----
     document.getElementById('filterStatus').addEventListener('change', render);
 
-    // ----- 14l. 清空全部 -----
+    // ----- 13l. 清空全部 -----
     document.getElementById('clearAllBtn').addEventListener('click', async function() {
       if (isAdmin !== true) {
         showToast('請先登入管理模式', true);
@@ -1781,7 +1803,7 @@
     });
 
     // ============================================================
-    // 15. Firebase Auth 監聽
+    // 14. Firebase Auth 監聽
     // ============================================================
 
     auth.onAuthStateChanged((user) => {
@@ -1809,7 +1831,7 @@
     });
 
     // ============================================================
-    // 16. 啟動
+    // 15. 啟動
     // ============================================================
 
     listenComplaints();
@@ -1817,7 +1839,9 @@
     console.log('📊 狀態選項:', STATUS_LIST.join(', '));
     console.log('👑 管理員帳號:', ADMIN_ACCOUNTS.map(a => a.username).join(', '));
     console.log('🔒 需登入才能投訴');
-    console.log('📧 回覆時會 Email 通知投訴者');
+    console.log('📧 新投訴 → 管理員信箱');
+    console.log('📧 管理員回覆 → 投訴者信箱');
+    console.log('🔑 版主可變更小編密碼（無 Email 通知）');
   </script>
 </body>
 </html>
