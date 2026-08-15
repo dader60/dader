@@ -29,10 +29,9 @@
     .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: #c52a2a; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; }
     .user-name { font-weight: 500; color: #1a2c44; }
     .user-role { font-size: 0.75rem; color: #7e93ab; background: #eef3f9; padding: 0.15rem 0.8rem; border-radius: 40px; }
-    .user-role.owner { background: #c52a2a; color: white; }
+    .user-role.admin { background: #c52a2a; color: white; }
     .user-role.moderator { background: #2a7a5b; color: white; }
-    .user-role.vice { background: #2a5b7a; color: white; }
-    .user-role.editor { background: #7a5b2a; color: white; }
+    .user-role.editor { background: #2a5b7a; color: white; }
     .btn-google { background: white; border: 1px solid #d7dfe9; border-radius: 40px; padding: 0.4rem 1.2rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-weight: 500; color: #2a405b; transition: 0.15s; font-size: 0.9rem; }
     .btn-google:hover { background: #f4f8ff; border-color: #b0c0d0; }
     .btn-google svg { width: 18px; height: 18px; }
@@ -157,19 +156,16 @@
 
     .view-passwords-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
     .view-passwords-overlay.active { display: flex; }
-    .view-passwords-box { background: white; padding: 2.5rem; border-radius: 28px; max-width: 550px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .view-passwords-box { background: white; padding: 2.5rem; border-radius: 28px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
     .view-passwords-box h3 { margin-bottom: 1.5rem; color: #0b1e33; text-align: center; }
     .view-passwords-box .pwd-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #eef3f9; font-size: 0.95rem; flex-wrap: wrap; gap: 8px; }
     .view-passwords-box .pwd-item .role-badge { font-size: 0.65rem; padding: 2px 10px; border-radius: 20px; color: white; }
-    .view-passwords-box .pwd-item .role-badge.owner { background: #c52a2a; }
     .view-passwords-box .pwd-item .role-badge.moderator { background: #2a7a5b; }
-    .view-passwords-box .pwd-item .role-badge.vice { background: #2a5b7a; }
-    .view-passwords-box .pwd-item .role-badge.editor { background: #7a5b2a; }
+    .view-passwords-box .pwd-item .role-badge.editor { background: #2a5b7a; }
     .view-passwords-box .pwd-item .pwd-display { font-family: monospace; color: #c52a2a; background: #f4f7fc; padding: 2px 10px; border-radius: 6px; }
     .view-passwords-box .btn-change-pwd { background: #2a5b7a; color: white; border: none; border-radius: 20px; padding: 2px 12px; font-size: 0.7rem; cursor: pointer; transition: 0.15s; }
     .view-passwords-box .btn-change-pwd:hover { background: #1a405a; }
     .view-passwords-box .btn-secondary { margin-top: 1rem; width: 100%; justify-content: center; }
-    .view-passwords-box .pwd-item .no-change { font-size: 0.7rem; color: #8a9db0; font-style: italic; }
 
     .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; cursor: pointer; }
     .lightbox.active { display: flex; }
@@ -445,13 +441,11 @@
     </div>
   </div>
 
-  <!-- ===== 查看密碼彈窗 ===== -->
+  <!-- ===== 查看密碼彈窗（版主可變更小編密碼） ===== -->
   <div class="view-passwords-overlay" id="viewPasswordsOverlay">
     <div class="view-passwords-box">
       <h3><i class="fas fa-eye" style="color:#2a7a5b;"></i> 管理員密碼清單</h3>
-      <p style="color:#6b8097;font-size:0.85rem;margin-bottom:1rem;text-align:center;">
-        <span id="viewPwdHint">根據權限顯示可查看/變更的帳號</span>
-      </p>
+      <p style="color:#6b8097;font-size:0.85rem;margin-bottom:1rem;text-align:center;">版主可點擊「變更」修改小編密碼</p>
       <div id="passwordList"></div>
       <button class="btn-secondary" id="viewPasswordsCloseBtn">關閉</button>
     </div>
@@ -489,14 +483,12 @@
       publicKey: "KU2Ya4rXsyHXopGAM"
     };
 
-    // ===== 管理員帳號（新結構） =====
+    // ===== 固定管理員帳號 =====
     let ADMIN_ACCOUNTS = [
-      { username: "dader60", password: "dader6020230527", role: "owner", roleName: "所有權", displayName: "所有權" },
-      { username: "dader00", password: "dader6000941010@", role: "moderator", roleName: "版主", displayName: "版主" },
-      { username: "dader01", password: "dader6000941010@", role: "vice", roleName: "副版主", displayName: "副版主" },
-      { username: "dader02", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編01" },
-      { username: "dader03", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編02" },
-      { username: "dader04", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編03" }
+      { username: "dader60", password: "dader600909575253h", role: "moderator", roleName: "版主", displayName: "版主" },
+      { username: "dader01", password: "dader600909575253h", role: "editor", roleName: "小編", displayName: "小編01" },
+      { username: "dader02", password: "dader600909575253h", role: "editor", roleName: "小編", displayName: "小編02" },
+      { username: "dader03", password: "dader600909575253h", role: "editor", roleName: "小編", displayName: "小編03" }
     ];
 
     const MAX_IMAGES = 10;
@@ -512,13 +504,9 @@
     ];
 
     const ROLE_NAMES = {
-      owner: '所有權',
       moderator: '版主',
-      vice: '副版主',
       editor: '小編'
     };
-
-    const ROLE_ORDER = ['owner', 'moderator', 'vice', 'editor'];
 
     // ============================================================
     // 2. 初始化
@@ -613,42 +601,6 @@
         admin.password = newPassword;
         return true;
       }
-      return false;
-    }
-
-    // 檢查權限：誰可以變更誰的密碼
-    function canChangePassword(operator, target) {
-      const operatorRole = getAdminRole(operator);
-      const targetRole = getAdminRole(target);
-      
-      // 所有權可以變更所有人
-      if (operatorRole === 'owner') return true;
-      // 版主不能變更所有權
-      if (operatorRole === 'moderator' && targetRole === 'owner') return false;
-      // 版主可以變更版主以下（副版主、小編）
-      if (operatorRole === 'moderator' && targetRole !== 'owner') return true;
-      // 副版主只能變更小編
-      if (operatorRole === 'vice' && targetRole === 'editor') return true;
-      // 自己只能變更自己
-      if (operator === target) return true;
-      // 其他人不能變更
-      return false;
-    }
-
-    // 檢查權限：誰可以查看誰的密碼
-    function canViewPassword(operator, target) {
-      const operatorRole = getAdminRole(operator);
-      const targetRole = getAdminRole(target);
-      
-      // 所有權可以看所有人
-      if (operatorRole === 'owner') return true;
-      // 版主可以看版主以下（副版主、小編）
-      if (operatorRole === 'moderator' && targetRole !== 'owner') return true;
-      // 副版主可以看小編
-      if (operatorRole === 'vice' && targetRole === 'editor') return true;
-      // 自己可以看自己
-      if (operator === target) return true;
-      // 其他人不能看
       return false;
     }
 
@@ -1302,7 +1254,7 @@
     };
 
     // ============================================================
-    // 10. 回覆處理函數
+    // 10. 回覆處理函數（發送 Email 給投訴者）
     // ============================================================
 
     async function handleReply(e) {
@@ -1436,8 +1388,7 @@
           roleDisplay.textContent = roleName;
           roleDisplay.className = `user-role ${role}`;
           changePwdBtn.classList.add('show');
-          // 所有權和版主可以查看密碼
-          if (role === 'owner' || role === 'moderator') {
+          if (role === 'moderator') {
             viewPwdBtn.classList.add('show');
           } else {
             viewPwdBtn.classList.remove('show');
@@ -1483,7 +1434,7 @@
           roleDisplay.textContent = roleName;
           roleDisplay.className = `user-role ${role}`;
           changePwdBtn.classList.add('show');
-          if (role === 'owner' || role === 'moderator') {
+          if (role === 'moderator') {
             viewPwdBtn.classList.add('show');
           } else {
             viewPwdBtn.classList.remove('show');
@@ -1609,7 +1560,7 @@
         if (changePwdBtn) changePwdBtn.classList.add('show');
         
         const viewPwdBtn = document.getElementById('viewPasswordsBtn');
-        if (found.role === 'owner' || found.role === 'moderator') {
+        if (found.role === 'moderator') {
           viewPwdBtn.classList.add('show');
         } else {
           viewPwdBtn.classList.remove('show');
@@ -1642,7 +1593,7 @@
     });
 
     // ============================================================
-    // 13d. 變更密碼功能（權限控制）
+    // 13d. 變更密碼功能（版主/小編變更自己的密碼，雲端同步）
     // ============================================================
 
     const changePwdBtn = document.getElementById('changePasswordBtn');
@@ -1714,6 +1665,7 @@
 
       updateAdminPassword(currentAdminUsername, newPwd);
       
+      // 🔥 更新所有密碼顯示元素
       document.querySelectorAll('.pwd-display').forEach(el => {
         const uname = el.id.replace('pwd_', '');
         const found = ADMIN_ACCOUNTS.find(a => a.username === uname);
@@ -1738,7 +1690,7 @@
     cpConfirm.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirmBtn.click(); });
 
     // ============================================================
-    // 13e. 查看密碼功能（權限控制）
+    // 13e. 查看密碼功能（版主可變更小編密碼，雲端同步）
     // ============================================================
 
     const viewPwdBtn = document.getElementById('viewPasswordsBtn');
@@ -1748,32 +1700,11 @@
 
     function renderPasswordList() {
       passwordListEl.innerHTML = '';
-      
       ADMIN_ACCOUNTS.forEach(a => {
         const roleName = ROLE_NAMES[a.role] || '管理員';
-        const isOwner = a.role === 'owner';
         const isModerator = a.role === 'moderator';
-        const isVice = a.role === 'vice';
-        const isEditor = a.role === 'editor';
-        
-        // 檢查權限：是否可以查看
-        const canView = canViewPassword(currentAdminUsername, a.username);
-        // 檢查權限：是否可以變更
-        const canChange = canChangePassword(currentAdminUsername, a.username);
-        
-        // 如果沒有權限查看，跳過
-        if (!canView) return;
-        
         const div = document.createElement('div');
         div.className = 'pwd-item';
-        
-        let actionHtml = '';
-        if (canChange) {
-          actionHtml = `<button class="btn-change-pwd" data-username="${escapeHtml(a.username)}">變更</button>`;
-        } else {
-          actionHtml = `<span class="no-change">唯讀</span>`;
-        }
-        
         div.innerHTML = `
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <span><strong>${escapeHtml(a.username)}</strong></span>
@@ -1781,7 +1712,7 @@
           </div>
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <span class="pwd-display" id="pwd_${a.username}">${escapeHtml(a.password)}</span>
-            ${actionHtml}
+            ${!isModerator ? `<button class="btn-change-pwd" data-username="${escapeHtml(a.username)}">變更</button>` : ''}
           </div>
         `;
         passwordListEl.appendChild(div);
@@ -1793,18 +1724,12 @@
       });
     }
 
-    // 🔥 變更密碼（權限控制）
+    // 🔥 變更小編密碼（版主變更，雲端同步）
     async function handleChangePwd(e) {
       const btn = e.currentTarget;
       const username = btn.dataset.username;
       const currentPwdEl = document.getElementById(`pwd_${username}`);
       const currentPwd = currentPwdEl.textContent;
-
-      // 再次檢查權限
-      if (!canChangePassword(currentAdminUsername, username)) {
-        showToast('您沒有權限變更此帳號的密碼', true);
-        return;
-      }
 
       const newPwd = prompt(`請輸入「${username}」的新密碼（至少6個字元）：`);
       if (newPwd === null) return;
@@ -1832,6 +1757,7 @@
     }
 
     viewPwdBtn.addEventListener('click', function() {
+      // 🔥 每次開啟都重新渲染，確保顯示最新密碼
       renderPasswordList();
       viewOverlay.classList.add('active');
     });
@@ -2080,8 +2006,9 @@
       console.log('🔒 需登入才能投訴');
       console.log('📧 新投訴 → 管理員信箱');
       console.log('📧 管理員回覆 → 投訴者信箱');
-      console.log('🔑 權限分級：所有權可查看/變更所有人，版主可查看/變更版主以下');
+      console.log('🔑 版主可變更小編密碼（雲端同步）');
       console.log('☁️ 密碼儲存在 Firestore 雲端，所有瀏覽器共享');
+      console.log('🔄 小編變更密碼後，版主查看密碼即時更新');
     })();
   </script>
 </body>
