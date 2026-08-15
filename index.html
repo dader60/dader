@@ -240,7 +240,7 @@
     <div class="top-nav">
       <div class="user-info" id="userInfo">
         <div class="user-avatar" id="userAvatar">👤</div>
-        <span class="user-name" id="userNameDisplay">未登入</span>
+        <span class="user-name" id="userNameDisplay"></span>
         <span class="user-role" id="userRoleDisplay">一般</span>
       </div>
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -961,7 +961,7 @@
             `;
           }
 
-          // ===== 回覆列表（包含身份顯示） =====
+          // ===== 回覆列表 =====
           let repliesHtml = '';
           if (item.replies && item.replies.length > 0) {
             repliesHtml = '<div class="reply-list">';
@@ -970,13 +970,11 @@
               let authorClass = 'public';
               
               if (r.isAdmin) {
-                // 管理員回覆 - 顯示具體身份（版主/小編01/小編02/小編03）
                 const roleName = r.authorRole || '管理員';
                 const displayName = r.authorDisplayName || '管理員';
                 authorDisplay = `${roleName} ${displayName}`;
                 authorClass = r.authorRole === 'moderator' ? 'moderator' : 'editor';
               } else {
-                // 一般使用者回覆
                 authorDisplay = item.userName || '使用者';
                 authorClass = 'public';
               }
@@ -1146,7 +1144,7 @@
     });
 
     // ============================================================
-    // 12. UI 更新
+    // 12. UI 更新（未登入時隱藏名稱）
     // ============================================================
 
     function updateUI(user) {
@@ -1165,7 +1163,18 @@
       if (user) {
         const displayName = user.displayName || user.email || '使用者';
         avatar.textContent = getInitials(displayName);
-        nameDisplay.textContent = `${displayName}，您好`;
+        
+        // 🔥 管理員顯示角色名稱，一般使用者顯示 Google 名稱
+        if (isAdmin === true) {
+          const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
+          if (adminInfo) {
+            nameDisplay.textContent = `${adminInfo.displayName} 您好`;
+          } else {
+            nameDisplay.textContent = `${displayName}，您好`;
+          }
+        } else {
+          nameDisplay.textContent = `${displayName}，您好`;
+        }
 
         if (isAdmin === true) {
           const role = getAdminRole(currentAdminUsername) || 'editor';
@@ -1197,7 +1206,8 @@
         }
       } else {
         avatar.textContent = '👤';
-        nameDisplay.textContent = '未登入';
+        // 🔥 未登入時隱藏名稱
+        nameDisplay.textContent = '';
         roleDisplay.textContent = '一般';
         roleDisplay.className = 'user-role';
         googleBtn.style.display = 'inline-flex';
@@ -1336,7 +1346,7 @@
         const nameDisplay = document.getElementById('userNameDisplay');
         if (currentUser) {
           const displayName = currentUser.displayName || currentUser.email || '使用者';
-          nameDisplay.textContent = `${displayName}，您好`;
+          nameDisplay.textContent = `${found.displayName} 您好`;
         }
         
         showToast(`✅ ${found.roleName}模式已啟用`);
@@ -1709,6 +1719,7 @@
     console.log('📊 狀態選項:', STATUS_LIST.join(', '));
     console.log('👑 管理員帳號:', ADMIN_ACCOUNTS.map(a => a.username).join(', '));
     console.log('🔒 需登入才能投訴');
+    console.log('👤 顯示方式：未登入隱藏 / 管理員顯示角色名稱');
   </script>
 </body>
 </html>
