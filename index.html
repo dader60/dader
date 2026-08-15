@@ -360,7 +360,8 @@
     // ============================================================
 
     let currentUser = null;
-    let isAdmin = false;
+    // 🔥 從 sessionStorage 讀取管理員狀態
+    let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
     let complaints = [];
     let unsubscribeSnapshot = null;
     let selectedFiles = [];
@@ -603,7 +604,7 @@
     }
 
     // ============================================================
-    // 8. 發送 Email 通知（不阻塞主流程）
+    // 8. 發送 Email 通知
     // ============================================================
 
     async function sendEmail(complaint) {
@@ -843,6 +844,7 @@
 
         if (isAdmin === true) {
           isAdmin = false;
+          sessionStorage.setItem('isAdmin', 'false');
           adminLoginBtn.textContent = '管理';
           adminLoginBtn.className = 'btn-admin-login';
         }
@@ -880,6 +882,7 @@
         await auth.signOut();
         currentUser = null;
         isAdmin = false;
+        sessionStorage.setItem('isAdmin', 'false');
         updateUI(null);
         showToast('已登出');
         render();
@@ -888,7 +891,7 @@
       }
     });
 
-    // ----- 12c. 管理員登入（修正重點）-----
+    // ----- 12c. 管理員登入（使用 sessionStorage）-----
     const adminLoginBtn = document.getElementById('adminLoginBtn');
     const adminOverlay = document.getElementById('adminLoginOverlay');
     const adminConfirmBtn = document.getElementById('adminLoginConfirmBtn');
@@ -899,6 +902,7 @@
     adminLoginBtn.addEventListener('click', function() {
       if (isAdmin === true) {
         isAdmin = false;
+        sessionStorage.setItem('isAdmin', 'false');
         this.textContent = '管理';
         this.className = 'btn-admin-login';
         updateUI(currentUser);
@@ -913,20 +917,18 @@
       }
     });
 
-    // 🔥 修正：直接使用常數比對，並強制設定 isAdmin
+    // 🔥 修正：使用 sessionStorage 儲存管理員狀態
     adminConfirmBtn.addEventListener('click', function() {
       const username = adminUsername.value.trim();
       const password = adminPassword.value.trim();
 
       console.log('🔑 輸入的帳號:', username);
       console.log('🔑 輸入的密碼:', password);
-      console.log('🔑 正確的帳號:', ADMIN_USERNAME);
-      console.log('🔑 正確的密碼:', ADMIN_PASSWORD);
 
-      // 直接比對常數
       if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-        // 強制設定 isAdmin 為 true
+        // 🔥 強制設定 isAdmin 為 true 並儲存到 sessionStorage
         isAdmin = true;
+        sessionStorage.setItem('isAdmin', 'true');
         adminOverlay.classList.remove('active');
         adminLoginBtn.textContent = '登出管理';
         adminLoginBtn.className = 'btn-admin-login active';
@@ -993,7 +995,7 @@
       }
     });
 
-    // ----- 12f. 提交投訴（修正：Email 不阻塞主流程）-----
+    // ----- 12f. 提交投訴（Email 不阻塞）-----
     document.getElementById('complaintForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -1027,14 +1029,12 @@
       submitBtn.disabled = true;
 
       try {
-        // 1. 上傳圖片
         let imageUrls = [];
         if (selectedFiles.length > 0) {
           submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上傳圖片中...';
           imageUrls = await uploadMultipleImages(selectedFiles);
         }
 
-        // 2. 儲存投訴（先完成這個，再發 Email）
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 儲存中...';
         const newComplaint = {
           id: newId,
@@ -1053,10 +1053,7 @@
         const success = await addComplaint(newComplaint);
 
         if (success) {
-          // 3. 發送 Email（不阻塞，失敗不影響）
           sendEmail(newComplaint).catch(err => console.error('Email 發送失敗:', err));
-          
-          // 4. 重置表單
           document.getElementById('complaintForm').reset();
           selectedFiles = [];
           updateImagePreview();
@@ -1142,8 +1139,16 @@
 
     auth.onAuthStateChanged((user) => {
       currentUser = user;
+      // 🔥 從 sessionStorage 讀取管理員狀態
+      const storedAdmin = sessionStorage.getItem('isAdmin');
+      if (storedAdmin === 'true') {
+        isAdmin = true;
+      } else {
+        isAdmin = false;
+      }
       if (!user && isAdmin === true) {
         isAdmin = false;
+        sessionStorage.setItem('isAdmin', 'false');
         adminLoginBtn.textContent = '管理';
         adminLoginBtn.className = 'btn-admin-login';
       }
@@ -1159,6 +1164,7 @@
     console.log('✅ 投訴系統已啟動');
     console.log('📊 狀態選項:', STATUS_LIST.join(', '));
     console.log('👑 管理員帳號:', ADMIN_USERNAME);
+    console.log('🔑 管理員狀態 (sessionStorage):', sessionStorage.getItem('isAdmin'));
   </script>
 </body>
 </html>
