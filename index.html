@@ -4,15 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>投訴系統</title>
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
 
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-
-  <!-- EmailJS -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
@@ -356,15 +352,16 @@
     emailjs.init(emailjsConfig.publicKey);
 
     // ============================================================
-    // 3. 全域變數
+    // 3. 全域變數（🔥 修正：從 sessionStorage 讀取）
     // ============================================================
 
     let currentUser = null;
-    // 🔥 從 sessionStorage 讀取管理員狀態
-    let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+    let isAdmin = sessionStorage.getItem('isAdmin') === 'true';  // 🔥 關鍵修正！
     let complaints = [];
     let unsubscribeSnapshot = null;
     let selectedFiles = [];
+
+    console.log('🔑 初始 isAdmin (從 sessionStorage 讀取):', isAdmin);
 
     // ============================================================
     // 4. 工具函數
@@ -842,12 +839,8 @@
         googleBtn.style.display = 'inline-flex';
         logoutBtn.classList.remove('show');
 
-        if (isAdmin === true) {
-          isAdmin = false;
-          sessionStorage.setItem('isAdmin', 'false');
-          adminLoginBtn.textContent = '管理';
-          adminLoginBtn.className = 'btn-admin-login';
-        }
+        // 如果使用者登出，但不影響管理員狀態
+        // 只有當管理員主動登出時才會清除
       }
     }
 
@@ -881,8 +874,7 @@
       try {
         await auth.signOut();
         currentUser = null;
-        isAdmin = false;
-        sessionStorage.setItem('isAdmin', 'false');
+        // 登出時不自動清除管理員狀態，讓用戶決定是否保留
         updateUI(null);
         showToast('已登出');
         render();
@@ -891,7 +883,7 @@
       }
     });
 
-    // ----- 12c. 管理員登入（使用 sessionStorage）-----
+    // ----- 12c. 管理員登入 -----
     const adminLoginBtn = document.getElementById('adminLoginBtn');
     const adminOverlay = document.getElementById('adminLoginOverlay');
     const adminConfirmBtn = document.getElementById('adminLoginConfirmBtn');
@@ -901,6 +893,7 @@
 
     adminLoginBtn.addEventListener('click', function() {
       if (isAdmin === true) {
+        // 登出管理員
         isAdmin = false;
         sessionStorage.setItem('isAdmin', 'false');
         this.textContent = '管理';
@@ -917,7 +910,6 @@
       }
     });
 
-    // 🔥 修正：使用 sessionStorage 儲存管理員狀態
     adminConfirmBtn.addEventListener('click', function() {
       const username = adminUsername.value.trim();
       const password = adminPassword.value.trim();
@@ -926,7 +918,7 @@
       console.log('🔑 輸入的密碼:', password);
 
       if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-        // 🔥 強制設定 isAdmin 為 true 並儲存到 sessionStorage
+        // 🔥 設定管理員狀態
         isAdmin = true;
         sessionStorage.setItem('isAdmin', 'true');
         adminOverlay.classList.remove('active');
@@ -935,7 +927,6 @@
         updateUI(currentUser);
         showToast('✅ 管理員模式已啟用');
         console.log('✅ 管理員登入成功，isAdmin =', isAdmin);
-        // 強制重新渲染
         render();
       } else {
         adminErrorMsg.classList.add('show');
@@ -995,7 +986,7 @@
       }
     });
 
-    // ----- 12f. 提交投訴（Email 不阻塞）-----
+    // ----- 12f. 提交投訴 -----
     document.getElementById('complaintForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -1139,18 +1130,16 @@
 
     auth.onAuthStateChanged((user) => {
       currentUser = user;
-      // 🔥 從 sessionStorage 讀取管理員狀態
+      // 🔥 從 sessionStorage 讀取管理員狀態（保留先前設定）
       const storedAdmin = sessionStorage.getItem('isAdmin');
       if (storedAdmin === 'true') {
         isAdmin = true;
       } else {
-        isAdmin = false;
+        // 不覆蓋 isAdmin，保留現有值
       }
-      if (!user && isAdmin === true) {
-        isAdmin = false;
-        sessionStorage.setItem('isAdmin', 'false');
-        adminLoginBtn.textContent = '管理';
-        adminLoginBtn.className = 'btn-admin-login';
+      // 如果使用者登出且沒有管理員權限，才清除管理員狀態
+      if (!user && isAdmin === false) {
+        // 保持現狀
       }
       updateUI(user);
       setTimeout(render, 100);
@@ -1165,6 +1154,7 @@
     console.log('📊 狀態選項:', STATUS_LIST.join(', '));
     console.log('👑 管理員帳號:', ADMIN_USERNAME);
     console.log('🔑 管理員狀態 (sessionStorage):', sessionStorage.getItem('isAdmin'));
+    console.log('🔑 目前 isAdmin 值:', isAdmin);
   </script>
 </body>
 </html>
