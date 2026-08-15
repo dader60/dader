@@ -16,7 +16,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
-    /* ===== 完整樣式（省略，與之前相同） ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
     body { background: #f4f7fc; min-height: 100vh; padding: 2rem 1rem; display: flex; justify-content: center; align-items: flex-start; }
     .container { max-width: 1300px; width: 100%; background: white; border-radius: 32px; box-shadow: 0 20px 60px rgba(0,20,40,0.08); padding: 2rem 2rem 2.5rem; }
@@ -835,7 +834,7 @@
     }
 
     // ============================================================
-    // 8. 發送 Email 通知（新投訴 → 管理員）
+    // 8a. 發送 Email 通知（新投訴 → 管理員）
     // ============================================================
 
     async function sendNewComplaintEmail(complaint) {
@@ -857,15 +856,16 @@
           圖片數量：${imageCount} 張
         `;
 
-        // 寄給管理員
+        // 🔥 寄給管理員
         await emailjs.send(
           emailjsConfig.serviceID,
           emailjsConfig.templateID,
           {
-            name: complaint.userName,
-            time: `${complaint.date} ${complaint.time || ''}`,
+            to_email: "dader60dader@gmail.com",  // 🔥 管理員信箱
+            subject: `【新投訴】${complaint.title}`,
             message: message,
-            title: complaint.title
+            name: complaint.userName,
+            time: `${complaint.date} ${complaint.time || ''}`
           }
         );
         console.log('✅ 新投訴 Email 通知發送成功');
@@ -905,23 +905,47 @@
           此為系統自動發送，請勿直接回覆。
         `;
 
-        // 寄給投訴者（使用同一 template，但 To Email 是投訴者）
+        // 🔥 寄給投訴者
         await emailjs.send(
           emailjsConfig.serviceID,
           emailjsConfig.templateID,
           {
-            name: complaint.userName,
-            time: getToday() + ' ' + getNowTime(),
+            to_email: complaint.userEmail,  // 🔥 投訴者的 Email
+            subject: `【投訴回覆】${complaint.title}`,
             message: message,
-            title: `【投訴回覆】${complaint.title}`
+            name: complaint.userName,
+            time: getToday() + ' ' + getNowTime()
           }
-          // 注意：這裡使用 template_whxsovg，To Email 需要在 EmailJS 模板中設定為動態
-          // 由於 EmailJS 免費版不支援動態 To Email，我們需要在模板中把 To Email 設為變數
-          // 或者使用 EmailJS 的「Reply To」功能
         );
         console.log('✅ 回覆通知已發送給投訴者');
       } catch (error) {
         console.error('❌ 回覆通知發送失敗:', error);
+      }
+    }
+
+    async function deleteComplaint(docId) {
+      try {
+        await db.collection('complaints').doc(docId).delete();
+        return true;
+      } catch (error) {
+        console.error('刪除失敗:', error);
+        showToast('刪除失敗', true);
+        return false;
+      }
+    }
+
+    async function clearAllComplaints() {
+      try {
+        const snapshot = await db.collection('complaints').get();
+        const batch = db.batch();
+        snapshot.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
+        showToast('已清空所有投訴');
+        return true;
+      } catch (error) {
+        console.error('清空失敗:', error);
+        showToast('清空失敗', true);
+        return false;
       }
     }
 
@@ -1244,6 +1268,7 @@
         const displayName = user.displayName || user.email || '使用者';
         avatar.textContent = getInitials(displayName);
         
+        // 🔥 管理員顯示角色名稱，一般使用者顯示 Google 名稱
         if (isAdmin === true) {
           const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
           if (adminInfo) {
@@ -1285,6 +1310,7 @@
         }
       } else {
         avatar.textContent = '👤';
+        // 🔥 未登入時隱藏名稱
         nameDisplay.textContent = '';
         roleDisplay.textContent = '一般';
         roleDisplay.className = 'user-role';
@@ -1722,6 +1748,7 @@
         const success = await addComplaint(newComplaint);
 
         if (success) {
+          // 🔥 發送新投訴 Email 給管理員
           sendNewComplaintEmail(newComplaint).catch(err => console.error('Email 發送失敗:', err));
           document.getElementById('complaintForm').reset();
           selectedFiles = [];
