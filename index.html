@@ -1120,7 +1120,10 @@
       }
     });
 
-    // ----- 13c. 管理員登入 -----
+    // ============================================================
+    // 13c. 管理員登入（🔧 修正：強制保留管理員狀態）
+    // ============================================================
+
     const adminLoginBtn = document.getElementById('adminLoginBtn');
     const adminOverlay = document.getElementById('adminLoginOverlay');
     const adminConfirmBtn = document.getElementById('adminLoginConfirmBtn');
@@ -1134,6 +1137,18 @@
         sessionStorage.setItem('isAdmin', 'false');
         this.textContent = '管理';
         this.className = 'btn-admin-login';
+        
+        // 更新 UI
+        const roleDisplay = document.getElementById('userRoleDisplay');
+        if (roleDisplay) {
+          roleDisplay.textContent = '一般使用者';
+          roleDisplay.className = 'user-role';
+        }
+        const changePwdBtn = document.getElementById('changePasswordBtn');
+        if (changePwdBtn) {
+          changePwdBtn.classList.remove('show');
+        }
+        
         updateUI(currentUser);
         showToast('已登出管理模式');
         render();
@@ -1156,14 +1171,36 @@
       console.log('🔑 管理員登入 - 正確密碼:', ADMIN_PASSWORD);
 
       if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        // 🔥 強制設定管理員狀態
         isAdmin = true;
         sessionStorage.setItem('isAdmin', 'true');
         adminOverlay.classList.remove('active');
         adminLoginBtn.textContent = '登出管理';
         adminLoginBtn.className = 'btn-admin-login active';
-        updateUI(currentUser);
+        
+        // 🔥 直接更新 UI
+        const roleDisplay = document.getElementById('userRoleDisplay');
+        if (roleDisplay) {
+          roleDisplay.textContent = '管理員';
+          roleDisplay.className = 'user-role admin';
+        }
+        
+        const changePwdBtn = document.getElementById('changePasswordBtn');
+        if (changePwdBtn) {
+          changePwdBtn.classList.add('show');
+        }
+        
+        // 更新 user info 中的名稱
+        const nameDisplay = document.getElementById('userNameDisplay');
+        if (currentUser) {
+          const displayName = currentUser.displayName || currentUser.email || '使用者';
+          nameDisplay.textContent = `${displayName}，您好`;
+        }
+        
         showToast('✅ 管理員模式已啟用');
         console.log('✅ 管理員登入成功，isAdmin =', isAdmin);
+        
+        // 🔥 強制重新渲染
         render();
       } else {
         adminErrorMsg.classList.add('show');
@@ -1460,11 +1497,11 @@
     });
 
     // ============================================================
-    // 14. Firebase Auth 監聽（🔧 修正：保留管理員狀態）
+    // 14. Firebase Auth 監聽
     // ============================================================
 
     auth.onAuthStateChanged((user) => {
-      // 只有在 user 改變時才更新，不要覆蓋管理員狀態
+      // 更新 currentUser
       if (user !== currentUser) {
         currentUser = user;
       }
