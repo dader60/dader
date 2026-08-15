@@ -224,6 +224,22 @@
       display: inline-block;
     }
     .processed-info i { margin-right: 4px; color: #6c7e94; }
+
+    /* 新回覆標記 */
+    .new-reply-badge {
+      background: #c52a2a;
+      color: white;
+      font-size: 0.6rem;
+      padding: 1px 8px;
+      border-radius: 20px;
+      margin-left: 6px;
+      animation: pulse 1.5s ease-in-out infinite;
+      display: inline-block;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
   </style>
 </head>
 <body>
@@ -712,9 +728,11 @@
               imageUrls: data.imageUrls || [],
               createdAt: data.createdAt || 0,
               userId: data.userId || '',
+              userEmail: data.userEmail || '',
               replies: data.replies || [],
               lastProcessedBy: data.lastProcessedBy || '',
-              lastProcessedAt: data.lastProcessedAt || ''
+              lastProcessedAt: data.lastProcessedAt || '',
+              hasNewReply: data.hasNewReply || false
             });
           });
           render();
@@ -744,9 +762,11 @@
           imageUrls: complaint.imageUrls || [],
           createdAt: Date.now(),
           userId: currentUser ? currentUser.uid : 'anonymous',
+          userEmail: currentUser ? currentUser.email : '',
           replies: [],
           lastProcessedBy: '',
-          lastProcessedAt: ''
+          lastProcessedAt: '',
+          hasNewReply: false
         });
         return true;
       } catch (error) {
@@ -789,13 +809,65 @@
           date: getToday()
         };
         await db.collection('complaints').doc(docId).update({
-          replies: firebase.firestore.FieldValue.arrayUnion(reply)
+          replies: firebase.firestore.FieldValue.arrayUnion(reply),
+          hasNewReply: true  // 🔥 標記有新回覆
         });
         return true;
       } catch (error) {
         console.error('回覆失敗:', error);
         showToast('回覆失敗，請稍後再試', true);
         return false;
+      }
+    }
+
+    // 🔥 標記回覆已讀（投訴者查看時呼叫）
+    async function markReplyAsRead(docId) {
+      try {
+        await db.collection('complaints').doc(docId).update({
+          hasNewReply: false
+        });
+        return true;
+      } catch (error) {
+        console.error('標記已讀失敗:', error);
+        return false;
+      }
+    }
+
+    // 🔥 發送 Email 通知給投訴者
+    async function sendReplyEmail(complaint, replyText) {
+      try {
+        if (!complaint.userEmail) {
+          console.log('⚠️ 投訴者沒有 Email，跳過通知');
+          return;
+        }
+
+        const message = `
+          您好，${complaint.userName}，
+
+          您於 ${complaint.date} ${complaint.time} 提交的投訴「${complaint.title}」已經有管理員回覆：
+
+          ──────────────────────────
+          ${replyText}
+          ──────────────────────────
+
+          請登入系統查看完整內容：https://dader60.github.io/dader/
+
+          此為系統自動發送，請勿直接回覆。
+        `;
+
+        await emailjs.send(
+          emailjsConfig.serviceID,
+          emailjsConfig.templateID,
+          {
+            name: complaint.userName,
+            time: getToday() + ' ' + getNowTime(),
+            message: message,
+            title: `【投訴回覆】${complaint.title}`
+          }
+        );
+        console.log('✅ 回覆 Email 通知發送成功');
+      } catch (error) {
+        console.error('❌ 回覆 Email 發送失敗:', error);
       }
     }
 
@@ -826,10 +898,10 @@
     }
 
     // ============================================================
-    // 8. 發送 Email 通知
+    // 8. 發送 Email 通知（新投訴）
     // ============================================================
 
-    async function sendEmail(complaint) {
+    async function sendNewComplaintEmail(complaint) {
       try {
         const imageCount = complaint.imageUrls ? complaint.imageUrls.length : 0;
         const message = `
@@ -858,9 +930,9 @@
             title: complaint.title
           }
         );
-        console.log('✅ Email 通知發送成功');
+        console.log('✅ 新投訴 Email 通知發送成功');
       } catch (error) {
-        console.error('❌ Email 發送失敗:', error);
+        console.error('❌ 新投訴 Email 發送失敗:', error);
       }
     }
 
@@ -951,6 +1023,12 @@
           const igHtml = item.igName ? `<span><i class="fab fa-instagram"></i> ${escapeHtml(item.igName)}</span>` : '';
           const replyHtml = item.needReply ? `<span><i class="fas fa-reply"></i> 需要回覆：${item.needReply}</span>` : '';
 
+          // 🔥 新回覆標記（只有一般使用者看到，管理員看不到）
+          let newReplyBadge = '';
+          if (!isAdmin && item.hasNewReply === true && item.replies && item.replies.length > 0) {
+            newReplyBadge = `<span class="new-reply-badge">📩 新回覆</span>`;
+          }
+
           let processedHtml = '';
           if (item.lastProcessedBy && item.lastProcessedAt) {
             processedHtml = `
@@ -1008,10 +1086,11 @@
           }
 
           html += `
-            <div class="complaint-item" data-id="${item.id}" data-docid="${item.docId}">
+            <div class="complaint-item" data-id="${item.id}" data-docid="${item.docId}" onclick="handleItemClick('${item.docId}')">
               <div class="complaint-content">
                 <div class="complaint-title">
                   <span>${escapeHtml(item.title)}</span>
+                  ${newReplyBadge}
                   ${statusControl}
                   ${isAdmin === true ? '<span class="admin-badge">管理</span>' : ''}
                 </div>
@@ -1051,7 +1130,21 @@
     }
 
     // ============================================================
-    // 10. 回覆處理函數
+    // 10. 點擊投訴時標記已讀
+    // ============================================================
+
+    window.handleItemClick = async function(docId) {
+      // 如果是一般使用者，點擊時標記已讀
+      if (!isAdmin && currentUser) {
+        const complaint = complaints.find(c => c.docId === docId);
+        if (complaint && complaint.hasNewReply === true) {
+          await markReplyAsRead(docId);
+        }
+      }
+    };
+
+    // ============================================================
+    // 11. 回覆處理函數
     // ============================================================
 
     async function handleReply(e) {
@@ -1075,10 +1168,16 @@
       btn.disabled = true;
       btn.textContent = '送出中...';
 
+      // 🔥 儲存回覆
       const success = await addReply(docId, replyText, true);
 
       if (success) {
-        showToast('✅ 回覆已送出');
+        // 🔥 發送 Email 通知給投訴者
+        const complaint = complaints.find(c => c.docId === docId);
+        if (complaint) {
+          await sendReplyEmail(complaint, replyText);
+        }
+        showToast('✅ 回覆已送出，投訴者將收到 Email 通知');
         textarea.value = '';
       }
 
@@ -1087,7 +1186,7 @@
     }
 
     // ============================================================
-    // 11. 圖片燈箱
+    // 12. 圖片燈箱
     // ============================================================
 
     let lightboxImages = [];
@@ -1144,7 +1243,7 @@
     });
 
     // ============================================================
-    // 12. UI 更新（未登入時隱藏名稱）
+    // 13. UI 更新
     // ============================================================
 
     function updateUI(user) {
@@ -1164,7 +1263,6 @@
         const displayName = user.displayName || user.email || '使用者';
         avatar.textContent = getInitials(displayName);
         
-        // 🔥 管理員顯示角色名稱，一般使用者顯示 Google 名稱
         if (isAdmin === true) {
           const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
           if (adminInfo) {
@@ -1206,7 +1304,6 @@
         }
       } else {
         avatar.textContent = '👤';
-        // 🔥 未登入時隱藏名稱
         nameDisplay.textContent = '';
         roleDisplay.textContent = '一般';
         roleDisplay.className = 'user-role';
@@ -1229,10 +1326,10 @@
     }
 
     // ============================================================
-    // 13. 事件處理
+    // 14. 事件處理
     // ============================================================
 
-    // ----- 13a. Google 登入 -----
+    // ----- 14a. Google 登入 -----
     async function googleLogin() {
       try {
         const provider = new firebase.auth.GoogleAuthProvider();
@@ -1254,7 +1351,7 @@
     document.getElementById('googleLoginBtn').addEventListener('click', googleLogin);
     document.getElementById('googleLoginBtn2').addEventListener('click', googleLogin);
 
-    // ----- 13b. 登出 -----
+    // ----- 14b. 登出 -----
     document.getElementById('logoutBtn').addEventListener('click', async function() {
       try {
         await auth.signOut();
@@ -1271,7 +1368,7 @@
     });
 
     // ============================================================
-    // 13c. 管理員登入
+    // 14c. 管理員登入
     // ============================================================
 
     const adminLoginBtn = document.getElementById('adminLoginBtn');
@@ -1368,7 +1465,7 @@
     });
 
     // ============================================================
-    // 13d. 變更密碼功能
+    // 14d. 變更密碼功能
     // ============================================================
 
     const changePwdBtn = document.getElementById('changePasswordBtn');
@@ -1453,7 +1550,7 @@
     cpConfirm.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirmBtn.click(); });
 
     // ============================================================
-    // 13e. 查看密碼功能（僅版主）
+    // 14e. 查看密碼功能（僅版主）
     // ============================================================
 
     const viewPwdBtn = document.getElementById('viewPasswordsBtn');
@@ -1488,7 +1585,7 @@
       if (e.target === this) this.classList.remove('active');
     });
 
-    // ----- 13f. 類別切換 -----
+    // ----- 14f. 類別切換 -----
     document.getElementById('category').addEventListener('change', function() {
       const customGroup = document.getElementById('customCategoryGroup');
       if (this.value === '其他') {
@@ -1498,7 +1595,7 @@
       }
     });
 
-    // ----- 13g. 圖片上傳 -----
+    // ----- 14g. 圖片上傳 -----
     const imageInput = document.getElementById('imageInput');
     const addMoreBtn = document.getElementById('addMoreBtn');
     const uploadArea = document.getElementById('imageUploadArea');
@@ -1531,7 +1628,7 @@
       }
     });
 
-    // ----- 13h. 提交投訴 -----
+    // ----- 14h. 提交投訴 -----
     document.getElementById('complaintForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -1602,7 +1699,8 @@
         const success = await addComplaint(newComplaint);
 
         if (success) {
-          sendEmail(newComplaint).catch(err => console.error('Email 發送失敗:', err));
+          // 🔥 發送新投訴 Email 通知給管理員
+          sendNewComplaintEmail(newComplaint).catch(err => console.error('Email 發送失敗:', err));
           document.getElementById('complaintForm').reset();
           selectedFiles = [];
           updateImagePreview();
@@ -1619,7 +1717,7 @@
       }
     });
 
-    // ----- 13i. 狀態變更 -----
+    // ----- 14i. 狀態變更 -----
     document.getElementById('complaintList').addEventListener('change', async function(e) {
       const target = e.target.closest('select');
       if (!target) return;
@@ -1641,7 +1739,7 @@
       }
     });
 
-    // ----- 13j. 刪除按鈕 -----
+    // ----- 14j. 刪除按鈕 -----
     document.getElementById('complaintList').addEventListener('click', async function(e) {
       const target = e.target.closest('button');
       if (!target) return;
@@ -1664,10 +1762,10 @@
       }
     });
 
-    // ----- 13k. 過濾 -----
+    // ----- 14k. 過濾 -----
     document.getElementById('filterStatus').addEventListener('change', render);
 
-    // ----- 13l. 清空全部 -----
+    // ----- 14l. 清空全部 -----
     document.getElementById('clearAllBtn').addEventListener('click', async function() {
       if (isAdmin !== true) {
         showToast('請先登入管理模式', true);
@@ -1683,7 +1781,7 @@
     });
 
     // ============================================================
-    // 14. Firebase Auth 監聽
+    // 15. Firebase Auth 監聽
     // ============================================================
 
     auth.onAuthStateChanged((user) => {
@@ -1711,7 +1809,7 @@
     });
 
     // ============================================================
-    // 15. 啟動
+    // 16. 啟動
     // ============================================================
 
     listenComplaints();
@@ -1719,7 +1817,7 @@
     console.log('📊 狀態選項:', STATUS_LIST.join(', '));
     console.log('👑 管理員帳號:', ADMIN_ACCOUNTS.map(a => a.username).join(', '));
     console.log('🔒 需登入才能投訴');
-    console.log('👤 顯示方式：未登入隱藏 / 管理員顯示角色名稱');
+    console.log('📧 回覆時會 Email 通知投訴者');
   </script>
 </body>
 </html>
