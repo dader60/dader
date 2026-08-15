@@ -394,10 +394,9 @@
       measurementId: "G-GP9F39N0LS"
     };
 
-    // ===== 🔥 EmailJS 設定（已更新 Template ID）=====
     const emailjsConfig = {
       serviceID: "service_6vu945a",
-      templateID: "template_whxsovg",   // ✅ 已更新為新的 Template ID
+      templateID: "template_whxsovg",
       publicKey: "KU2Ya4rXsyHXopGAM"
     };
 
@@ -722,7 +721,7 @@
     }
 
     // ============================================================
-    // 9. 渲染
+    // 9. 渲染（🔒 隱私修正：訪客看不到投訴）
     // ============================================================
 
     function render() {
@@ -733,11 +732,17 @@
       let filtered = [];
       
       if (isAdmin === true) {
+        // 👑 管理員：顯示全部投訴
         filtered = [...complaints];
+        console.log('👑 管理員模式 - 顯示全部', filtered.length, '筆');
       } else if (currentUser) {
+        // 👤 一般登入用戶：只顯示自己的投訴
         filtered = complaints.filter(c => c.userId === currentUser.uid);
+        console.log('👤 一般用戶 - 顯示', filtered.length, '筆');
       } else {
-        filtered = [...complaints];
+        // 👋 訪客（未登入）：看不到任何投訴
+        filtered = [];
+        console.log('👋 訪客模式 - 不顯示任何投訴');
       }
 
       if (filterStatus !== 'all') {
@@ -745,11 +750,24 @@
       }
 
       if (filtered.length === 0) {
+        // 根據身份顯示不同的空狀態訊息
+        let emptyMessage = '';
+        let subMessage = '';
+        if (isAdmin === true) {
+          emptyMessage = '目前沒有投訴紀錄';
+          subMessage = '新增一筆投訴吧';
+        } else if (currentUser) {
+          emptyMessage = '您還沒有提交過投訴';
+          subMessage = '提交您的第一筆投訴';
+        } else {
+          emptyMessage = '請登入查看您的投訴紀錄';
+          subMessage = '登入後即可提交投訴';
+        }
         listEl.innerHTML = `
           <div class="empty-state">
             <i class="fas fa-inbox"></i>
-            <p style="margin-top: 6px;">目前沒有投訴紀錄</p>
-            <span class="text-muted">新增一筆投訴吧</span>
+            <p style="margin-top: 6px;">${emptyMessage}</p>
+            <span class="text-muted">${subMessage}</span>
           </div>
         `;
       } else {
@@ -1126,7 +1144,6 @@
         const success = await addComplaint(newComplaint);
 
         if (success) {
-          // 🔥 發送 Email（不阻塞主流程）
           sendEmail(newComplaint).catch(err => console.error('Email 發送失敗:', err));
           document.getElementById('complaintForm').reset();
           selectedFiles = [];
@@ -1229,6 +1246,7 @@
     console.log('✅ 靠北達德投訴系統已啟動');
     console.log('📊 狀態選項:', STATUS_LIST.join(', '));
     console.log('👑 管理員帳號:', ADMIN_USERNAME);
+    console.log('🔒 隱私模式：訪客看不到任何投訴');
   </script>
 </body>
 </html>
