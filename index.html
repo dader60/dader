@@ -1248,7 +1248,7 @@
     });
 
     // ============================================================
-    // 12. UI 更新
+    // 12. UI 更新（🔧 修正：管理員登入顯示角色名稱）
     // ============================================================
 
     function updateUI(user) {
@@ -1264,19 +1264,20 @@
       const form = document.getElementById('complaintForm');
       const loginRequired = document.getElementById('loginRequiredMsg');
 
+      // 🔥 先處理管理員名稱顯示（無論是否有 Google 登入）
+      if (isAdmin === true) {
+        const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
+        if (adminInfo) {
+          nameDisplay.textContent = `${adminInfo.displayName} 您好`;
+        }
+      }
+
       if (user) {
         const displayName = user.displayName || user.email || '使用者';
         avatar.textContent = getInitials(displayName);
         
-        // 🔥 管理員顯示角色名稱，一般使用者顯示 Google 名稱
-        if (isAdmin === true) {
-          const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
-          if (adminInfo) {
-            nameDisplay.textContent = `${adminInfo.displayName} 您好`;
-          } else {
-            nameDisplay.textContent = `${displayName}，您好`;
-          }
-        } else {
+        // 🔥 如果沒有管理員身份，顯示 Google 名稱
+        if (isAdmin !== true) {
           nameDisplay.textContent = `${displayName}，您好`;
         }
 
@@ -1309,9 +1310,17 @@
           nameInput.value = displayName;
         }
       } else {
-        avatar.textContent = '👤';
-        // 🔥 未登入時隱藏名稱
-        nameDisplay.textContent = '';
+        // 🔥 沒有 Google 登入
+        if (isAdmin !== true) {
+          // 不是管理員，也不是 Google 用戶 → 隱藏
+          nameDisplay.textContent = '';
+          avatar.textContent = '👤';
+        } else {
+          // 是管理員，但沒有 Google 登入 → 名稱已在上方設定
+          avatar.textContent = '👤';
+          // 保留管理員名稱
+        }
+        
         roleDisplay.textContent = '一般';
         roleDisplay.className = 'user-role';
         googleBtn.style.display = 'inline-flex';
@@ -1322,12 +1331,26 @@
         form.style.display = 'none';
         loginRequired.style.display = 'block';
 
+        // 如果是管理員模式，顯示變更密碼按鈕
         if (isAdmin === true) {
-          isAdmin = false;
-          sessionStorage.setItem('isAdmin', 'false');
-          sessionStorage.removeItem('currentAdminUsername');
-          adminLoginBtn.textContent = '管理';
-          adminLoginBtn.className = 'btn-admin-login';
+          const role = getAdminRole(currentAdminUsername) || 'editor';
+          const roleName = ROLE_NAMES[role] || '管理員';
+          roleDisplay.textContent = roleName;
+          roleDisplay.className = `user-role ${role}`;
+          changePwdBtn.classList.add('show');
+          if (role === 'moderator') {
+            viewPwdBtn.classList.add('show');
+          } else {
+            viewPwdBtn.classList.remove('show');
+          }
+        } else {
+          if (isAdmin === true) {
+            isAdmin = false;
+            sessionStorage.setItem('isAdmin', 'false');
+            sessionStorage.removeItem('currentAdminUsername');
+            adminLoginBtn.textContent = '管理';
+            adminLoginBtn.className = 'btn-admin-login';
+          }
         }
       }
     }
@@ -1450,6 +1473,9 @@
         const nameDisplay = document.getElementById('userNameDisplay');
         if (currentUser) {
           const displayName = currentUser.displayName || currentUser.email || '使用者';
+          nameDisplay.textContent = `${found.displayName} 您好`;
+        } else {
+          // 🔥 沒有 Google 登入，直接顯示管理員名稱
           nameDisplay.textContent = `${found.displayName} 您好`;
         }
         
@@ -1869,6 +1895,7 @@
     console.log('📧 新投訴 → 管理員信箱');
     console.log('📧 管理員回覆 → 投訴者信箱');
     console.log('🔑 版主可變更小編密碼（無 Email 通知）');
+    console.log('👤 管理員登入顯示角色名稱（無需 Google）');
   </script>
 </body>
 </html>
