@@ -16,7 +16,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
-    /* ===== 完整樣式（保持與之前相同） ===== */
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
     body { background: #f4f7fc; min-height: 100vh; padding: 2rem 1rem; display: flex; justify-content: center; align-items: flex-start; }
     .container { max-width: 1300px; width: 100%; background: white; border-radius: 32px; box-shadow: 0 20px 60px rgba(0,20,40,0.08); padding: 2rem 2rem 2.5rem; }
@@ -604,7 +603,7 @@
     }
 
     // ============================================================
-    // 8. 發送 Email 通知
+    // 8. 發送 Email 通知（不阻塞主流程）
     // ============================================================
 
     async function sendEmail(complaint) {
@@ -651,7 +650,7 @@
 
       let filtered = [];
       
-      if (isAdmin) {
+      if (isAdmin === true) {
         filtered = [...complaints];
         console.log('👑 管理員模式 - 顯示全部', filtered.length, '筆');
       } else if (currentUser) {
@@ -681,7 +680,7 @@
           const statusClass = status;
 
           let statusControl = '';
-          if (isAdmin) {
+          if (isAdmin === true) {
             const options = STATUS_LIST.map(s => 
               `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`
             ).join('');
@@ -694,7 +693,7 @@
             statusControl = `<span class="status-badge ${statusClass}">${status}</span>`;
           }
 
-          const adminButtons = isAdmin ? `
+          const adminButtons = (isAdmin === true) ? `
             <button class="btn-delete" data-action="delete" data-docid="${item.docId}" data-id="${item.id}"><i class="fas fa-times"></i></button>
           ` : '';
 
@@ -720,7 +719,7 @@
                 <div class="complaint-title">
                   <span>${escapeHtml(item.title)}</span>
                   ${statusControl}
-                  ${isAdmin ? '<span class="admin-badge">管理</span>' : ''}
+                  ${isAdmin === true ? '<span class="admin-badge">管理</span>' : ''}
                 </div>
                 <div class="complaint-meta">
                   <span><i class="fas fa-user"></i> ${escapeHtml(item.userName)}</span>
@@ -819,7 +818,7 @@
         avatar.textContent = getInitials(displayName);
         nameDisplay.textContent = displayName;
 
-        if (isAdmin) {
+        if (isAdmin === true) {
           roleDisplay.textContent = '管理員';
           roleDisplay.className = 'user-role admin';
         } else {
@@ -842,7 +841,7 @@
         googleBtn.style.display = 'inline-flex';
         logoutBtn.classList.remove('show');
 
-        if (isAdmin) {
+        if (isAdmin === true) {
           isAdmin = false;
           adminLoginBtn.textContent = '管理';
           adminLoginBtn.className = 'btn-admin-login';
@@ -898,7 +897,7 @@
     const adminErrorMsg = document.getElementById('adminErrorMsg');
 
     adminLoginBtn.addEventListener('click', function() {
-      if (isAdmin) {
+      if (isAdmin === true) {
         isAdmin = false;
         this.textContent = '管理';
         this.className = 'btn-admin-login';
@@ -914,7 +913,7 @@
       }
     });
 
-    // 🔥 修正：直接使用常數比對
+    // 🔥 修正：直接使用常數比對，並強制設定 isAdmin
     adminConfirmBtn.addEventListener('click', function() {
       const username = adminUsername.value.trim();
       const password = adminPassword.value.trim();
@@ -926,6 +925,7 @@
 
       // 直接比對常數
       if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        // 強制設定 isAdmin 為 true
         isAdmin = true;
         adminOverlay.classList.remove('active');
         adminLoginBtn.textContent = '登出管理';
@@ -933,6 +933,7 @@
         updateUI(currentUser);
         showToast('✅ 管理員模式已啟用');
         console.log('✅ 管理員登入成功，isAdmin =', isAdmin);
+        // 強制重新渲染
         render();
       } else {
         adminErrorMsg.classList.add('show');
@@ -992,7 +993,7 @@
       }
     });
 
-    // ----- 12f. 提交投訴 -----
+    // ----- 12f. 提交投訴（修正：Email 不阻塞主流程）-----
     document.getElementById('complaintForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -1026,12 +1027,14 @@
       submitBtn.disabled = true;
 
       try {
+        // 1. 上傳圖片
         let imageUrls = [];
         if (selectedFiles.length > 0) {
           submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上傳圖片中...';
           imageUrls = await uploadMultipleImages(selectedFiles);
         }
 
+        // 2. 儲存投訴（先完成這個，再發 Email）
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 儲存中...';
         const newComplaint = {
           id: newId,
@@ -1050,7 +1053,10 @@
         const success = await addComplaint(newComplaint);
 
         if (success) {
+          // 3. 發送 Email（不阻塞，失敗不影響）
           sendEmail(newComplaint).catch(err => console.error('Email 發送失敗:', err));
+          
+          // 4. 重置表單
           document.getElementById('complaintForm').reset();
           selectedFiles = [];
           updateImagePreview();
@@ -1078,7 +1084,7 @@
       const newStatus = target.value;
 
       if (!docId || !id) return;
-      if (!isAdmin) {
+      if (isAdmin !== true) {
         showToast('請先登入管理模式', true);
         return;
       }
@@ -1101,7 +1107,7 @@
       if (!docId || !id) return;
 
       if (action === 'delete') {
-        if (!isAdmin) {
+        if (isAdmin !== true) {
           showToast('請先登入管理模式', true);
           return;
         }
@@ -1117,7 +1123,7 @@
 
     // ----- 12j. 清空全部 -----
     document.getElementById('clearAllBtn').addEventListener('click', async function() {
-      if (!isAdmin) {
+      if (isAdmin !== true) {
         showToast('請先登入管理模式', true);
         return;
       }
@@ -1136,7 +1142,7 @@
 
     auth.onAuthStateChanged((user) => {
       currentUser = user;
-      if (!user && isAdmin) {
+      if (!user && isAdmin === true) {
         isAdmin = false;
         adminLoginBtn.textContent = '管理';
         adminLoginBtn.className = 'btn-admin-login';
