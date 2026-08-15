@@ -30,6 +30,8 @@
     .user-name { font-weight: 500; color: #1a2c44; }
     .user-role { font-size: 0.75rem; color: #7e93ab; background: #eef3f9; padding: 0.15rem 0.8rem; border-radius: 40px; }
     .user-role.admin { background: #c52a2a; color: white; }
+    .user-role.moderator { background: #2a7a5b; color: white; }
+    .user-role.editor { background: #2a5b7a; color: white; }
     .btn-google { background: white; border: 1px solid #d7dfe9; border-radius: 40px; padding: 0.4rem 1.2rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-weight: 500; color: #2a405b; transition: 0.15s; font-size: 0.9rem; }
     .btn-google:hover { background: #f4f8ff; border-color: #b0c0d0; }
     .btn-google svg { width: 18px; height: 18px; }
@@ -42,6 +44,9 @@
     .btn-change-password { background: #6c7e94; color: white; border: none; border-radius: 40px; padding: 0.3rem 1rem; cursor: pointer; font-size: 0.75rem; transition: 0.15s; display: none; }
     .btn-change-password:hover { background: #5a6b80; }
     .btn-change-password.show { display: inline-block; }
+    .btn-view-passwords { background: #2a7a5b; color: white; border: none; border-radius: 40px; padding: 0.3rem 1rem; cursor: pointer; font-size: 0.75rem; transition: 0.15s; display: none; }
+    .btn-view-passwords:hover { background: #1e5f46; }
+    .btn-view-passwords.show { display: inline-block; }
     .row { display: grid; grid-template-columns: 1fr 1.4fr; gap: 2rem; margin-top: 0.5rem; }
     @media (max-width: 820px) { .row { grid-template-columns: 1fr; gap: 1.5rem; } .container { padding: 1.5rem; } }
     .card { background: #ffffff; border-radius: 24px; padding: 1.6rem 1.8rem 2rem; box-shadow: 0 6px 20px rgba(0,0,0,0.02); border: 1px solid #e9edf4; }
@@ -80,6 +85,10 @@
     .btn-secondary { background: #6c7e94; border: none; color: white; padding: 0.4rem 1.2rem; border-radius: 40px; font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: 0.15s; display: inline-flex; align-items: center; gap: 6px; }
     .btn-secondary:hover { background: #5a6b80; }
     .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
+    .btn-success { background: #28a745; border: none; color: white; padding: 0.4rem 1.2rem; border-radius: 40px; font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-success:hover { background: #1e7e34; }
+    .btn-danger { background: #dc3545; border: none; color: white; padding: 0.4rem 1.2rem; border-radius: 40px; font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+    .btn-danger:hover { background: #b02a37; }
     .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem; }
     .filter-bar { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
     .filter-bar select { width: auto; padding: 0.4rem 1.8rem 0.4rem 1rem; border-radius: 40px; background: #f4f8ff; border: 1px solid #d7dfe9; font-size: 0.85rem; cursor: pointer; }
@@ -145,6 +154,17 @@
     .change-password-box .success-msg { color: #28a745; font-size: 0.85rem; margin-bottom: 0.8rem; display: none; }
     .change-password-box .success-msg.show { display: block; }
 
+    /* 查看密碼彈窗 */
+    .view-passwords-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
+    .view-passwords-overlay.active { display: flex; }
+    .view-passwords-box { background: white; padding: 2.5rem; border-radius: 28px; max-width: 450px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .view-passwords-box h3 { margin-bottom: 1.5rem; color: #0b1e33; text-align: center; }
+    .view-passwords-box .pwd-item { display: flex; justify-content: space-between; padding: 8px 12px; border-bottom: 1px solid #eef3f9; font-size: 0.95rem; }
+    .view-passwords-box .pwd-item .role-badge { font-size: 0.65rem; padding: 2px 10px; border-radius: 20px; color: white; }
+    .view-passwords-box .pwd-item .role-badge.moderator { background: #2a7a5b; }
+    .view-passwords-box .pwd-item .role-badge.editor { background: #2a5b7a; }
+    .view-passwords-box .btn-secondary { margin-top: 1rem; width: 100%; justify-content: center; }
+
     .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; cursor: pointer; }
     .lightbox.active { display: flex; }
     .lightbox img { max-width: 90%; max-height: 90%; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
@@ -191,6 +211,17 @@
 
     .login-required-msg { text-align: center; padding: 2rem 1rem; color: #6b8097; }
     .login-required-msg i { font-size: 2.5rem; color: #c52a2a; margin-bottom: 0.8rem; display: block; }
+
+    .processed-info {
+      font-size: 0.75rem;
+      color: #8a9db0;
+      margin-top: 4px;
+      padding: 4px 10px;
+      background: #f4f7fc;
+      border-radius: 6px;
+      display: inline-block;
+    }
+    .processed-info i { margin-right: 4px; color: #6c7e94; }
   </style>
 </head>
 <body>
@@ -218,6 +249,7 @@
         <button class="btn-logout" id="logoutBtn">登出</button>
         <button class="btn-admin-login" id="adminLoginBtn"><i class="fas fa-user-shield"></i> 管理</button>
         <button class="btn-change-password" id="changePasswordBtn"><i class="fas fa-key"></i> 變更密碼</button>
+        <button class="btn-view-passwords" id="viewPasswordsBtn"><i class="fas fa-eye"></i> 查看密碼</button>
       </div>
     </div>
 
@@ -226,7 +258,6 @@
       <div class="card">
         <div class="card-title"><i class="fas fa-pen"></i> 新增投訴</div>
 
-        <!-- 未登入提示 -->
         <div id="loginRequiredMsg" class="login-required-msg">
           <i class="fas fa-lock"></i>
           <p>請先登入才能提交投訴</p>
@@ -236,7 +267,6 @@
           </button>
         </div>
 
-        <!-- 表單（登入後顯示） -->
         <form id="complaintForm" style="display:none;">
           <div class="form-group">
             <label><i class="fas fa-user"></i> 姓名 <span class="required">*</span></label>
@@ -323,7 +353,6 @@
         </div>
       </div>
 
-      <!-- ===== 提醒文字（全寬） ===== -->
       <div class="notice-full-width">
         <div class="notice-box">
           <i class="fas fa-exclamation-triangle"></i>
@@ -331,7 +360,6 @@
         </div>
       </div>
 
-      <!-- ===== 右欄：投訴紀錄 ===== -->
       <div class="card">
         <div class="list-header">
           <div class="card-title" style="margin-bottom:0;">
@@ -394,6 +422,16 @@
     </div>
   </div>
 
+  <!-- ===== 查看密碼彈窗（僅版主） ===== -->
+  <div class="view-passwords-overlay" id="viewPasswordsOverlay">
+    <div class="view-passwords-box">
+      <h3><i class="fas fa-eye" style="color:#2a7a5b;"></i> 管理員密碼清單</h3>
+      <p style="color:#6b8097;font-size:0.85rem;margin-bottom:1rem;text-align:center;">僅版主可查看</p>
+      <div id="passwordList"></div>
+      <button class="btn-secondary" id="viewPasswordsCloseBtn">關閉</button>
+    </div>
+  </div>
+
   <!-- ===== 圖片燈箱 ===== -->
   <div class="lightbox" id="lightbox">
     <button class="nav-btn prev" id="lightboxPrev"><i class="fas fa-chevron-left"></i></button>
@@ -426,9 +464,13 @@
       publicKey: "KU2Ya4rXsyHXopGAM"
     };
 
-    // 管理員帳號
-    let ADMIN_USERNAME = "dader60";
-    let ADMIN_PASSWORD = "dader600909575253h";
+    // ===== 固定管理員帳號 =====
+    const ADMIN_ACCOUNTS = [
+      { username: "dader60", password: "dader600909575253h", role: "moderator", roleName: "版主" },
+      { username: "dader01", password: "dader600909575253h", role: "editor", roleName: "小編" },
+      { username: "dader02", password: "dader600909575253h", role: "editor", roleName: "小編" },
+      { username: "dader03", password: "dader600909575253h", role: "editor", roleName: "小編" }
+    ];
 
     const MAX_IMAGES = 10;
     const IMGBB_API_KEY = "e36eefa56ac3084d8b981ee390bcba27";
@@ -441,6 +483,16 @@
       '需要補充資料',
       '已轉交相關人員'
     ];
+
+    const ROLE_NAMES = {
+      moderator: '版主',
+      editor: '小編'
+    };
+
+    const ROLE_COLORS = {
+      moderator: '#2a7a5b',
+      editor: '#2a5b7a'
+    };
 
     // ============================================================
     // 2. 初始化
@@ -459,6 +511,7 @@
 
     let currentUser = null;
     let isAdmin = sessionStorage.getItem('isAdmin') === 'true';
+    let currentAdminUsername = sessionStorage.getItem('currentAdminUsername') || '';
     let complaints = [];
     let unsubscribeSnapshot = null;
     let selectedFiles = [];
@@ -506,6 +559,30 @@
         toast.classList.remove('show');
         toast.style.opacity = '0';
       }, 3500);
+    }
+
+    function getAdminRole(username) {
+      const admin = ADMIN_ACCOUNTS.find(a => a.username === username);
+      return admin ? admin.role : null;
+    }
+
+    function getAdminRoleName(username) {
+      const admin = ADMIN_ACCOUNTS.find(a => a.username === username);
+      return admin ? admin.roleName : '管理員';
+    }
+
+    function getAdminPassword(username) {
+      const admin = ADMIN_ACCOUNTS.find(a => a.username === username);
+      return admin ? admin.password : null;
+    }
+
+    function updateAdminPassword(username, newPassword) {
+      const admin = ADMIN_ACCOUNTS.find(a => a.username === username);
+      if (admin) {
+        admin.password = newPassword;
+        return true;
+      }
+      return false;
     }
 
     // ============================================================
@@ -633,7 +710,9 @@
               imageUrls: data.imageUrls || [],
               createdAt: data.createdAt || 0,
               userId: data.userId || '',
-              replies: data.replies || []
+              replies: data.replies || [],
+              lastProcessedBy: data.lastProcessedBy || '',
+              lastProcessedAt: data.lastProcessedAt || ''
             });
           });
           render();
@@ -663,7 +742,9 @@
           imageUrls: complaint.imageUrls || [],
           createdAt: Date.now(),
           userId: currentUser ? currentUser.uid : 'anonymous',
-          replies: []
+          replies: [],
+          lastProcessedBy: '',
+          lastProcessedAt: ''
         });
         return true;
       } catch (error) {
@@ -675,7 +756,14 @@
 
     async function updateStatus(docId, newStatus) {
       try {
-        await db.collection('complaints').doc(docId).update({ status: newStatus });
+        const adminName = currentAdminUsername || currentUser?.displayName || currentUser?.email || '管理員';
+        const roleName = getAdminRoleName(adminName);
+        const displayName = roleName !== '管理員' ? `${roleName} ${adminName}` : adminName;
+        await db.collection('complaints').doc(docId).update({ 
+          status: newStatus,
+          lastProcessedBy: displayName,
+          lastProcessedAt: getToday() + ' ' + getNowTime()
+        });
         return true;
       } catch (error) {
         console.error('更新失敗:', error);
@@ -686,9 +774,13 @@
 
     async function addReply(docId, replyText, isAdminReply = false) {
       try {
+        const adminName = currentAdminUsername || currentUser?.displayName || currentUser?.email || '管理員';
+        const roleName = getAdminRoleName(adminName);
+        const displayName = isAdminReply ? `${roleName} ${adminName}` : adminName;
         const reply = {
           text: replyText,
           isAdmin: isAdminReply,
+          author: displayName,
           time: getNowTime(),
           date: getToday()
         };
@@ -855,12 +947,22 @@
           const igHtml = item.igName ? `<span><i class="fab fa-instagram"></i> ${escapeHtml(item.igName)}</span>` : '';
           const replyHtml = item.needReply ? `<span><i class="fas fa-reply"></i> 需要回覆：${item.needReply}</span>` : '';
 
+          let processedHtml = '';
+          if (item.lastProcessedBy && item.lastProcessedAt) {
+            processedHtml = `
+              <div class="processed-info">
+                <i class="fas fa-user-check"></i> 
+                最後處理：${escapeHtml(item.lastProcessedBy)} (${item.lastProcessedAt})
+              </div>
+            `;
+          }
+
           let repliesHtml = '';
           if (item.replies && item.replies.length > 0) {
             repliesHtml = '<div class="reply-list">';
             item.replies.forEach(r => {
               const replyClass = r.isAdmin ? 'reply-item reply-admin' : 'reply-item';
-              const authorName = r.isAdmin ? '👑 管理員' : '📝 ' + (item.userName || '使用者');
+              const authorName = r.isAdmin ? '👑 ' + (r.author || '管理員') : '📝 ' + (item.userName || '使用者');
               repliesHtml += `
                 <div class="${replyClass}">
                   <span class="reply-author">${authorName}</span>
@@ -900,6 +1002,7 @@
                   ${item.imageUrls && item.imageUrls.length > 0 ? `<span><i class="fas fa-image"></i> ${item.imageUrls.length}張</span>` : ''}
                 </div>
                 <div style="margin-top: 6px; font-size:0.9rem; color:#2b405b;">${escapeHtml(item.description)}</div>
+                ${processedHtml}
                 ${imagesHtml}
                 
                 <div class="reply-section">
@@ -1030,6 +1133,7 @@
       const logoutBtn = document.getElementById('logoutBtn');
       const adminLoginBtn = document.getElementById('adminLoginBtn');
       const changePwdBtn = document.getElementById('changePasswordBtn');
+      const viewPwdBtn = document.getElementById('viewPasswordsBtn');
       const form = document.getElementById('complaintForm');
       const loginRequired = document.getElementById('loginRequiredMsg');
 
@@ -1039,13 +1143,22 @@
         nameDisplay.textContent = `${displayName}，您好`;
 
         if (isAdmin === true) {
-          roleDisplay.textContent = '管理員';
-          roleDisplay.className = 'user-role admin';
+          const role = getAdminRole(currentAdminUsername) || 'editor';
+          const roleName = ROLE_NAMES[role] || '管理員';
+          roleDisplay.textContent = roleName;
+          roleDisplay.className = `user-role ${role}`;
           changePwdBtn.classList.add('show');
+          // 只有版主可以查看密碼
+          if (role === 'moderator') {
+            viewPwdBtn.classList.add('show');
+          } else {
+            viewPwdBtn.classList.remove('show');
+          }
         } else {
           roleDisplay.textContent = '一般使用者';
           roleDisplay.className = 'user-role';
           changePwdBtn.classList.remove('show');
+          viewPwdBtn.classList.remove('show');
         }
 
         googleBtn.style.display = 'none';
@@ -1067,12 +1180,14 @@
         googleBtn2.style.display = 'inline-flex';
         logoutBtn.classList.remove('show');
         changePwdBtn.classList.remove('show');
+        viewPwdBtn.classList.remove('show');
         form.style.display = 'none';
         loginRequired.style.display = 'block';
 
         if (isAdmin === true) {
           isAdmin = false;
           sessionStorage.setItem('isAdmin', 'false');
+          sessionStorage.removeItem('currentAdminUsername');
           adminLoginBtn.textContent = '管理';
           adminLoginBtn.className = 'btn-admin-login';
         }
@@ -1112,6 +1227,7 @@
         currentUser = null;
         isAdmin = false;
         sessionStorage.setItem('isAdmin', 'false');
+        sessionStorage.removeItem('currentAdminUsername');
         updateUI(null);
         showToast('已登出');
         render();
@@ -1121,7 +1237,7 @@
     });
 
     // ============================================================
-    // 13c. 管理員登入（🔧 修正：強制保留管理員狀態）
+    // 13c. 管理員登入
     // ============================================================
 
     const adminLoginBtn = document.getElementById('adminLoginBtn');
@@ -1135,19 +1251,17 @@
       if (isAdmin === true) {
         isAdmin = false;
         sessionStorage.setItem('isAdmin', 'false');
+        sessionStorage.removeItem('currentAdminUsername');
         this.textContent = '管理';
         this.className = 'btn-admin-login';
         
-        // 更新 UI
         const roleDisplay = document.getElementById('userRoleDisplay');
         if (roleDisplay) {
           roleDisplay.textContent = '一般使用者';
           roleDisplay.className = 'user-role';
         }
-        const changePwdBtn = document.getElementById('changePasswordBtn');
-        if (changePwdBtn) {
-          changePwdBtn.classList.remove('show');
-        }
+        document.getElementById('changePasswordBtn').classList.remove('show');
+        document.getElementById('viewPasswordsBtn').classList.remove('show');
         
         updateUI(currentUser);
         showToast('已登出管理模式');
@@ -1165,42 +1279,44 @@
       const username = adminUsername.value.trim();
       const password = adminPassword.value.trim();
 
-      console.log('🔑 管理員登入 - 輸入帳號:', username);
-      console.log('🔑 管理員登入 - 輸入密碼:', password);
-      console.log('🔑 管理員登入 - 正確帳號:', ADMIN_USERNAME);
-      console.log('🔑 管理員登入 - 正確密碼:', ADMIN_PASSWORD);
+      const found = ADMIN_ACCOUNTS.find(
+        a => a.username === username && a.password === password
+      );
 
-      if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-        // 🔥 強制設定管理員狀態
+      if (found) {
         isAdmin = true;
+        currentAdminUsername = username;
         sessionStorage.setItem('isAdmin', 'true');
+        sessionStorage.setItem('currentAdminUsername', username);
         adminOverlay.classList.remove('active');
         adminLoginBtn.textContent = '登出管理';
         adminLoginBtn.className = 'btn-admin-login active';
         
-        // 🔥 直接更新 UI
         const roleDisplay = document.getElementById('userRoleDisplay');
         if (roleDisplay) {
-          roleDisplay.textContent = '管理員';
-          roleDisplay.className = 'user-role admin';
+          const roleName = ROLE_NAMES[found.role] || '管理員';
+          roleDisplay.textContent = roleName;
+          roleDisplay.className = `user-role ${found.role}`;
         }
         
         const changePwdBtn = document.getElementById('changePasswordBtn');
-        if (changePwdBtn) {
-          changePwdBtn.classList.add('show');
+        if (changePwdBtn) changePwdBtn.classList.add('show');
+        
+        const viewPwdBtn = document.getElementById('viewPasswordsBtn');
+        if (found.role === 'moderator') {
+          viewPwdBtn.classList.add('show');
+        } else {
+          viewPwdBtn.classList.remove('show');
         }
         
-        // 更新 user info 中的名稱
         const nameDisplay = document.getElementById('userNameDisplay');
         if (currentUser) {
           const displayName = currentUser.displayName || currentUser.email || '使用者';
           nameDisplay.textContent = `${displayName}，您好`;
         }
         
-        showToast('✅ 管理員模式已啟用');
-        console.log('✅ 管理員登入成功，isAdmin =', isAdmin);
-        
-        // 🔥 強制重新渲染
+        showToast(`✅ ${found.roleName}模式已啟用`);
+        console.log(`✅ 管理員登入成功，角色: ${found.role}`);
         render();
       } else {
         adminErrorMsg.classList.add('show');
@@ -1263,7 +1379,7 @@
         return;
       }
 
-      if (current !== ADMIN_PASSWORD) {
+      if (current !== getAdminPassword(currentAdminUsername)) {
         cpErrorMsg.textContent = '❌ 目前密碼錯誤';
         cpErrorMsg.classList.add('show');
         cpCurrent.value = '';
@@ -1288,7 +1404,7 @@
         return;
       }
 
-      ADMIN_PASSWORD = newPwd;
+      updateAdminPassword(currentAdminUsername, newPwd);
       cpSuccessMsg.textContent = '✅ 密碼變更成功！請使用新密碼登入';
       cpSuccessMsg.classList.add('show');
       
@@ -1302,7 +1418,43 @@
     cpNew.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirm.focus(); });
     cpConfirm.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirmBtn.click(); });
 
-    // ----- 13e. 類別切換 -----
+    // ============================================================
+    // 13e. 查看密碼功能（僅版主）
+    // ============================================================
+
+    const viewPwdBtn = document.getElementById('viewPasswordsBtn');
+    const viewOverlay = document.getElementById('viewPasswordsOverlay');
+    const passwordListEl = document.getElementById('passwordList');
+    const viewCloseBtn = document.getElementById('viewPasswordsCloseBtn');
+
+    function renderPasswordList() {
+      passwordListEl.innerHTML = '';
+      ADMIN_ACCOUNTS.forEach(a => {
+        const roleName = ROLE_NAMES[a.role] || '管理員';
+        const div = document.createElement('div');
+        div.className = 'pwd-item';
+        div.innerHTML = `
+          <span><strong>${escapeHtml(a.username)}</strong> <span class="role-badge ${a.role}">${roleName}</span></span>
+          <span style="font-family:monospace;color:#c52a2a;">${escapeHtml(a.password)}</span>
+        `;
+        passwordListEl.appendChild(div);
+      });
+    }
+
+    viewPwdBtn.addEventListener('click', function() {
+      viewOverlay.classList.add('active');
+      renderPasswordList();
+    });
+
+    viewCloseBtn.addEventListener('click', function() {
+      viewOverlay.classList.remove('active');
+    });
+
+    viewOverlay.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('active');
+    });
+
+    // ----- 13f. 類別切換 -----
     document.getElementById('category').addEventListener('change', function() {
       const customGroup = document.getElementById('customCategoryGroup');
       if (this.value === '其他') {
@@ -1312,7 +1464,7 @@
       }
     });
 
-    // ----- 13f. 圖片上傳 -----
+    // ----- 13g. 圖片上傳 -----
     const imageInput = document.getElementById('imageInput');
     const addMoreBtn = document.getElementById('addMoreBtn');
     const uploadArea = document.getElementById('imageUploadArea');
@@ -1345,7 +1497,7 @@
       }
     });
 
-    // ----- 13g. 提交投訴 -----
+    // ----- 13h. 提交投訴 -----
     document.getElementById('complaintForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -1433,7 +1585,7 @@
       }
     });
 
-    // ----- 13h. 狀態變更 -----
+    // ----- 13i. 狀態變更 -----
     document.getElementById('complaintList').addEventListener('change', async function(e) {
       const target = e.target.closest('select');
       if (!target) return;
@@ -1455,7 +1607,7 @@
       }
     });
 
-    // ----- 13i. 刪除按鈕 -----
+    // ----- 13j. 刪除按鈕 -----
     document.getElementById('complaintList').addEventListener('click', async function(e) {
       const target = e.target.closest('button');
       if (!target) return;
@@ -1478,10 +1630,10 @@
       }
     });
 
-    // ----- 13j. 過濾 -----
+    // ----- 13k. 過濾 -----
     document.getElementById('filterStatus').addEventListener('change', render);
 
-    // ----- 13k. 清空全部 -----
+    // ----- 13l. 清空全部 -----
     document.getElementById('clearAllBtn').addEventListener('click', async function() {
       if (isAdmin !== true) {
         showToast('請先登入管理模式', true);
@@ -1501,21 +1653,22 @@
     // ============================================================
 
     auth.onAuthStateChanged((user) => {
-      // 更新 currentUser
       if (user !== currentUser) {
         currentUser = user;
       }
       
-      // 如果使用者登出，清除管理員狀態
       if (!user) {
         isAdmin = false;
         sessionStorage.setItem('isAdmin', 'false');
-      }
-      // 如果使用者登入，從 sessionStorage 讀取管理員狀態
-      else {
+        sessionStorage.removeItem('currentAdminUsername');
+      } else {
         const storedAdmin = sessionStorage.getItem('isAdmin');
         if (storedAdmin === 'true') {
           isAdmin = true;
+          const storedUsername = sessionStorage.getItem('currentAdminUsername');
+          if (storedUsername) {
+            currentAdminUsername = storedUsername;
+          }
         }
       }
       
@@ -1530,9 +1683,8 @@
     listenComplaints();
     console.log('✅ 靠北達德投訴系統已啟動');
     console.log('📊 狀態選項:', STATUS_LIST.join(', '));
-    console.log('👑 管理員帳號:', ADMIN_USERNAME);
+    console.log('👑 管理員帳號:', ADMIN_ACCOUNTS.map(a => a.username).join(', '));
     console.log('🔒 需登入才能投訴');
-    console.log('👤 顯示方式：未登入 / {姓名}，您好');
   </script>
 </body>
 </html>
