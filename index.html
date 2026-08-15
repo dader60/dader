@@ -394,9 +394,10 @@
       measurementId: "G-GP9F39N0LS"
     };
 
+    // ===== 🔥 EmailJS 設定（已更新 Template ID）=====
     const emailjsConfig = {
       serviceID: "service_6vu945a",
-      templateID: "6f2xzro",
+      templateID: "template_whxsovg",   // ✅ 已更新為新的 Template ID
       publicKey: "KU2Ya4rXsyHXopGAM"
     };
 
@@ -1082,7 +1083,7 @@
         category = custom;
       }
 
-      // 驗證所有必填欄位（排除 postLink 和 expectedResolution）
+      // 驗證所有必填欄位
       if (!name || !igName || !category || !priority || !title || !eventTime || !description || !needReply) {
         showToast('請填寫所有必填欄位（標示 * 的欄位）', true);
         return;
@@ -1125,6 +1126,7 @@
         const success = await addComplaint(newComplaint);
 
         if (success) {
+          // 🔥 發送 Email（不阻塞主流程）
           sendEmail(newComplaint).catch(err => console.error('Email 發送失敗:', err));
           document.getElementById('complaintForm').reset();
           selectedFiles = [];
@@ -1224,7 +1226,7 @@
     // ============================================================
 
     listenComplaints();
-    console.log('✅ 投訴系統已啟動');
+    console.log('✅ 靠北達德投訴系統已啟動');
     console.log('📊 狀態選項:', STATUS_LIST.join(', '));
     console.log('👑 管理員帳號:', ADMIN_USERNAME);
   </script>
