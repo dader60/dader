@@ -445,7 +445,7 @@
   <div class="view-passwords-overlay" id="viewPasswordsOverlay">
     <div class="view-passwords-box">
       <h3><i class="fas fa-eye" style="color:#2a7a5b;"></i> 管理員密碼清單</h3>
-      <p style="color:#6b8097;font-size:0.85rem;margin-bottom:1rem;text-align:center;">版主可點擊「變更」修改小編密碼</p>
+      <p style="color:#6b8097;font-size:0.85rem;margin-bottom:1rem;text-align:center;">版主可點擊「變更」修改小編密碼（雲端同步）</p>
       <div id="passwordList"></div>
       <button class="btn-secondary" id="viewPasswordsCloseBtn">關閉</button>
     </div>
@@ -605,36 +605,125 @@
     }
 
     // ============================================================
-    // 4b. 儲存/載入管理員密碼（永久儲存）
+    // 4b. 儲存/載入管理員密碼（Firestore 雲端 + localStorage 備份）
     // ============================================================
 
-    function saveAdmins() {
-      localStorage.setItem('adminAccounts', JSON.stringify(ADMIN_ACCOUNTS));
-      console.log('✅ 管理員密碼已儲存');
+    // 🔥 初始化 Firestore 中的密碼文件（如果不存在）
+    async function initAdminPasswords() {
+      try {
+        const docRef = db.collection('settings').doc('adminPasswords');
+        const doc = await docRef.get();
+        if (!doc.exists) {
+          // 第一次使用，建立密碼文件
+          const adminData = {};
+          ADMIN_ACCOUNTS.forEach(a => {
+            adminData[a.username] = a.password;
+          });
+          await docRef.set(adminData);
+          console.log('✅ 管理員密碼已初始化到 Firestore');
+        }
+      } catch (error) {
+        console.error('❌ 初始化密碼失敗:', error);
+      }
     }
 
-    function loadAdmins() {
-      const stored = localStorage.getItem('adminAccounts');
-      if (stored) {
-        try {
-          const parsed = JSON.parse(stored);
-          if (parsed && parsed.length > 0) {
-            // 更新 ADMIN_ACCOUNTS 的密碼
+    // 🔥 儲存密碼到 Firestore（所有瀏覽器共享）
+    async function saveAdminsToCloud() {
+      try {
+        const adminData = {};
+        ADMIN_ACCOUNTS.forEach(a => {
+          adminData[a.username] = a.password;
+        });
+        await db.collection('settings').doc('adminPasswords').set(adminData);
+        console.log('✅ 管理員密碼已儲存到雲端');
+        return true;
+      } catch (error) {
+        console.error('❌ 儲存密碼到雲端失敗:', error);
+        showToast('密碼儲存失敗，請稍後再試', true);
+        return false;
+      }
+    }
+
+    // 🔥 從 Firestore 讀取密碼（所有瀏覽器共享）
+    async function loadAdminsFromCloud() {
+      try {
+        const docRef = db.collection('settings').doc('adminPasswords');
+        const doc = await docRef.get();
+        if (doc.exists) {
+          const data = doc.data();
+          let updated = false;
+          ADMIN_ACCOUNTS.forEach(a => {
+            if (data[a.username]) {
+              a.password = data[a.username];
+              updated = true;
+            }
+          });
+          if (updated) {
+            console.log('✅ 管理員密碼已從雲端載入');
+          }
+          return true;
+        } else {
+          // 如果不存在，初始化
+          await initAdminPasswords();
+          return true;
+        }
+      } catch (error) {
+        console.error('❌ 從雲端載入密碼失敗:', error);
+        // 如果載入失敗，使用 localStorage 備份
+        const stored = localStorage.getItem('adminAccounts');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
             parsed.forEach(p => {
               const existing = ADMIN_ACCOUNTS.find(a => a.username === p.username);
               if (existing) {
                 existing.password = p.password;
               }
             });
-            console.log('✅ 管理員密碼已載入');
-            return;
-          }
-        } catch (e) {
-          console.error('載入密碼失敗:', e);
+            console.log('⚠️ 使用 localStorage 備份密碼');
+          } catch (e) {}
         }
+        return false;
       }
-      // 如果沒有儲存，使用預設並儲存
-      saveAdmins();
+    }
+
+    // 🔥 儲存管理員密碼（同時儲存到雲端和本地）
+    async function saveAdmins() {
+      // 儲存到 localStorage（本地備份）
+      localStorage.setItem('adminAccounts', JSON.stringify(ADMIN_ACCOUNTS));
+      // 儲存到 Firestore（雲端共享）
+      await saveAdminsToCloud();
+      console.log('✅ 管理員密碼已儲存（雲端 + 本地）');
+    }
+
+    // 🔥 載入管理員密碼（優先從雲端載入）
+    async function loadAdmins() {
+      // 先從雲端載入
+      const cloudLoaded = await loadAdminsFromCloud();
+      
+      if (!cloudLoaded) {
+        // 如果雲端載入失敗，從 localStorage 載入
+        const stored = localStorage.getItem('adminAccounts');
+        if (stored) {
+          try {
+            const parsed = JSON.parse(stored);
+            if (parsed && parsed.length > 0) {
+              parsed.forEach(p => {
+                const existing = ADMIN_ACCOUNTS.find(a => a.username === p.username);
+                if (existing) {
+                  existing.password = p.password;
+                }
+              });
+              console.log('✅ 管理員密碼已從 localStorage 載入');
+              return;
+            }
+          } catch (e) {}
+        }
+        // 如果都沒有，初始化雲端
+        await initAdminPasswords();
+        // 重新載入
+        await loadAdminsFromCloud();
+      }
     }
 
     // ============================================================
@@ -1531,7 +1620,7 @@
     });
 
     // ============================================================
-    // 13d. 變更密碼功能（版主/小編變更自己的密碼）
+    // 13d. 變更密碼功能（版主/小編變更自己的密碼，雲端同步）
     // ============================================================
 
     const changePwdBtn = document.getElementById('changePasswordBtn');
@@ -1562,7 +1651,7 @@
       if (e.target === this) this.classList.remove('active');
     });
 
-    cpConfirmBtn.addEventListener('click', function() {
+    cpConfirmBtn.addEventListener('click', async function() {
       const current = cpCurrent.value.trim();
       const newPwd = cpNew.value.trim();
       const confirmPwd = cpConfirm.value.trim();
@@ -1603,15 +1692,15 @@
 
       // 🔥 更新密碼
       updateAdminPassword(currentAdminUsername, newPwd);
-      // 🔥 儲存到 localStorage
-      saveAdmins();
+      // 🔥 儲存到雲端（所有瀏覽器共享）
+      await saveAdmins();
       
-      cpSuccessMsg.textContent = '✅ 密碼變更成功！請使用新密碼登入';
+      cpSuccessMsg.textContent = '✅ 密碼變更成功！所有瀏覽器同步';
       cpSuccessMsg.classList.add('show');
       
       setTimeout(() => {
         cpOverlay.classList.remove('active');
-        showToast('✅ 密碼已變更成功');
+        showToast('✅ 密碼已變更成功（所有瀏覽器同步）');
       }, 2000);
     });
 
@@ -1620,7 +1709,7 @@
     cpConfirm.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirmBtn.click(); });
 
     // ============================================================
-    // 13e. 查看密碼功能（版主可變更小編密碼）
+    // 13e. 查看密碼功能（版主可變更小編密碼，雲端同步）
     // ============================================================
 
     const viewPwdBtn = document.getElementById('viewPasswordsBtn');
@@ -1654,8 +1743,8 @@
       });
     }
 
-    // 🔥 變更小編密碼（版主變更，不發送 Email）
-    function handleChangePwd(e) {
+    // 🔥 變更小編密碼（版主變更，雲端同步，不發送 Email）
+    async function handleChangePwd(e) {
       const btn = e.currentTarget;
       const username = btn.dataset.username;
       const currentPwdEl = document.getElementById(`pwd_${username}`);
@@ -1679,9 +1768,9 @@
         // 🔥 更新密碼
         admin.password = newPwd;
         currentPwdEl.textContent = newPwd;
-        // 🔥 儲存到 localStorage
-        saveAdmins();
-        showToast(`✅ 「${username}」密碼已變更為：${newPwd}`);
+        // 🔥 儲存到雲端（所有瀏覽器共享）
+        await saveAdmins();
+        showToast(`✅ 「${username}」密碼已變更為：${newPwd}（所有瀏覽器同步）`);
         console.log(`✅ 密碼已變更：${username} → ${newPwd}`);
       }
     }
@@ -1926,19 +2015,22 @@
     // 15. 啟動
     // ============================================================
 
-    // 🔥 載入儲存的管理員密碼
-    loadAdmins();
-    
-    listenComplaints();
-    console.log('✅ 靠北達德投訴系統已啟動');
-    console.log('📊 狀態選項:', STATUS_LIST.join(', '));
-    console.log('👑 管理員帳號:', ADMIN_ACCOUNTS.map(a => a.username).join(', '));
-    console.log('🔒 需登入才能投訴');
-    console.log('📧 新投訴 → 管理員信箱');
-    console.log('📧 管理員回覆 → 投訴者信箱');
-    console.log('🔑 版主可變更小編密碼（無 Email 通知）');
-    console.log('👤 管理員登入顯示角色名稱（無需 Google）');
-    console.log('💾 密碼變更會永久儲存');
+    (async function startSystem() {
+      // 🔥 先載入管理員密碼（從雲端或本地）
+      await loadAdmins();
+      
+      // 開始監聽投訴
+      listenComplaints();
+      
+      console.log('✅ 靠北達德投訴系統已啟動');
+      console.log('📊 狀態選項:', STATUS_LIST.join(', '));
+      console.log('👑 管理員帳號:', ADMIN_ACCOUNTS.map(a => a.username).join(', '));
+      console.log('🔒 需登入才能投訴');
+      console.log('📧 新投訴 → 管理員信箱');
+      console.log('📧 管理員回覆 → 投訴者信箱');
+      console.log('🔑 版主可變更小編密碼（雲端同步）');
+      console.log('☁️ 密碼儲存在 Firestore 雲端，所有瀏覽器共享');
+    })();
   </script>
 </body>
 </html>
