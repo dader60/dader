@@ -732,23 +732,33 @@
       });
     }
 
+    // ============================================================
+    // 🔑 權限控制函數（已更新）
+    // ============================================================
+
     // 檢查權限：誰可以變更誰的密碼
     function canChangePassword(operator, target) {
       const operatorRole = getAdminRole(operator);
       const targetRole = getAdminRole(target);
       
+      // 所有權可以變更所有人
       if (operatorRole === 'owner') return true;
-      // 版主可變更副版主、小編、自己
+      
+      // 版主可以變更副版主、小編、自己（不能變更所有權）
       if (operatorRole === 'moderator') {
         if (targetRole === 'owner') return false;
         return true;
       }
-      // 副版主可變更小編、自己
+      
+      // 副版主只能變更自己（不能變更任何人，包含小編）
       if (operatorRole === 'vice') {
-        if (targetRole === 'owner' || targetRole === 'moderator') return false;
-        return true;
+        if (operator === target) return true;
+        return false;
       }
+      
+      // 小編只能變更自己
       if (operator === target) return true;
+      
       return false;
     }
 
@@ -757,18 +767,24 @@
       const operatorRole = getAdminRole(operator);
       const targetRole = getAdminRole(target);
       
+      // 所有權可以查看所有人
       if (operatorRole === 'owner') return true;
-      // 版主可查看版主以下（含副版主、小編）
+      
+      // 版主可以查看版主以下（含副版主、小編、自己）
       if (operatorRole === 'moderator') {
         if (targetRole === 'owner') return false;
         return true;
       }
-      // 副版主可查看小編、自己
+      
+      // 副版主可以查看小編、自己（不能查看所有權、版主）
       if (operatorRole === 'vice') {
         if (targetRole === 'owner' || targetRole === 'moderator') return false;
         return true;
       }
+      
+      // 小編只能查看自己
       if (operator === target) return true;
+      
       return false;
     }
 
@@ -1449,7 +1465,7 @@
           roleDisplay.textContent = roleName;
           roleDisplay.className = `user-role ${role}`;
           changePwdBtn.classList.add('show');
-          if (role === 'owner' || role === 'moderator') {
+          if (role === 'owner' || role === 'moderator' || role === 'vice') {
             viewPwdBtn.classList.add('show');
           } else {
             viewPwdBtn.classList.remove('show');
@@ -1495,7 +1511,7 @@
           roleDisplay.textContent = roleName;
           roleDisplay.className = `user-role ${role}`;
           changePwdBtn.classList.add('show');
-          if (role === 'owner' || role === 'moderator') {
+          if (role === 'owner' || role === 'moderator' || role === 'vice') {
             viewPwdBtn.classList.add('show');
           } else {
             viewPwdBtn.classList.remove('show');
@@ -1621,7 +1637,7 @@
         if (changePwdBtn) changePwdBtn.classList.add('show');
         
         const viewPwdBtn = document.getElementById('viewPasswordsBtn');
-        if (found.role === 'owner' || found.role === 'moderator') {
+        if (found.role === 'owner' || found.role === 'moderator' || found.role === 'vice') {
           viewPwdBtn.classList.add('show');
         } else {
           viewPwdBtn.classList.remove('show');
@@ -1772,7 +1788,7 @@
         if (canChange) {
           actionHtml = `<button class="btn-change-pwd" data-username="${escapeHtml(a.username)}">變更</button>`;
         } else {
-          actionHtml = `<span class="no-change">唯讀</span>`;
+          actionHtml = `<span class="no-change">🔒 唯讀</span>`;
         }
         
         div.innerHTML = `
@@ -2085,7 +2101,7 @@
       console.log('🔑 權限分級：');
       console.log('   - 所有權：可查看/變更所有人');
       console.log('   - 版主：可查看/變更版主以下（含副版主、小編）');
-      console.log('   - 副版主：可查看/變更小編、自己');
+      console.log('   - 副版主：可查看小編/自己，僅能變更自己');
       console.log('   - 小編：僅可自己變更密碼');
       console.log('🔄 密碼變更後立即儲存到 Firestore，所有瀏覽器即時同步');
     }
