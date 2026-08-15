@@ -29,9 +29,10 @@
     .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: #c52a2a; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; }
     .user-name { font-weight: 500; color: #1a2c44; }
     .user-role { font-size: 0.75rem; color: #7e93ab; background: #eef3f9; padding: 0.15rem 0.8rem; border-radius: 40px; }
-    .user-role.admin { background: #c52a2a; color: white; }
+    .user-role.owner { background: #c52a2a; color: white; }
     .user-role.moderator { background: #2a7a5b; color: white; }
-    .user-role.editor { background: #2a5b7a; color: white; }
+    .user-role.vice { background: #2a5b7a; color: white; }
+    .user-role.editor { background: #7a5b2a; color: white; }
     .btn-google { background: white; border: 1px solid #d7dfe9; border-radius: 40px; padding: 0.4rem 1.2rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-weight: 500; color: #2a405b; transition: 0.15s; font-size: 0.9rem; }
     .btn-google:hover { background: #f4f8ff; border-color: #b0c0d0; }
     .btn-google svg { width: 18px; height: 18px; }
@@ -156,16 +157,19 @@
 
     .view-passwords-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
     .view-passwords-overlay.active { display: flex; }
-    .view-passwords-box { background: white; padding: 2.5rem; border-radius: 28px; max-width: 500px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .view-passwords-box { background: white; padding: 2.5rem; border-radius: 28px; max-width: 550px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
     .view-passwords-box h3 { margin-bottom: 1.5rem; color: #0b1e33; text-align: center; }
     .view-passwords-box .pwd-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #eef3f9; font-size: 0.95rem; flex-wrap: wrap; gap: 8px; }
     .view-passwords-box .pwd-item .role-badge { font-size: 0.65rem; padding: 2px 10px; border-radius: 20px; color: white; }
+    .view-passwords-box .pwd-item .role-badge.owner { background: #c52a2a; }
     .view-passwords-box .pwd-item .role-badge.moderator { background: #2a7a5b; }
-    .view-passwords-box .pwd-item .role-badge.editor { background: #2a5b7a; }
+    .view-passwords-box .pwd-item .role-badge.vice { background: #2a5b7a; }
+    .view-passwords-box .pwd-item .role-badge.editor { background: #7a5b2a; }
     .view-passwords-box .pwd-item .pwd-display { font-family: monospace; color: #c52a2a; background: #f4f7fc; padding: 2px 10px; border-radius: 6px; }
     .view-passwords-box .btn-change-pwd { background: #2a5b7a; color: white; border: none; border-radius: 20px; padding: 2px 12px; font-size: 0.7rem; cursor: pointer; transition: 0.15s; }
     .view-passwords-box .btn-change-pwd:hover { background: #1a405a; }
     .view-passwords-box .btn-secondary { margin-top: 1rem; width: 100%; justify-content: center; }
+    .view-passwords-box .pwd-item .no-change { font-size: 0.7rem; color: #8a9db0; font-style: italic; }
 
     .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; cursor: pointer; }
     .lightbox.active { display: flex; }
@@ -441,11 +445,13 @@
     </div>
   </div>
 
-  <!-- ===== 查看密碼彈窗（版主可變更小編密碼） ===== -->
+  <!-- ===== 查看密碼彈窗 ===== -->
   <div class="view-passwords-overlay" id="viewPasswordsOverlay">
     <div class="view-passwords-box">
       <h3><i class="fas fa-eye" style="color:#2a7a5b;"></i> 管理員密碼清單</h3>
-      <p style="color:#6b8097;font-size:0.85rem;margin-bottom:1rem;text-align:center;">版主可點擊「變更」修改小編密碼</p>
+      <p style="color:#6b8097;font-size:0.85rem;margin-bottom:1rem;text-align:center;">
+        <span id="viewPwdHint">根據權限顯示可查看/變更的帳號</span>
+      </p>
       <div id="passwordList"></div>
       <button class="btn-secondary" id="viewPasswordsCloseBtn">關閉</button>
     </div>
@@ -483,13 +489,20 @@
       publicKey: "KU2Ya4rXsyHXopGAM"
     };
 
-    // ===== 固定管理員帳號 =====
-    let ADMIN_ACCOUNTS = [
-      { username: "dader60", password: "dader600909575253h", role: "moderator", roleName: "版主", displayName: "版主" },
-      { username: "dader01", password: "dader600909575253h", role: "editor", roleName: "小編", displayName: "小編01" },
-      { username: "dader02", password: "dader600909575253h", role: "editor", roleName: "小編", displayName: "小編02" },
-      { username: "dader03", password: "dader600909575253h", role: "editor", roleName: "小編", displayName: "小編03" }
+    // ============================================================
+    // 🔥 管理員帳號（從 Firestore 載入）
+    // ============================================================
+    const DEFAULT_ADMINS = [
+      { username: "dader60", password: "dader6020230527", role: "owner", roleName: "所有權", displayName: "所有權" },
+      { username: "dader00", password: "dader6000941010@", role: "moderator", roleName: "版主", displayName: "版主" },
+      { username: "dader01", password: "dader6000941010@", role: "vice", roleName: "副版主", displayName: "副版主" },
+      { username: "dader02", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編01" },
+      { username: "dader03", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編02" },
+      { username: "dader04", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編03" }
     ];
+
+    // 取得管理員陣列（從 DEFAULT_ADMINS 讀取）
+    let ADMIN_ACCOUNTS = DEFAULT_ADMINS;
 
     const MAX_IMAGES = 10;
     const IMGBB_API_KEY = "e36eefa56ac3084d8b981ee390bcba27";
@@ -504,7 +517,9 @@
     ];
 
     const ROLE_NAMES = {
+      owner: '所有權',
       moderator: '版主',
+      vice: '副版主',
       editor: '小編'
     };
 
@@ -529,6 +544,7 @@
     let complaints = [];
     let unsubscribeSnapshot = null;
     let selectedFiles = [];
+    let isPasswordLoaded = false;
 
     // ============================================================
     // 4. 工具函數
@@ -595,120 +611,165 @@
       return admin ? admin.password : null;
     }
 
-    function updateAdminPassword(username, newPassword) {
-      const admin = ADMIN_ACCOUNTS.find(a => a.username === username);
-      if (admin) {
-        admin.password = newPassword;
+    // ============================================================
+    // 4a. 🔥 Firestore 密碼管理（跨瀏覽器同步）
+    // ============================================================
+
+    // 從 Firestore 載入密碼
+    async function loadAdminsFromFirestore() {
+      try {
+        const docRef = db.collection('config').doc('adminPasswords');
+        const doc = await docRef.get();
+        
+        if (doc.exists) {
+          const pwdMap = doc.data();
+          let changed = false;
+          DEFAULT_ADMINS.forEach(admin => {
+            if (pwdMap[admin.username] && pwdMap[admin.username] !== admin.password) {
+              admin.password = pwdMap[admin.username];
+              changed = true;
+            }
+          });
+          if (changed) {
+            console.log('✅ 管理員密碼已從 Firestore 載入並更新');
+          } else {
+            console.log('✅ 管理員密碼已從 Firestore 載入');
+          }
+        } else {
+          // 第一次使用，初始化預設密碼到 Firestore
+          await saveAdminsToFirestore();
+          console.log('✅ 管理員密碼已初始化到 Firestore');
+        }
+        ADMIN_ACCOUNTS = DEFAULT_ADMINS;
+        isPasswordLoaded = true;
+        return DEFAULT_ADMINS;
+      } catch (error) {
+        console.error('❌ 載入密碼失敗:', error);
+        ADMIN_ACCOUNTS = DEFAULT_ADMINS;
+        isPasswordLoaded = true;
+        return DEFAULT_ADMINS;
+      }
+    }
+
+    // 儲存密碼到 Firestore
+    async function saveAdminsToFirestore() {
+      try {
+        const pwdMap = {};
+        DEFAULT_ADMINS.forEach(admin => {
+          pwdMap[admin.username] = admin.password;
+        });
+        await db.collection('config').doc('adminPasswords').set(pwdMap);
+        console.log('✅ 管理員密碼已儲存到 Firestore');
+        return true;
+      } catch (error) {
+        console.error('❌ 儲存密碼失敗:', error);
+        return false;
+      }
+    }
+
+    // 更新單一管理員密碼
+    async function updateAdminPasswordInFirestore(username, newPassword) {
+      const admin = DEFAULT_ADMINS.find(a => a.username === username);
+      if (!admin) return false;
+      
+      admin.password = newPassword;
+      const success = await saveAdminsToFirestore();
+      if (success) {
+        // 更新所有顯示
+        updateAllPasswordDisplays();
+        // 如果有密碼顯示彈窗打開，更新內容
+        if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
+          renderPasswordList();
+        }
         return true;
       }
       return false;
     }
 
-    // ============================================================
-    // 4b. 儲存/載入管理員密碼（Firestore 雲端 + localStorage 備份）
-    // ============================================================
-
-    async function initAdminPasswords() {
-      try {
-        const docRef = db.collection('settings').doc('adminPasswords');
-        const doc = await docRef.get();
-        if (!doc.exists) {
-          const adminData = {};
-          ADMIN_ACCOUNTS.forEach(a => {
-            adminData[a.username] = a.password;
-          });
-          await docRef.set(adminData);
-          console.log('✅ 管理員密碼已初始化到 Firestore');
-        }
-      } catch (error) {
-        console.error('❌ 初始化密碼失敗:', error);
-      }
-    }
-
-    async function saveAdminsToCloud() {
-      try {
-        const adminData = {};
-        ADMIN_ACCOUNTS.forEach(a => {
-          adminData[a.username] = a.password;
-        });
-        await db.collection('settings').doc('adminPasswords').set(adminData);
-        console.log('✅ 管理員密碼已儲存到雲端');
-        return true;
-      } catch (error) {
-        console.error('❌ 儲存密碼到雲端失敗:', error);
-        showToast('密碼儲存失敗，請稍後再試', true);
-        return false;
-      }
-    }
-
-    async function loadAdminsFromCloud() {
-      try {
-        const docRef = db.collection('settings').doc('adminPasswords');
-        const doc = await docRef.get();
-        if (doc.exists) {
-          const data = doc.data();
-          let updated = false;
-          ADMIN_ACCOUNTS.forEach(a => {
-            if (data[a.username]) {
-              a.password = data[a.username];
-              updated = true;
+    // 監聽密碼變更（跨瀏覽器同步）
+    function listenAdminPasswords() {
+      db.collection('config').doc('adminPasswords').onSnapshot((doc) => {
+        if (doc.exists && isPasswordLoaded) {
+          const pwdMap = doc.data();
+          let changed = false;
+          DEFAULT_ADMINS.forEach(admin => {
+            if (pwdMap[admin.username] && pwdMap[admin.username] !== admin.password) {
+              admin.password = pwdMap[admin.username];
+              changed = true;
             }
           });
-          if (updated) {
-            console.log('✅ 管理員密碼已從雲端載入');
-          }
-          return true;
-        } else {
-          await initAdminPasswords();
-          return true;
-        }
-      } catch (error) {
-        console.error('❌ 從雲端載入密碼失敗:', error);
-        const stored = localStorage.getItem('adminAccounts');
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            parsed.forEach(p => {
-              const existing = ADMIN_ACCOUNTS.find(a => a.username === p.username);
-              if (existing) {
-                existing.password = p.password;
+          if (changed) {
+            console.log('🔄 密碼已從 Firestore 同步更新（跨瀏覽器）');
+            updateAllPasswordDisplays();
+            // 如果有密碼顯示彈窗打開，更新內容
+            if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
+              renderPasswordList();
+            }
+            // 更新管理員登入按鈕狀態（如果當前使用者密碼被變更）
+            if (isAdmin) {
+              const currentAdmin = DEFAULT_ADMINS.find(a => a.username === currentAdminUsername);
+              if (currentAdmin) {
+                // 重新驗證當前管理員身份
+                // 不需要強制登出，但提示使用者
+                showToast('🔄 管理員密碼已在其他瀏覽器變更', false);
               }
-            });
-            console.log('⚠️ 使用 localStorage 備份密碼');
-          } catch (e) {}
-        }
-        return false;
-      }
-    }
-
-    async function saveAdmins() {
-      localStorage.setItem('adminAccounts', JSON.stringify(ADMIN_ACCOUNTS));
-      await saveAdminsToCloud();
-      console.log('✅ 管理員密碼已儲存（雲端 + 本地）');
-    }
-
-    async function loadAdmins() {
-      const cloudLoaded = await loadAdminsFromCloud();
-      if (!cloudLoaded) {
-        const stored = localStorage.getItem('adminAccounts');
-        if (stored) {
-          try {
-            const parsed = JSON.parse(stored);
-            if (parsed && parsed.length > 0) {
-              parsed.forEach(p => {
-                const existing = ADMIN_ACCOUNTS.find(a => a.username === p.username);
-                if (existing) {
-                  existing.password = p.password;
-                }
-              });
-              console.log('✅ 管理員密碼已從 localStorage 載入');
-              return;
             }
-          } catch (e) {}
+          }
         }
-        await initAdminPasswords();
-        await loadAdminsFromCloud();
+      }, (error) => {
+        console.error('❌ 監聽密碼變更失敗:', error);
+      });
+    }
+
+    // 更新所有密碼顯示（立即生效，不需刷新）
+    function updateAllPasswordDisplays() {
+      document.querySelectorAll('.pwd-display').forEach(el => {
+        const uname = el.id.replace('pwd_', '');
+        const found = DEFAULT_ADMINS.find(a => a.username === uname);
+        if (found) {
+          el.textContent = found.password;
+        }
+      });
+    }
+
+    // 檢查權限：誰可以變更誰的密碼
+    function canChangePassword(operator, target) {
+      const operatorRole = getAdminRole(operator);
+      const targetRole = getAdminRole(target);
+      
+      if (operatorRole === 'owner') return true;
+      // 版主可變更副版主、小編、自己
+      if (operatorRole === 'moderator') {
+        if (targetRole === 'owner') return false;
+        return true;
       }
+      // 副版主可變更小編、自己
+      if (operatorRole === 'vice') {
+        if (targetRole === 'owner' || targetRole === 'moderator') return false;
+        return true;
+      }
+      if (operator === target) return true;
+      return false;
+    }
+
+    // 檢查權限：誰可以查看誰的密碼
+    function canViewPassword(operator, target) {
+      const operatorRole = getAdminRole(operator);
+      const targetRole = getAdminRole(target);
+      
+      if (operatorRole === 'owner') return true;
+      // 版主可查看版主以下（含副版主、小編）
+      if (operatorRole === 'moderator') {
+        if (targetRole === 'owner') return false;
+        return true;
+      }
+      // 副版主可查看小編、自己
+      if (operatorRole === 'vice') {
+        if (targetRole === 'owner' || targetRole === 'moderator') return false;
+        return true;
+      }
+      if (operator === target) return true;
+      return false;
     }
 
     // ============================================================
@@ -1254,7 +1315,7 @@
     };
 
     // ============================================================
-    // 10. 回覆處理函數（發送 Email 給投訴者）
+    // 10. 回覆處理函數
     // ============================================================
 
     async function handleReply(e) {
@@ -1388,7 +1449,7 @@
           roleDisplay.textContent = roleName;
           roleDisplay.className = `user-role ${role}`;
           changePwdBtn.classList.add('show');
-          if (role === 'moderator') {
+          if (role === 'owner' || role === 'moderator') {
             viewPwdBtn.classList.add('show');
           } else {
             viewPwdBtn.classList.remove('show');
@@ -1434,7 +1495,7 @@
           roleDisplay.textContent = roleName;
           roleDisplay.className = `user-role ${role}`;
           changePwdBtn.classList.add('show');
-          if (role === 'moderator') {
+          if (role === 'owner' || role === 'moderator') {
             viewPwdBtn.classList.add('show');
           } else {
             viewPwdBtn.classList.remove('show');
@@ -1494,7 +1555,7 @@
     });
 
     // ============================================================
-    // 13c. 管理員登入
+    // 13c. 管理員登入（使用 Firestore 密碼）
     // ============================================================
 
     const adminLoginBtn = document.getElementById('adminLoginBtn');
@@ -1560,7 +1621,7 @@
         if (changePwdBtn) changePwdBtn.classList.add('show');
         
         const viewPwdBtn = document.getElementById('viewPasswordsBtn');
-        if (found.role === 'moderator') {
+        if (found.role === 'owner' || found.role === 'moderator') {
           viewPwdBtn.classList.add('show');
         } else {
           viewPwdBtn.classList.remove('show');
@@ -1593,7 +1654,7 @@
     });
 
     // ============================================================
-    // 13d. 變更密碼功能（版主/小編變更自己的密碼，雲端同步）
+    // 13d. 變更密碼功能（使用 Firestore，所有瀏覽器同步）
     // ============================================================
 
     const changePwdBtn = document.getElementById('changePasswordBtn');
@@ -1663,26 +1724,21 @@
         return;
       }
 
-      updateAdminPassword(currentAdminUsername, newPwd);
+      // 更新密碼到 Firestore
+      const success = await updateAdminPasswordInFirestore(currentAdminUsername, newPwd);
       
-      // 🔥 更新所有密碼顯示元素
-      document.querySelectorAll('.pwd-display').forEach(el => {
-        const uname = el.id.replace('pwd_', '');
-        const found = ADMIN_ACCOUNTS.find(a => a.username === uname);
-        if (found) {
-          el.textContent = found.password;
-        }
-      });
-      
-      await saveAdmins();
-      
-      cpSuccessMsg.textContent = '✅ 密碼變更成功！所有瀏覽器同步';
-      cpSuccessMsg.classList.add('show');
-      
-      setTimeout(() => {
-        cpOverlay.classList.remove('active');
-        showToast('✅ 密碼已變更成功（所有瀏覽器同步）');
-      }, 2000);
+      if (success) {
+        cpSuccessMsg.textContent = '✅ 密碼變更成功！所有瀏覽器將同步';
+        cpSuccessMsg.classList.add('show');
+        
+        setTimeout(() => {
+          cpOverlay.classList.remove('active');
+          showToast('✅ 密碼已變更成功（所有瀏覽器同步）');
+        }, 1500);
+      } else {
+        cpErrorMsg.textContent = '❌ 儲存失敗，請稍後再試';
+        cpErrorMsg.classList.add('show');
+      }
     });
 
     cpCurrent.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpNew.focus(); });
@@ -1690,7 +1746,7 @@
     cpConfirm.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirmBtn.click(); });
 
     // ============================================================
-    // 13e. 查看密碼功能（版主可變更小編密碼，雲端同步）
+    // 13e. 查看密碼功能（權限控制，使用 Firestore）
     // ============================================================
 
     const viewPwdBtn = document.getElementById('viewPasswordsBtn');
@@ -1700,11 +1756,25 @@
 
     function renderPasswordList() {
       passwordListEl.innerHTML = '';
+      
       ADMIN_ACCOUNTS.forEach(a => {
         const roleName = ROLE_NAMES[a.role] || '管理員';
-        const isModerator = a.role === 'moderator';
+        
+        const canView = canViewPassword(currentAdminUsername, a.username);
+        const canChange = canChangePassword(currentAdminUsername, a.username);
+        
+        if (!canView) return;
+        
         const div = document.createElement('div');
         div.className = 'pwd-item';
+        
+        let actionHtml = '';
+        if (canChange) {
+          actionHtml = `<button class="btn-change-pwd" data-username="${escapeHtml(a.username)}">變更</button>`;
+        } else {
+          actionHtml = `<span class="no-change">唯讀</span>`;
+        }
+        
         div.innerHTML = `
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <span><strong>${escapeHtml(a.username)}</strong></span>
@@ -1712,7 +1782,7 @@
           </div>
           <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
             <span class="pwd-display" id="pwd_${a.username}">${escapeHtml(a.password)}</span>
-            ${!isModerator ? `<button class="btn-change-pwd" data-username="${escapeHtml(a.username)}">變更</button>` : ''}
+            ${actionHtml}
           </div>
         `;
         passwordListEl.appendChild(div);
@@ -1724,12 +1794,16 @@
       });
     }
 
-    // 🔥 變更小編密碼（版主變更，雲端同步）
     async function handleChangePwd(e) {
       const btn = e.currentTarget;
       const username = btn.dataset.username;
       const currentPwdEl = document.getElementById(`pwd_${username}`);
       const currentPwd = currentPwdEl.textContent;
+
+      if (!canChangePassword(currentAdminUsername, username)) {
+        showToast('您沒有權限變更此帳號的密碼', true);
+        return;
+      }
 
       const newPwd = prompt(`請輸入「${username}」的新密碼（至少6個字元）：`);
       if (newPwd === null) return;
@@ -1744,20 +1818,16 @@
         return;
       }
 
-      const admin = ADMIN_ACCOUNTS.find(a => a.username === username);
-      if (admin) {
-        admin.password = newPwd;
+      const success = await updateAdminPasswordInFirestore(username, newPwd);
+      if (success) {
         currentPwdEl.textContent = newPwd;
-        
-        await saveAdmins();
-        
-        showToast(`✅ 「${username}」密碼已變更為：${newPwd}（所有瀏覽器同步）`);
-        console.log(`✅ 密碼已變更：${username} → ${newPwd}`);
+        showToast(`✅ 「${username}」密碼已變更（所有瀏覽器同步）`);
+      } else {
+        showToast('❌ 變更失敗，請稍後再試', true);
       }
     }
 
     viewPwdBtn.addEventListener('click', function() {
-      // 🔥 每次開啟都重新渲染，確保顯示最新密碼
       renderPasswordList();
       viewOverlay.classList.add('active');
     });
@@ -1996,20 +2066,31 @@
     // 15. 啟動
     // ============================================================
 
-    (async function startSystem() {
-      await loadAdmins();
+    async function init() {
+      // 先從 Firestore 載入密碼
+      await loadAdminsFromFirestore();
+      
+      // 監聽密碼變更（跨瀏覽器同步）
+      listenAdminPasswords();
+      
+      // 啟動監聽投訴
       listenComplaints();
       
       console.log('✅ 靠北達德投訴系統已啟動');
       console.log('📊 狀態選項:', STATUS_LIST.join(', '));
-      console.log('👑 管理員帳號:', ADMIN_ACCOUNTS.map(a => a.username).join(', '));
+      console.log('👑 管理員帳號:', DEFAULT_ADMINS.map(a => a.username).join(', '));
       console.log('🔒 需登入才能投訴');
       console.log('📧 新投訴 → 管理員信箱');
       console.log('📧 管理員回覆 → 投訴者信箱');
-      console.log('🔑 版主可變更小編密碼（雲端同步）');
-      console.log('☁️ 密碼儲存在 Firestore 雲端，所有瀏覽器共享');
-      console.log('🔄 小編變更密碼後，版主查看密碼即時更新');
-    })();
+      console.log('🔑 權限分級：');
+      console.log('   - 所有權：可查看/變更所有人');
+      console.log('   - 版主：可查看/變更版主以下（含副版主、小編）');
+      console.log('   - 副版主：可查看/變更小編、自己');
+      console.log('   - 小編：僅可自己變更密碼');
+      console.log('🔄 密碼變更後立即儲存到 Firestore，所有瀏覽器即時同步');
+    }
+
+    init();
   </script>
 </body>
 </html>
