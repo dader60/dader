@@ -39,6 +39,9 @@
     .btn-admin-login { background: #2a405b; color: white; border: none; border-radius: 40px; padding: 0.3rem 1.2rem; cursor: pointer; font-size: 0.85rem; transition: 0.15s; }
     .btn-admin-login:hover { background: #1a2c44; }
     .btn-admin-login.active { background: #c52a2a; }
+    .btn-change-password { background: #6c7e94; color: white; border: none; border-radius: 40px; padding: 0.3rem 1rem; cursor: pointer; font-size: 0.75rem; transition: 0.15s; display: none; }
+    .btn-change-password:hover { background: #5a6b80; }
+    .btn-change-password.show { display: inline-block; }
     .row { display: grid; grid-template-columns: 1fr 1.4fr; gap: 2rem; margin-top: 0.5rem; }
     @media (max-width: 820px) { .row { grid-template-columns: 1fr; gap: 1.5rem; } .container { padding: 1.5rem; } }
     .card { background: #ffffff; border-radius: 24px; padding: 1.6rem 1.8rem 2rem; box-shadow: 0 6px 20px rgba(0,0,0,0.02); border: 1px solid #e9edf4; }
@@ -130,6 +133,19 @@
     .login-box .btn-primary { width: 100%; margin-top: 0; }
     .login-box .error-msg { color: #c52a2a; font-size: 0.85rem; margin-bottom: 0.8rem; display: none; }
     .login-box .error-msg.show { display: block; }
+
+    /* 變更密碼彈窗 */
+    .change-password-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
+    .change-password-overlay.active { display: flex; }
+    .change-password-box { background: white; padding: 2.5rem; border-radius: 28px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); text-align: center; }
+    .change-password-box h3 { margin-bottom: 1.5rem; color: #0b1e33; }
+    .change-password-box input { margin-bottom: 1rem; }
+    .change-password-box .btn-primary { width: 100%; margin-top: 0; }
+    .change-password-box .error-msg { color: #c52a2a; font-size: 0.85rem; margin-bottom: 0.8rem; display: none; }
+    .change-password-box .error-msg.show { display: block; }
+    .change-password-box .success-msg { color: #28a745; font-size: 0.85rem; margin-bottom: 0.8rem; display: none; }
+    .change-password-box .success-msg.show { display: block; }
+
     .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; cursor: pointer; }
     .lightbox.active { display: flex; }
     .lightbox img { max-width: 90%; max-height: 90%; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
@@ -202,6 +218,7 @@
         </button>
         <button class="btn-logout" id="logoutBtn">登出</button>
         <button class="btn-admin-login" id="adminLoginBtn"><i class="fas fa-user-shield"></i> 管理</button>
+        <button class="btn-change-password" id="changePasswordBtn"><i class="fas fa-key"></i> 變更密碼</button>
       </div>
     </div>
 
@@ -363,6 +380,21 @@
     </div>
   </div>
 
+  <!-- ===== 變更密碼彈窗 ===== -->
+  <div class="change-password-overlay" id="changePasswordOverlay">
+    <div class="change-password-box">
+      <h3><i class="fas fa-key" style="color:#c52a2a;"></i> 變更管理員密碼</h3>
+      <p style="color:#6b8097;font-size:0.9rem;margin-bottom:1.2rem;">請輸入目前密碼並設定新密碼</p>
+      <div class="error-msg" id="cpErrorMsg">❌ 錯誤訊息</div>
+      <div class="success-msg" id="cpSuccessMsg">✅ 密碼變更成功！</div>
+      <input type="password" id="cpCurrentPassword" placeholder="目前密碼" />
+      <input type="password" id="cpNewPassword" placeholder="新密碼" />
+      <input type="password" id="cpConfirmPassword" placeholder="確認新密碼" />
+      <button class="btn-primary" id="cpConfirmBtn"><i class="fas fa-save"></i> 確認變更</button>
+      <button class="btn-secondary" id="cpCancelBtn" style="margin-top:0.5rem; width:100%; justify-content:center;">取消</button>
+    </div>
+  </div>
+
   <!-- ===== 圖片燈箱 ===== -->
   <div class="lightbox" id="lightbox">
     <button class="nav-btn prev" id="lightboxPrev"><i class="fas fa-chevron-left"></i></button>
@@ -395,8 +427,9 @@
       publicKey: "KU2Ya4rXsyHXopGAM"
     };
 
-    const ADMIN_USERNAME = "dader60";
-    const ADMIN_PASSWORD = "dader600909575253h";
+    // 管理員帳號
+    let ADMIN_USERNAME = "dader60";
+    let ADMIN_PASSWORD = "dader600909575253h";
 
     const MAX_IMAGES = 10;
     const IMGBB_API_KEY = "e36eefa56ac3084d8b981ee390bcba27";
@@ -986,7 +1019,7 @@
     });
 
     // ============================================================
-    // 12. UI 更新（🔧 顯示「未登入」和「姓名，您好」）
+    // 12. UI 更新
     // ============================================================
 
     function updateUI(user) {
@@ -997,21 +1030,23 @@
       const googleBtn2 = document.getElementById('googleLoginBtn2');
       const logoutBtn = document.getElementById('logoutBtn');
       const adminLoginBtn = document.getElementById('adminLoginBtn');
+      const changePwdBtn = document.getElementById('changePasswordBtn');
       const form = document.getElementById('complaintForm');
       const loginRequired = document.getElementById('loginRequiredMsg');
 
       if (user) {
         const displayName = user.displayName || user.email || '使用者';
         avatar.textContent = getInitials(displayName);
-        // 🔥 登入顯示「姓名，您好」
         nameDisplay.textContent = `${displayName}，您好`;
 
         if (isAdmin === true) {
           roleDisplay.textContent = '管理員';
           roleDisplay.className = 'user-role admin';
+          changePwdBtn.classList.add('show');
         } else {
           roleDisplay.textContent = '一般使用者';
           roleDisplay.className = 'user-role';
+          changePwdBtn.classList.remove('show');
         }
 
         googleBtn.style.display = 'none';
@@ -1026,13 +1061,13 @@
         }
       } else {
         avatar.textContent = '👤';
-        // 🔥 未登入顯示「未登入」
         nameDisplay.textContent = '未登入';
         roleDisplay.textContent = '一般';
         roleDisplay.className = 'user-role';
         googleBtn.style.display = 'inline-flex';
         googleBtn2.style.display = 'inline-flex';
         logoutBtn.classList.remove('show');
+        changePwdBtn.classList.remove('show');
         form.style.display = 'none';
         loginRequired.style.display = 'block';
 
@@ -1116,6 +1151,11 @@
       const username = adminUsername.value.trim();
       const password = adminPassword.value.trim();
 
+      console.log('🔑 管理員登入 - 輸入帳號:', username);
+      console.log('🔑 管理員登入 - 輸入密碼:', password);
+      console.log('🔑 管理員登入 - 正確帳號:', ADMIN_USERNAME);
+      console.log('🔑 管理員登入 - 正確密碼:', ADMIN_PASSWORD);
+
       if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
         isAdmin = true;
         sessionStorage.setItem('isAdmin', 'true');
@@ -1124,11 +1164,13 @@
         adminLoginBtn.className = 'btn-admin-login active';
         updateUI(currentUser);
         showToast('✅ 管理員模式已啟用');
+        console.log('✅ 管理員登入成功，isAdmin =', isAdmin);
         render();
       } else {
         adminErrorMsg.classList.add('show');
         adminPassword.value = '';
         adminPassword.focus();
+        console.log('❌ 管理員登入失敗');
       }
     });
 
@@ -1139,7 +1181,97 @@
       if (e.target === this) this.classList.remove('active');
     });
 
-    // ----- 13d. 類別切換 -----
+    // ============================================================
+    // 13d. 變更密碼功能
+    // ============================================================
+
+    const changePwdBtn = document.getElementById('changePasswordBtn');
+    const cpOverlay = document.getElementById('changePasswordOverlay');
+    const cpCurrent = document.getElementById('cpCurrentPassword');
+    const cpNew = document.getElementById('cpNewPassword');
+    const cpConfirm = document.getElementById('cpConfirmPassword');
+    const cpConfirmBtn = document.getElementById('cpConfirmBtn');
+    const cpCancelBtn = document.getElementById('cpCancelBtn');
+    const cpErrorMsg = document.getElementById('cpErrorMsg');
+    const cpSuccessMsg = document.getElementById('cpSuccessMsg');
+
+    changePwdBtn.addEventListener('click', function() {
+      cpOverlay.classList.add('active');
+      cpCurrent.value = '';
+      cpNew.value = '';
+      cpConfirm.value = '';
+      cpErrorMsg.classList.remove('show');
+      cpSuccessMsg.classList.remove('show');
+      cpCurrent.focus();
+    });
+
+    cpCancelBtn.addEventListener('click', function() {
+      cpOverlay.classList.remove('active');
+    });
+
+    cpOverlay.addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('active');
+    });
+
+    cpConfirmBtn.addEventListener('click', function() {
+      const current = cpCurrent.value.trim();
+      const newPwd = cpNew.value.trim();
+      const confirmPwd = cpConfirm.value.trim();
+
+      // 清除之前的訊息
+      cpErrorMsg.classList.remove('show');
+      cpSuccessMsg.classList.remove('show');
+
+      // 驗證
+      if (!current || !newPwd || !confirmPwd) {
+        cpErrorMsg.textContent = '❌ 請填寫所有欄位';
+        cpErrorMsg.classList.add('show');
+        return;
+      }
+
+      if (current !== ADMIN_PASSWORD) {
+        cpErrorMsg.textContent = '❌ 目前密碼錯誤';
+        cpErrorMsg.classList.add('show');
+        cpCurrent.value = '';
+        cpCurrent.focus();
+        return;
+      }
+
+      if (newPwd.length < 6) {
+        cpErrorMsg.textContent = '❌ 新密碼至少需要 6 個字元';
+        cpErrorMsg.classList.add('show');
+        cpNew.value = '';
+        cpConfirm.value = '';
+        cpNew.focus();
+        return;
+      }
+
+      if (newPwd !== confirmPwd) {
+        cpErrorMsg.textContent = '❌ 新密碼與確認密碼不符';
+        cpErrorMsg.classList.add('show');
+        cpConfirm.value = '';
+        cpConfirm.focus();
+        return;
+      }
+
+      // 更新密碼
+      ADMIN_PASSWORD = newPwd;
+      cpSuccessMsg.textContent = '✅ 密碼變更成功！請使用新密碼登入';
+      cpSuccessMsg.classList.add('show');
+      
+      // 3秒後關閉視窗
+      setTimeout(() => {
+        cpOverlay.classList.remove('active');
+        showToast('✅ 密碼已變更成功');
+      }, 2000);
+    });
+
+    // Enter 鍵支援
+    cpCurrent.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpNew.focus(); });
+    cpNew.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirm.focus(); });
+    cpConfirm.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirmBtn.click(); });
+
+    // ----- 13e. 類別切換 -----
     document.getElementById('category').addEventListener('change', function() {
       const customGroup = document.getElementById('customCategoryGroup');
       if (this.value === '其他') {
@@ -1149,7 +1281,7 @@
       }
     });
 
-    // ----- 13e. 圖片上傳 -----
+    // ----- 13f. 圖片上傳 -----
     const imageInput = document.getElementById('imageInput');
     const addMoreBtn = document.getElementById('addMoreBtn');
     const uploadArea = document.getElementById('imageUploadArea');
@@ -1182,7 +1314,7 @@
       }
     });
 
-    // ----- 13f. 提交投訴 -----
+    // ----- 13g. 提交投訴 -----
     document.getElementById('complaintForm').addEventListener('submit', async function(e) {
       e.preventDefault();
 
@@ -1270,7 +1402,7 @@
       }
     });
 
-    // ----- 13g. 狀態變更 -----
+    // ----- 13h. 狀態變更 -----
     document.getElementById('complaintList').addEventListener('change', async function(e) {
       const target = e.target.closest('select');
       if (!target) return;
@@ -1292,7 +1424,7 @@
       }
     });
 
-    // ----- 13h. 刪除按鈕 -----
+    // ----- 13i. 刪除按鈕 -----
     document.getElementById('complaintList').addEventListener('click', async function(e) {
       const target = e.target.closest('button');
       if (!target) return;
@@ -1315,10 +1447,10 @@
       }
     });
 
-    // ----- 13i. 過濾 -----
+    // ----- 13j. 過濾 -----
     document.getElementById('filterStatus').addEventListener('change', render);
 
-    // ----- 13j. 清空全部 -----
+    // ----- 13k. 清空全部 -----
     document.getElementById('clearAllBtn').addEventListener('click', async function() {
       if (isAdmin !== true) {
         showToast('請先登入管理模式', true);
