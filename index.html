@@ -202,11 +202,13 @@
     .reply-section .reply-input-area .btn-reply:disabled { opacity: 0.5; cursor: not-allowed; }
     .reply-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
     .reply-item { background: #f4f7fc; border-radius: 12px; padding: 8px 12px; font-size: 0.85rem; color: #2a405b; border-left: 3px solid #c52a2a; }
-    .reply-item .reply-author { font-weight: 600; color: #c52a2a; margin-right: 6px; }
+    .reply-item .reply-author { font-weight: 600; margin-right: 6px; }
     .reply-item .reply-time { font-size: 0.7rem; color: #8a9db0; margin-left: 6px; }
     .reply-item .reply-text { margin-top: 2px; }
     .reply-item.reply-admin { border-left-color: #2a405b; }
-    .reply-item.reply-admin .reply-author { color: #2a405b; }
+    .reply-item .reply-author.moderator { color: #2a7a5b; }
+    .reply-item .reply-author.editor { color: #2a5b7a; }
+    .reply-item .reply-author.public { color: #8a9db0; }
     .no-reply { font-size: 0.8rem; color: #8a9db0; font-style: italic; }
 
     .login-required-msg { text-align: center; padding: 2rem 1rem; color: #6b8097; }
@@ -466,10 +468,10 @@
 
     // ===== 固定管理員帳號 =====
     const ADMIN_ACCOUNTS = [
-      { username: "dader60", password: "dader600909575253h", role: "moderator", roleName: "版主" },
-      { username: "dader01", password: "dader600909575253h", role: "editor", roleName: "小編" },
-      { username: "dader02", password: "dader600909575253h", role: "editor", roleName: "小編" },
-      { username: "dader03", password: "dader600909575253h", role: "editor", roleName: "小編" }
+      { username: "dader60", password: "dader600909575253h", role: "moderator", roleName: "版主", displayName: "版主" },
+      { username: "dader01", password: "dader600909575253h", role: "editor", roleName: "小編", displayName: "小編01" },
+      { username: "dader02", password: "dader600909575253h", role: "editor", roleName: "小編", displayName: "小編02" },
+      { username: "dader03", password: "dader600909575253h", role: "editor", roleName: "小編", displayName: "小編03" }
     ];
 
     const MAX_IMAGES = 10;
@@ -487,11 +489,6 @@
     const ROLE_NAMES = {
       moderator: '版主',
       editor: '小編'
-    };
-
-    const ROLE_COLORS = {
-      moderator: '#2a7a5b',
-      editor: '#2a5b7a'
     };
 
     // ============================================================
@@ -559,6 +556,11 @@
         toast.classList.remove('show');
         toast.style.opacity = '0';
       }, 3500);
+    }
+
+    function getAdminDisplayName(username) {
+      const admin = ADMIN_ACCOUNTS.find(a => a.username === username);
+      return admin ? admin.displayName : username;
     }
 
     function getAdminRole(username) {
@@ -756,12 +758,12 @@
 
     async function updateStatus(docId, newStatus) {
       try {
-        const adminName = currentAdminUsername || currentUser?.displayName || currentUser?.email || '管理員';
-        const roleName = getAdminRoleName(adminName);
-        const displayName = roleName !== '管理員' ? `${roleName} ${adminName}` : adminName;
+        const displayName = getAdminDisplayName(currentAdminUsername);
+        const roleName = getAdminRoleName(currentAdminUsername);
+        const fullDisplay = `${roleName} ${displayName}`;
         await db.collection('complaints').doc(docId).update({ 
           status: newStatus,
-          lastProcessedBy: displayName,
+          lastProcessedBy: fullDisplay,
           lastProcessedAt: getToday() + ' ' + getNowTime()
         });
         return true;
@@ -774,13 +776,15 @@
 
     async function addReply(docId, replyText, isAdminReply = false) {
       try {
-        const adminName = currentAdminUsername || currentUser?.displayName || currentUser?.email || '管理員';
-        const roleName = getAdminRoleName(adminName);
-        const displayName = isAdminReply ? `${roleName} ${adminName}` : adminName;
+        const displayName = getAdminDisplayName(currentAdminUsername);
+        const roleName = getAdminRoleName(currentAdminUsername);
+        const authorDisplay = `${roleName} ${displayName}`;
         const reply = {
           text: replyText,
           isAdmin: isAdminReply,
-          author: displayName,
+          author: authorDisplay,
+          authorRole: roleName,
+          authorDisplayName: displayName,
           time: getNowTime(),
           date: getToday()
         };
@@ -957,15 +961,36 @@
             `;
           }
 
+          // ===== 回覆列表（包含身份顯示） =====
           let repliesHtml = '';
           if (item.replies && item.replies.length > 0) {
             repliesHtml = '<div class="reply-list">';
             item.replies.forEach(r => {
+              let authorDisplay = '';
+              let authorClass = 'public';
+              
+              if (r.isAdmin) {
+                // 管理員回覆 - 顯示具體身份（版主/小編01/小編02/小編03）
+                const roleName = r.authorRole || '管理員';
+                const displayName = r.authorDisplayName || '管理員';
+                authorDisplay = `${roleName} ${displayName}`;
+                authorClass = r.authorRole === 'moderator' ? 'moderator' : 'editor';
+              } else {
+                // 一般使用者回覆
+                authorDisplay = item.userName || '使用者';
+                authorClass = 'public';
+              }
+              
+              // 版主和小編可以看到完整身份，一般使用者只看到「管理員」
+              let finalAuthorDisplay = authorDisplay;
+              if (!isAdmin && r.isAdmin) {
+                finalAuthorDisplay = '管理員';
+              }
+              
               const replyClass = r.isAdmin ? 'reply-item reply-admin' : 'reply-item';
-              const authorName = r.isAdmin ? '👑 ' + (r.author || '管理員') : '📝 ' + (item.userName || '使用者');
               repliesHtml += `
                 <div class="${replyClass}">
-                  <span class="reply-author">${authorName}</span>
+                  <span class="reply-author ${authorClass}">${escapeHtml(finalAuthorDisplay)}</span>
                   <span class="reply-time">${r.date || ''} ${r.time || ''}</span>
                   <div class="reply-text">${escapeHtml(r.text)}</div>
                 </div>
@@ -1148,7 +1173,6 @@
           roleDisplay.textContent = roleName;
           roleDisplay.className = `user-role ${role}`;
           changePwdBtn.classList.add('show');
-          // 只有版主可以查看密碼
           if (role === 'moderator') {
             viewPwdBtn.classList.add('show');
           } else {
