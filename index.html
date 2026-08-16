@@ -16,6 +16,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
+    /* ... 樣式保持不變 ... */
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
     body { background: #f4f7fc; min-height: 100vh; padding: 2rem 1rem; display: flex; justify-content: center; align-items: flex-start; }
     .container { max-width: 1300px; width: 100%; background: white; border-radius: 32px; box-shadow: 0 20px 60px rgba(0,20,40,0.08); padding: 2rem 2rem 2.5rem; }
@@ -490,15 +491,19 @@
     };
 
     // ============================================================
-    // 🔥 管理員帳號（從 Firestore 載入）
+    // 🔥 管理員帳號（寫死在程式中，密碼會從 Firestore 載入）
     // ============================================================
     const DEFAULT_ADMINS = [
       { username: "dader60", password: "dader6020230527", role: "owner", roleName: "所有權", displayName: "所有權" },
       { username: "dader00", password: "dader6000941010@", role: "moderator", roleName: "版主", displayName: "版主" },
       { username: "dader01", password: "dader6000941010@", role: "vice", roleName: "副版主", displayName: "副版主" },
+      // 小編群組
       { username: "dader02", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編01" },
       { username: "dader03", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編02" },
-      { username: "dader04", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編03" }
+      { username: "dader04", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編03" },
+      // 🔥 新增小編04、小編05
+      { username: "dader05", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編04" },
+      { username: "dader06", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編05" }
     ];
 
     // 取得管理員陣列（從 DEFAULT_ADMINS 讀取）
@@ -709,8 +714,6 @@
             if (isAdmin) {
               const currentAdmin = DEFAULT_ADMINS.find(a => a.username === currentAdminUsername);
               if (currentAdmin) {
-                // 重新驗證當前管理員身份
-                // 不需要強制登出，但提示使用者
                 showToast('🔄 管理員密碼已在其他瀏覽器變更', false);
               }
             }
@@ -733,7 +736,7 @@
     }
 
     // ============================================================
-    // 🔑 權限控制函數（已更新）
+    // 🔑 權限控制函數
     // ============================================================
 
     // 檢查權限：誰可以變更誰的密碼
@@ -2104,6 +2107,7 @@
       console.log('   - 副版主：可查看小編/自己，僅能變更自己');
       console.log('   - 小編：僅可自己變更密碼');
       console.log('🔄 密碼變更後立即儲存到 Firestore，所有瀏覽器即時同步');
+      console.log('📋 小編帳號：dader05、dader06 (密碼: dader600909575253@)');
     }
 
     init();
