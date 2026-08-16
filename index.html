@@ -246,6 +246,16 @@
       0%, 100% { opacity: 1; }
       50% { opacity: 0.5; }
     }
+
+    .welcome-line {
+      font-size: 0.9rem;
+      color: #2a405b;
+      font-weight: 400;
+    }
+    .welcome-line i {
+      color: #c52a2a;
+      margin-right: 6px;
+    }
   </style>
 </head>
 <body>
@@ -262,7 +272,10 @@
     <div class="top-nav">
       <div class="user-info" id="userInfo">
         <div class="user-avatar" id="userAvatar">👤</div>
-        <span class="user-name" id="userNameDisplay"></span>
+        <div>
+          <div class="user-name" id="userNameDisplay"></div>
+          <div class="welcome-line" id="welcomeLine"><i class="fas fa-smile"></i> 歡迎使用投訴系統</div>
+        </div>
         <span class="user-role" id="userRoleDisplay">一般</span>
       </div>
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
@@ -501,7 +514,7 @@
       { username: "dader02", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編01" },
       { username: "dader03", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編02" },
       { username: "dader04", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編03" },
-      // 🔥 新增小編04、小編05
+      // 小編04、小編05
       { username: "dader05", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編04" },
       { username: "dader06", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編05" }
     ];
@@ -617,6 +630,45 @@
     }
 
     // ============================================================
+    // 🔥 強制登出管理員函數
+    // ============================================================
+
+    function forceLogoutAdmin(username) {
+      if (isAdmin && currentAdminUsername === username) {
+        console.log(`🔄 管理員 ${username} 的密碼已被變更，強制登出`);
+        isAdmin = false;
+        sessionStorage.setItem('isAdmin', 'false');
+        sessionStorage.removeItem('currentAdminUsername');
+        
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+        adminLoginBtn.textContent = '管理';
+        adminLoginBtn.className = 'btn-admin-login';
+        
+        const roleDisplay = document.getElementById('userRoleDisplay');
+        if (roleDisplay) {
+          if (currentUser) {
+            roleDisplay.textContent = '一般使用者';
+            roleDisplay.className = 'user-role';
+          } else {
+            roleDisplay.textContent = '一般';
+            roleDisplay.className = 'user-role';
+          }
+        }
+        
+        document.getElementById('changePasswordBtn').classList.remove('show');
+        document.getElementById('viewPasswordsBtn').classList.remove('show');
+        
+        // 更新 UI
+        updateUI(currentUser);
+        render();
+        
+        showToast(`🔒 您的密碼已被管理員變更，請重新登入`, true);
+        return true;
+      }
+      return false;
+    }
+
+    // ============================================================
     // 4a. 🔥 Firestore 密碼管理（跨瀏覽器同步）
     // ============================================================
 
@@ -672,50 +724,59 @@
       }
     }
 
-    // 更新單一管理員密碼
+    // 更新單一管理員密碼（加入登出邏輯）
     async function updateAdminPasswordInFirestore(username, newPassword) {
       const admin = DEFAULT_ADMINS.find(a => a.username === username);
       if (!admin) return false;
       
       admin.password = newPassword;
       const success = await saveAdminsToFirestore();
+      
       if (success) {
         // 更新所有顯示
         updateAllPasswordDisplays();
+        
         // 如果有密碼顯示彈窗打開，更新內容
         if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
           renderPasswordList();
         }
+        
+        // 🔥 檢查被變更的使用者是否為目前登入的管理員
+        forceLogoutAdmin(username);
+        
         return true;
       }
       return false;
     }
 
-    // 監聽密碼變更（跨瀏覽器同步）
+    // 監聽密碼變更（跨瀏覽器同步）- 加入登出邏輯
     function listenAdminPasswords() {
       db.collection('config').doc('adminPasswords').onSnapshot((doc) => {
         if (doc.exists && isPasswordLoaded) {
           const pwdMap = doc.data();
           let changed = false;
+          let changedUsername = null;
+          
           DEFAULT_ADMINS.forEach(admin => {
             if (pwdMap[admin.username] && pwdMap[admin.username] !== admin.password) {
               admin.password = pwdMap[admin.username];
               changed = true;
+              changedUsername = admin.username;
             }
           });
+          
           if (changed) {
-            console.log('🔄 密碼已從 Firestore 同步更新（跨瀏覽器）');
+            console.log(`🔄 密碼已從 Firestore 同步更新（跨瀏覽器）- 變更帳號: ${changedUsername}`);
             updateAllPasswordDisplays();
+            
             // 如果有密碼顯示彈窗打開，更新內容
             if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
               renderPasswordList();
             }
-            // 更新管理員登入按鈕狀態（如果當前使用者密碼被變更）
-            if (isAdmin) {
-              const currentAdmin = DEFAULT_ADMINS.find(a => a.username === currentAdminUsername);
-              if (currentAdmin) {
-                showToast('🔄 管理員密碼已在其他瀏覽器變更', false);
-              }
+            
+            // 🔥 檢查被變更的使用者是否為目前登入的管理員（來自其他瀏覽器的變更）
+            if (isAdmin && currentAdminUsername === changedUsername) {
+              forceLogoutAdmin(changedUsername);
             }
           }
         }
@@ -1431,12 +1492,13 @@
     });
 
     // ============================================================
-    // 12. UI 更新
+    // 12. UI 更新（歡迎訊息：一般使用者顯示名字，管理員顯示角色名稱）
     // ============================================================
 
     function updateUI(user) {
       const avatar = document.getElementById('userAvatar');
       const nameDisplay = document.getElementById('userNameDisplay');
+      const welcomeLine = document.getElementById('welcomeLine');
       const roleDisplay = document.getElementById('userRoleDisplay');
       const googleBtn = document.getElementById('googleLoginBtn');
       const googleBtn2 = document.getElementById('googleLoginBtn2');
@@ -1447,22 +1509,18 @@
       const form = document.getElementById('complaintForm');
       const loginRequired = document.getElementById('loginRequiredMsg');
 
-      if (isAdmin === true) {
-        const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
-        if (adminInfo) {
-          nameDisplay.textContent = `${adminInfo.displayName} 您好`;
-        }
-      }
-
       if (user) {
         const displayName = user.displayName || user.email || '使用者';
         avatar.textContent = getInitials(displayName);
         
-        if (isAdmin !== true) {
-          nameDisplay.textContent = `${displayName}，您好`;
-        }
-
         if (isAdmin === true) {
+          const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
+          if (adminInfo) {
+            const roleName = ROLE_NAMES[adminInfo.role] || '管理員';
+            // 管理員顯示：角色名稱 + 您好，歡迎使用投訴系統
+            nameDisplay.textContent = `${roleName}`;
+            welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${roleName} 您好，歡迎使用投訴系統`;
+          }
           const role = getAdminRole(currentAdminUsername) || 'editor';
           const roleName = ROLE_NAMES[role] || '管理員';
           roleDisplay.textContent = roleName;
@@ -1474,6 +1532,9 @@
             viewPwdBtn.classList.remove('show');
           }
         } else {
+          // 一般使用者顯示：Google 名字 + 您好，歡迎使用投訴系統
+          nameDisplay.textContent = `${displayName}`;
+          welcomeLine.innerHTML = `<i class="fas fa-smile" style="color:#c52a2a;"></i> ${displayName} 您好，歡迎使用投訴系統`;
           roleDisplay.textContent = '一般使用者';
           roleDisplay.className = 'user-role';
           changePwdBtn.classList.remove('show');
@@ -1491,13 +1552,9 @@
           nameInput.value = displayName;
         }
       } else {
-        if (isAdmin !== true) {
-          nameDisplay.textContent = '';
-          avatar.textContent = '👤';
-        } else {
-          avatar.textContent = '👤';
-        }
-        
+        avatar.textContent = '👤';
+        nameDisplay.textContent = '';
+        welcomeLine.innerHTML = `<i class="fas fa-smile"></i> 歡迎使用投訴系統`;
         roleDisplay.textContent = '一般';
         roleDisplay.className = 'user-role';
         googleBtn.style.display = 'inline-flex';
@@ -1509,6 +1566,12 @@
         loginRequired.style.display = 'block';
 
         if (isAdmin === true) {
+          const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
+          if (adminInfo) {
+            const roleName = ROLE_NAMES[adminInfo.role] || '管理員';
+            nameDisplay.textContent = `${roleName}`;
+            welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${roleName} 您好，歡迎使用投訴系統`;
+          }
           const role = getAdminRole(currentAdminUsername) || 'editor';
           const roleName = ROLE_NAMES[role] || '管理員';
           roleDisplay.textContent = roleName;
@@ -1518,14 +1581,6 @@
             viewPwdBtn.classList.add('show');
           } else {
             viewPwdBtn.classList.remove('show');
-          }
-        } else {
-          if (isAdmin === true) {
-            isAdmin = false;
-            sessionStorage.setItem('isAdmin', 'false');
-            sessionStorage.removeItem('currentAdminUsername');
-            adminLoginBtn.textContent = '管理';
-            adminLoginBtn.className = 'btn-admin-login';
           }
         }
       }
@@ -1542,7 +1597,8 @@
         const result = await auth.signInWithPopup(provider);
         currentUser = result.user;
         updateUI(currentUser);
-        showToast(`歡迎 ${currentUser.displayName || currentUser.email}`);
+        const displayName = currentUser.displayName || currentUser.email || '使用者';
+        showToast(`👋 ${displayName} 您好，歡迎使用投訴系統`);
         render();
       } catch (error) {
         console.error('Google 登入失敗:', error);
@@ -1647,14 +1703,13 @@
         }
         
         const nameDisplay = document.getElementById('userNameDisplay');
-        if (currentUser) {
-          const displayName = currentUser.displayName || currentUser.email || '使用者';
-          nameDisplay.textContent = `${found.displayName} 您好`;
-        } else {
-          nameDisplay.textContent = `${found.displayName} 您好`;
-        }
+        const welcomeLine = document.getElementById('welcomeLine');
+        const roleName = ROLE_NAMES[found.role] || '管理員';
         
-        showToast(`✅ ${found.roleName}模式已啟用`);
+        nameDisplay.textContent = `${roleName}`;
+        welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${roleName} 您好，歡迎使用投訴系統`;
+        
+        showToast(`👋 ${roleName} 您好，歡迎使用投訴系統`);
         console.log(`✅ 管理員登入成功，角色: ${found.role}`);
         render();
       } else {
@@ -2108,6 +2163,8 @@
       console.log('   - 小編：僅可自己變更密碼');
       console.log('🔄 密碼變更後立即儲存到 Firestore，所有瀏覽器即時同步');
       console.log('📋 小編帳號：dader05、dader06 (密碼: dader600909575253@)');
+      console.log('👋 歡迎訊息：一般使用者顯示名字，管理員顯示角色名稱');
+      console.log('🔒 密碼被變更時，被變更者會被強制登出');
     }
 
     init();
