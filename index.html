@@ -212,6 +212,7 @@
     .reply-item .reply-author.moderator { color: #2a7a5b; }
     .reply-item .reply-author.editor { color: #2a5b7a; }
     .reply-item .reply-author.public { color: #8a9db0; }
+    .reply-item .reply-author.me { color: #c52a2a; font-weight: 700; }
     .no-reply { font-size: 0.8rem; color: #8a9db0; font-style: italic; }
 
     .login-required-msg { text-align: center; padding: 2rem 1rem; color: #6b8097; }
@@ -1212,7 +1213,7 @@
     }
 
     // ============================================================
-    // 9. 渲染
+    // 9. 渲染（投訴者和管理員都可以回覆）
     // ============================================================
 
     function render() {
@@ -1330,15 +1331,28 @@
                 authorClass = 'public';
               }
               
+              // 判斷是否為當前使用者自己發的訊息
+              let isMe = false;
+              if (currentUser && !r.isAdmin && item.userId === currentUser.uid) {
+                isMe = true;
+              }
+              if (isAdmin && r.isAdmin) {
+                const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
+                if (adminInfo && r.authorDisplayName === adminInfo.displayName) {
+                  isMe = true;
+                }
+              }
+              
               let finalAuthorDisplay = authorDisplay;
               if (!isAdmin && r.isAdmin) {
                 finalAuthorDisplay = '管理員';
               }
               
               const replyClass = r.isAdmin ? 'reply-item reply-admin' : 'reply-item';
+              const meClass = isMe ? ' reply-author me' : '';
               repliesHtml += `
                 <div class="${replyClass}">
-                  <span class="reply-author ${authorClass}">${escapeHtml(finalAuthorDisplay)}</span>
+                  <span class="reply-author ${authorClass}${meClass}">${escapeHtml(finalAuthorDisplay)}</span>
                   <span class="reply-time">${r.date || ''} ${r.time || ''}</span>
                   <div class="reply-text">${escapeHtml(r.text)}</div>
                 </div>
@@ -1347,8 +1361,16 @@
             repliesHtml += '</div>';
           }
 
-          let replyInputHtml = '';
+          // 🔥 判斷是否顯示回覆輸入框：管理員 或 投訴者（自己是該投訴的發起人）
+          let showReplyInput = false;
           if (isAdmin === true) {
+            showReplyInput = true; // 管理員可以回覆所有投訴
+          } else if (currentUser && item.userId === currentUser.uid) {
+            showReplyInput = true; // 投訴者可以回覆自己的投訴
+          }
+
+          let replyInputHtml = '';
+          if (showReplyInput) {
             replyInputHtml = `
               <div class="reply-input-area">
                 <textarea class="reply-textarea" placeholder="輸入回覆內容..." rows="1"></textarea>
@@ -1411,7 +1433,7 @@
     };
 
     // ============================================================
-    // 10. 回覆處理函數
+    // 10. 回覆處理函數（投訴者和管理員都可以回覆）
     // ============================================================
 
     async function handleReply(e) {
@@ -1427,22 +1449,37 @@
         return;
       }
 
-      if (!isAdmin) {
-        showToast('只有管理員可以回覆', true);
+      // 檢查是否有權限回覆
+      const complaint = complaints.find(c => c.docId === docId);
+      if (!complaint) {
+        showToast('找不到該投訴', true);
+        return;
+      }
+
+      // 🔥 投訴者只能回覆自己的投訴，管理員可以回覆所有投訴
+      if (!isAdmin && (!currentUser || complaint.userId !== currentUser.uid)) {
+        showToast('您沒有權限回覆此投訴', true);
         return;
       }
 
       btn.disabled = true;
       btn.textContent = '送出中...';
 
-      const success = await addReply(docId, replyText, true);
+      // 判斷是否為管理員回覆
+      const isAdminReply = isAdmin === true;
+      const success = await addReply(docId, replyText, isAdminReply);
 
       if (success) {
-        const complaint = complaints.find(c => c.docId === docId);
-        if (complaint) {
-          await sendReplyToComplainant(complaint, replyText);
+        // 如果是管理員回覆，發送 Email 通知給投訴者
+        if (isAdminReply) {
+          const complaintData = complaints.find(c => c.docId === docId);
+          if (complaintData) {
+            await sendReplyToComplainant(complaintData, replyText);
+          }
+          showToast('✅ 回覆已送出，投訴者將收到 Email 通知');
+        } else {
+          showToast('✅ 回覆已送出');
         }
-        showToast('✅ 回覆已送出，投訴者將收到 Email 通知');
         textarea.value = '';
       }
 
@@ -2179,6 +2216,7 @@
       console.log('🏷️ 管理員角色標籤統一顯示為「管理員」');
       console.log('📂 類別共19項，含「其他問題(請自訂)」');
       console.log('⚠️ 嚴重程度預設為「無」');
+      console.log('💬 投訴者與管理員可以雙向回覆對話');
     }
 
     init();
