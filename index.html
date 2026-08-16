@@ -29,10 +29,7 @@
     .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: #c52a2a; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; }
     .user-name { font-weight: 500; color: #1a2c44; }
     .user-role { font-size: 0.75rem; color: #7e93ab; background: #eef3f9; padding: 0.15rem 0.8rem; border-radius: 40px; }
-    .user-role.owner { background: #c52a2a; color: white; }
-    .user-role.moderator { background: #2a7a5b; color: white; }
-    .user-role.vice { background: #2a5b7a; color: white; }
-    .user-role.editor { background: #7a5b2a; color: white; }
+    .user-role.admin-role { background: #c52a2a; color: white; }
     .btn-google { background: white; border: 1px solid #d7dfe9; border-radius: 40px; padding: 0.4rem 1.2rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-weight: 500; color: #2a405b; transition: 0.15s; font-size: 0.9rem; }
     .btn-google:hover { background: #f4f8ff; border-color: #b0c0d0; }
     .btn-google svg { width: 18px; height: 18px; }
@@ -258,12 +255,6 @@
     .welcome-line.hidden {
       display: none !important;
     }
-
-    /* 管理員角色標籤樣式 */
-    .user-role.admin-role {
-      background: #c52a2a;
-      color: white;
-    }
   </style>
 </head>
 <body>
@@ -328,14 +319,31 @@
                 <option value="">請選擇</option>
                 <option value="服務品質">服務品質</option>
                 <option value="人員態度">人員態度</option>
-                <option value="其他">其他（請自訂）</option>
+                <option value="貼文處理問題">貼文處理問題</option>
+                <option value="被刪文／封鎖相關">被刪文／封鎖相關</option>
+                <option value="版規執行問題">版規執行問題</option>
+                <option value="隱私／個資問題">隱私／個資問題</option>
+                <option value="客服／回覆問題">客服／回覆問題</option>
+                <option value="系統功能異常">系統功能異常</option>
+                <option value="公告／資訊問題">公告／資訊問題</option>
+                <option value="對版面管理的建議">對版面管理的建議</option>
+                <option value="校園相關問題">校園相關問題</option>
+                <option value="色情／不當內容">色情／不當內容</option>
+                <option value="暴力／威脅">暴力／威脅</option>
+                <option value="誹謗／造謠">誹謗／造謠</option>
+                <option value="冒充他人／假帳號">冒充他人／假帳號</option>
+                <option value="感情糾紛／騷擾">感情糾紛／騷擾</option>
+                <option value="危險或違法行為">危險或違法行為</option>
+                <option value="人身攻擊／辱罵">人身攻擊／辱罵</option>
+                <option value="其他問題(請自訂)">其他問題(請自訂)</option>
               </select>
             </div>
             <div class="form-group">
               <label><i class="fas fa-flag"></i> 嚴重程度 <span class="required">*</span></label>
               <select id="priority" required>
+                <option value="無" selected>無</option>
                 <option value="輕微">輕微</option>
-                <option value="中等" selected>中等</option>
+                <option value="中等">中等</option>
                 <option value="嚴重">嚴重</option>
               </select>
             </div>
@@ -1500,7 +1508,7 @@
     });
 
     // ============================================================
-    // 12. UI 更新（管理員角色標籤顯示「管理員」）
+    // 12. UI 更新
     // ============================================================
 
     function updateUI(user) {
@@ -1525,16 +1533,14 @@
           const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
           if (adminInfo) {
             const roleName = ROLE_NAMES[adminInfo.role] || '管理員';
-            // 管理員顯示：角色名稱 + 您好，歡迎使用投訴系統
             nameDisplay.textContent = `${roleName}`;
             welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${roleName} 您好，歡迎使用投訴系統`;
             welcomeLine.classList.remove('hidden');
           }
-          // 🔥 角色標籤統一顯示「管理員」
+          // 角色標籤統一顯示「管理員」
           roleDisplay.textContent = '管理員';
           roleDisplay.className = 'user-role admin-role';
           changePwdBtn.classList.add('show');
-          // 根據權限顯示「查看密碼」按鈕
           const role = getAdminRole(currentAdminUsername) || 'editor';
           if (role === 'owner' || role === 'moderator' || role === 'vice') {
             viewPwdBtn.classList.add('show');
@@ -1563,7 +1569,7 @@
           nameInput.value = displayName;
         }
       } else {
-        // 🔥 未登入時：隱藏所有使用者資訊
+        // 未登入時：隱藏所有使用者資訊
         avatar.textContent = '👤';
         nameDisplay.textContent = '';
         welcomeLine.innerHTML = '';
@@ -1634,7 +1640,7 @@
     });
 
     // ============================================================
-    // 13c. 管理員登入（使用 Firestore 密碼）
+    // 13c. 管理員登入
     // ============================================================
 
     const adminLoginBtn = document.getElementById('adminLoginBtn');
@@ -1694,7 +1700,7 @@
         adminLoginBtn.textContent = '登出管理';
         adminLoginBtn.className = 'btn-admin-login active';
         
-        // 🔥 角色標籤統一顯示「管理員」
+        // 角色標籤統一顯示「管理員」
         const roleDisplay = document.getElementById('userRoleDisplay');
         if (roleDisplay) {
           roleDisplay.textContent = '管理員';
@@ -1738,7 +1744,7 @@
     });
 
     // ============================================================
-    // 13d. 變更密碼功能（使用 Firestore，所有瀏覽器同步）
+    // 13d. 變更密碼功能
     // ============================================================
 
     const changePwdBtn = document.getElementById('changePasswordBtn');
@@ -1830,7 +1836,7 @@
     cpConfirm.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirmBtn.click(); });
 
     // ============================================================
-    // 13e. 查看密碼功能（權限控制，使用 Firestore）
+    // 13e. 查看密碼功能
     // ============================================================
 
     const viewPwdBtn = document.getElementById('viewPasswordsBtn');
@@ -1927,7 +1933,7 @@
     // ----- 13f. 類別切換 -----
     document.getElementById('category').addEventListener('change', function() {
       const customGroup = document.getElementById('customCategoryGroup');
-      if (this.value === '其他') {
+      if (this.value === '其他問題(請自訂)') {
         customGroup.style.display = 'block';
       } else {
         customGroup.style.display = 'none';
@@ -1987,7 +1993,8 @@
       const expectedResolution = document.getElementById('expectedResolution').value.trim();
       const needReply = document.querySelector('input[name="needReply"]:checked')?.value || '';
 
-      if (category === '其他') {
+      // 🔥 判斷是否為「其他問題(請自訂)」
+      if (category === '其他問題(請自訂)') {
         const custom = document.getElementById('customCategory').value.trim();
         if (!custom) {
           showToast('請輸入自訂類別名稱', true);
@@ -2151,13 +2158,8 @@
     // ============================================================
 
     async function init() {
-      // 先從 Firestore 載入密碼
       await loadAdminsFromFirestore();
-      
-      // 監聽密碼變更（跨瀏覽器同步）
       listenAdminPasswords();
-      
-      // 啟動監聽投訴
       listenComplaints();
       
       console.log('✅ 靠北達德投訴系統已啟動');
@@ -2166,17 +2168,15 @@
       console.log('🔒 需登入才能投訴');
       console.log('📧 新投訴 → 管理員信箱');
       console.log('📧 管理員回覆 → 投訴者信箱');
-      console.log('🔑 權限分級：');
-      console.log('   - 所有權：可查看/變更所有人');
-      console.log('   - 版主：可查看/變更版主以下（含副版主、小編）');
-      console.log('   - 副版主：可查看小編/自己，僅能變更自己');
-      console.log('   - 小編：僅可自己變更密碼');
+      console.log('🔑 權限分級：所有權 > 版主 > 副版主 > 小編');
       console.log('🔄 密碼變更後立即儲存到 Firestore，所有瀏覽器即時同步');
       console.log('📋 小編帳號：dader05、dader06 (密碼: dader600909575253@)');
       console.log('👋 歡迎訊息：一般使用者顯示名字，管理員顯示角色名稱');
       console.log('🔒 密碼被變更時，被變更者會被強制登出');
       console.log('👤 未登入時不顯示任何歡迎訊息和使用者名稱');
       console.log('🏷️ 管理員角色標籤統一顯示為「管理員」');
+      console.log('📂 類別共19項，含「其他問題(請自訂)」');
+      console.log('⚠️ 嚴重程度預設為「無」');
     }
 
     init();
