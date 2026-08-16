@@ -1508,7 +1508,7 @@
     });
 
     // ============================================================
-    // 12. UI 更新
+    // 12. UI 更新（管理員顯示完整顯示名稱，如：小編01）
     // ============================================================
 
     function updateUI(user) {
@@ -1532,9 +1532,10 @@
         if (isAdmin === true) {
           const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
           if (adminInfo) {
-            const roleName = ROLE_NAMES[adminInfo.role] || '管理員';
-            nameDisplay.textContent = `${roleName}`;
-            welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${roleName} 您好，歡迎使用投訴系統`;
+            // 🔥 使用 displayName 顯示完整名稱（如：小編01、小編02）
+            const fullDisplayName = adminInfo.displayName;
+            nameDisplay.textContent = `${fullDisplayName}`;
+            welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${fullDisplayName} 您好，歡迎使用投訴系統`;
             welcomeLine.classList.remove('hidden');
           }
           // 角色標籤統一顯示「管理員」
@@ -1640,7 +1641,7 @@
     });
 
     // ============================================================
-    // 13c. 管理員登入
+    // 13c. 管理員登入（顯示完整名稱，如：小編01）
     // ============================================================
 
     const adminLoginBtn = document.getElementById('adminLoginBtn');
@@ -1719,14 +1720,15 @@
         
         const nameDisplay = document.getElementById('userNameDisplay');
         const welcomeLine = document.getElementById('welcomeLine');
-        const roleName = ROLE_NAMES[found.role] || '管理員';
+        // 🔥 使用 displayName 顯示完整名稱（如：小編01、小編02）
+        const fullDisplayName = found.displayName;
         
-        nameDisplay.textContent = `${roleName}`;
-        welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${roleName} 您好，歡迎使用投訴系統`;
+        nameDisplay.textContent = `${fullDisplayName}`;
+        welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${fullDisplayName} 您好，歡迎使用投訴系統`;
         welcomeLine.classList.remove('hidden');
         
-        showToast(`👋 ${roleName} 您好，歡迎使用投訴系統`);
-        console.log(`✅ 管理員登入成功，角色: ${found.role}`);
+        showToast(`👋 ${fullDisplayName} 您好，歡迎使用投訴系統`);
+        console.log(`✅ 管理員登入成功，角色: ${found.role}, 名稱: ${fullDisplayName}`);
         render();
       } else {
         adminErrorMsg.classList.add('show');
@@ -2170,8 +2172,8 @@
       console.log('📧 管理員回覆 → 投訴者信箱');
       console.log('🔑 權限分級：所有權 > 版主 > 副版主 > 小編');
       console.log('🔄 密碼變更後立即儲存到 Firestore，所有瀏覽器即時同步');
-      console.log('📋 小編帳號：dader05、dader06 (密碼: dader600909575253@)');
-      console.log('👋 歡迎訊息：一般使用者顯示名字，管理員顯示角色名稱');
+      console.log('📋 小編帳號：dader02~dader06');
+      console.log('👋 歡迎訊息：管理員顯示完整顯示名稱（如：小編01）');
       console.log('🔒 密碼被變更時，被變更者會被強制登出');
       console.log('👤 未登入時不顯示任何歡迎訊息和使用者名稱');
       console.log('🏷️ 管理員角色標籤統一顯示為「管理員」');
