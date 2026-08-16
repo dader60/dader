@@ -16,7 +16,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
-    /* ... 樣式保持不變 ... */
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
     body { background: #f4f7fc; min-height: 100vh; padding: 2rem 1rem; display: flex; justify-content: center; align-items: flex-start; }
     .container { max-width: 1300px; width: 100%; background: white; border-radius: 32px; box-shadow: 0 20px 60px rgba(0,20,40,0.08); padding: 2rem 2rem 2.5rem; }
@@ -256,6 +255,15 @@
       color: #c52a2a;
       margin-right: 6px;
     }
+    .welcome-line.hidden {
+      display: none !important;
+    }
+
+    /* 管理員角色標籤樣式 */
+    .user-role.admin-role {
+      background: #c52a2a;
+      color: white;
+    }
   </style>
 </head>
 <body>
@@ -274,9 +282,9 @@
         <div class="user-avatar" id="userAvatar">👤</div>
         <div>
           <div class="user-name" id="userNameDisplay"></div>
-          <div class="welcome-line" id="welcomeLine"><i class="fas fa-smile"></i> 歡迎使用投訴系統</div>
+          <div class="welcome-line hidden" id="welcomeLine"><i class="fas fa-smile"></i> 歡迎使用投訴系統</div>
         </div>
-        <span class="user-role" id="userRoleDisplay">一般</span>
+        <span class="user-role" id="userRoleDisplay"></span>
       </div>
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
         <button class="btn-google" id="googleLoginBtn">
@@ -650,7 +658,7 @@
             roleDisplay.textContent = '一般使用者';
             roleDisplay.className = 'user-role';
           } else {
-            roleDisplay.textContent = '一般';
+            roleDisplay.textContent = '';
             roleDisplay.className = 'user-role';
           }
         }
@@ -1492,7 +1500,7 @@
     });
 
     // ============================================================
-    // 12. UI 更新（歡迎訊息：一般使用者顯示名字，管理員顯示角色名稱）
+    // 12. UI 更新（管理員角色標籤顯示「管理員」）
     // ============================================================
 
     function updateUI(user) {
@@ -1520,12 +1528,14 @@
             // 管理員顯示：角色名稱 + 您好，歡迎使用投訴系統
             nameDisplay.textContent = `${roleName}`;
             welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${roleName} 您好，歡迎使用投訴系統`;
+            welcomeLine.classList.remove('hidden');
           }
-          const role = getAdminRole(currentAdminUsername) || 'editor';
-          const roleName = ROLE_NAMES[role] || '管理員';
-          roleDisplay.textContent = roleName;
-          roleDisplay.className = `user-role ${role}`;
+          // 🔥 角色標籤統一顯示「管理員」
+          roleDisplay.textContent = '管理員';
+          roleDisplay.className = 'user-role admin-role';
           changePwdBtn.classList.add('show');
+          // 根據權限顯示「查看密碼」按鈕
+          const role = getAdminRole(currentAdminUsername) || 'editor';
           if (role === 'owner' || role === 'moderator' || role === 'vice') {
             viewPwdBtn.classList.add('show');
           } else {
@@ -1535,6 +1545,7 @@
           // 一般使用者顯示：Google 名字 + 您好，歡迎使用投訴系統
           nameDisplay.textContent = `${displayName}`;
           welcomeLine.innerHTML = `<i class="fas fa-smile" style="color:#c52a2a;"></i> ${displayName} 您好，歡迎使用投訴系統`;
+          welcomeLine.classList.remove('hidden');
           roleDisplay.textContent = '一般使用者';
           roleDisplay.className = 'user-role';
           changePwdBtn.classList.remove('show');
@@ -1552,11 +1563,14 @@
           nameInput.value = displayName;
         }
       } else {
+        // 🔥 未登入時：隱藏所有使用者資訊
         avatar.textContent = '👤';
         nameDisplay.textContent = '';
-        welcomeLine.innerHTML = `<i class="fas fa-smile"></i> 歡迎使用投訴系統`;
-        roleDisplay.textContent = '一般';
+        welcomeLine.innerHTML = '';
+        welcomeLine.classList.add('hidden');
+        roleDisplay.textContent = '';
         roleDisplay.className = 'user-role';
+        
         googleBtn.style.display = 'inline-flex';
         googleBtn2.style.display = 'inline-flex';
         logoutBtn.classList.remove('show');
@@ -1565,23 +1579,13 @@
         form.style.display = 'none';
         loginRequired.style.display = 'block';
 
+        // 清除管理員狀態
         if (isAdmin === true) {
-          const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
-          if (adminInfo) {
-            const roleName = ROLE_NAMES[adminInfo.role] || '管理員';
-            nameDisplay.textContent = `${roleName}`;
-            welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${roleName} 您好，歡迎使用投訴系統`;
-          }
-          const role = getAdminRole(currentAdminUsername) || 'editor';
-          const roleName = ROLE_NAMES[role] || '管理員';
-          roleDisplay.textContent = roleName;
-          roleDisplay.className = `user-role ${role}`;
-          changePwdBtn.classList.add('show');
-          if (role === 'owner' || role === 'moderator' || role === 'vice') {
-            viewPwdBtn.classList.add('show');
-          } else {
-            viewPwdBtn.classList.remove('show');
-          }
+          isAdmin = false;
+          sessionStorage.setItem('isAdmin', 'false');
+          sessionStorage.removeItem('currentAdminUsername');
+          adminLoginBtn.textContent = '管理';
+          adminLoginBtn.className = 'btn-admin-login';
         }
       }
     }
@@ -1650,8 +1654,13 @@
         
         const roleDisplay = document.getElementById('userRoleDisplay');
         if (roleDisplay) {
-          roleDisplay.textContent = '一般使用者';
-          roleDisplay.className = 'user-role';
+          if (currentUser) {
+            roleDisplay.textContent = '一般使用者';
+            roleDisplay.className = 'user-role';
+          } else {
+            roleDisplay.textContent = '';
+            roleDisplay.className = 'user-role';
+          }
         }
         document.getElementById('changePasswordBtn').classList.remove('show');
         document.getElementById('viewPasswordsBtn').classList.remove('show');
@@ -1685,11 +1694,11 @@
         adminLoginBtn.textContent = '登出管理';
         adminLoginBtn.className = 'btn-admin-login active';
         
+        // 🔥 角色標籤統一顯示「管理員」
         const roleDisplay = document.getElementById('userRoleDisplay');
         if (roleDisplay) {
-          const roleName = ROLE_NAMES[found.role] || '管理員';
-          roleDisplay.textContent = roleName;
-          roleDisplay.className = `user-role ${found.role}`;
+          roleDisplay.textContent = '管理員';
+          roleDisplay.className = 'user-role admin-role';
         }
         
         const changePwdBtn = document.getElementById('changePasswordBtn');
@@ -1708,6 +1717,7 @@
         
         nameDisplay.textContent = `${roleName}`;
         welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${roleName} 您好，歡迎使用投訴系統`;
+        welcomeLine.classList.remove('hidden');
         
         showToast(`👋 ${roleName} 您好，歡迎使用投訴系統`);
         console.log(`✅ 管理員登入成功，角色: ${found.role}`);
@@ -2165,6 +2175,8 @@
       console.log('📋 小編帳號：dader05、dader06 (密碼: dader600909575253@)');
       console.log('👋 歡迎訊息：一般使用者顯示名字，管理員顯示角色名稱');
       console.log('🔒 密碼被變更時，被變更者會被強制登出');
+      console.log('👤 未登入時不顯示任何歡迎訊息和使用者名稱');
+      console.log('🏷️ 管理員角色標籤統一顯示為「管理員」');
     }
 
     init();
