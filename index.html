@@ -319,6 +319,8 @@
     .verify-data-item .vdata-left .badge { font-size:0.6rem; padding:1px 8px; border-radius:12px; background:#2a5b7a; color:white; }
     .verify-data-item .vdata-right button { background:transparent; border:none; color:#2a5b7a; cursor:pointer; font-size:0.75rem; }
     .verify-data-item .vdata-right button:hover { color:#1a405a; text-decoration:underline; }
+    .manage-verify-box .form-group { margin-bottom: 0.5rem; }
+    .manage-verify-box .form-group label { font-size: 0.8rem; }
   </style>
 </head>
 <body>
@@ -332,6 +334,7 @@
       </div>
     </header>
 
+    <!-- top-nav -->
     <div class="top-nav">
       <div class="user-info" id="userInfo">
         <div class="user-avatar" id="userAvatar">👤</div>
@@ -342,10 +345,7 @@
         <span class="user-role" id="userRoleDisplay"></span>
       </div>
       <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
-        <button class="btn-google" id="googleLoginBtn">
-          <svg viewBox="0 0 48 48" style="width:18px;height:18px;"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
-          Google 登入
-        </button>
+        <button class="btn-google" id="googleLoginBtn">Google 登入</button>
         <button class="btn-logout" id="logoutBtn">登出</button>
         <button class="btn-admin-login" id="adminLoginBtn"><i class="fas fa-user-shield"></i> 管理</button>
         <button class="btn-change-password" id="changePasswordBtn"><i class="fas fa-key"></i> 變更密碼</button>
@@ -354,16 +354,14 @@
       </div>
     </div>
 
+    <!-- 主內容 -->
     <div class="row">
       <div class="card">
         <div class="card-title"><i class="fas fa-pen"></i> 新增投訴</div>
         <div id="loginRequiredMsg" class="login-required-msg">
           <i class="fas fa-lock"></i>
           <p>請先登入才能提交投訴</p>
-          <button class="btn-google" id="googleLoginBtn2" style="margin:0.8rem auto 0; display:inline-flex;">
-            <svg viewBox="0 0 48 48" style="width:18px;height:18px;"><path fill="#FFC107" d="M43.611,20.083H42V20H24v8h11.303c-1.649,4.657-6.08,8-11.303,8c-6.627,0-12-5.373-12-12c0-6.627,5.373-12,12-12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C12.955,4,4,12.955,4,24c0,11.045,8.955,20,20,20c11.045,0,20-8.955,20-20C44,22.659,43.862,21.35,43.611,20.083z"/><path fill="#FF3D00" d="M6.306,14.691l6.571,4.819C14.655,15.108,18.961,12,24,12c3.059,0,5.842,1.154,7.961,3.039l5.657-5.657C34.046,6.053,29.268,4,24,4C16.318,4,9.656,8.337,6.306,14.691z"/><path fill="#4CAF50" d="M24,44c5.166,0,9.86-1.977,13.409-5.192l-6.19-5.238C29.211,35.091,26.715,36,24,36c-5.202,0-9.619-3.317-11.283-7.946l-6.522,5.025C9.505,39.556,16.227,44,24,44z"/><path fill="#1976D2" d="M43.611,20.083H42V20H24v8h11.303c-0.792,2.237-2.231,4.166-4.087,5.571c0.001-0.001,0.002-0.001,0.003-0.002l6.19,5.238C36.971,39.205,44,34,44,24C44,22.659,43.862,21.35,43.611,20.083z"/></svg>
-            使用 Google 登入
-          </button>
+          <button class="btn-google" id="googleLoginBtn2">使用 Google 登入</button>
         </div>
         <form id="complaintForm" style="display:none;">
           <div class="form-group">
@@ -503,7 +501,7 @@
     </div>
   </div>
 
-  <!-- ===== 管理員登入彈窗（含忘記密碼） ===== -->
+  <!-- ===== 管理員登入彈窗 ===== -->
   <div class="login-overlay" id="adminLoginOverlay">
     <div class="login-box">
       <h3><i class="fas fa-user-shield" style="color:#c52a2a;"></i> 管理員登入</h3>
@@ -527,7 +525,7 @@
         <div class="forgot-password-card" id="verifyChangeCard">
           <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
           <h4>身份驗證變更密碼</h4>
-          <p>透過帳號、名稱、生日驗證身份後變更密碼</p>
+          <p>透過帳號、姓名、生日驗證身份後變更密碼</p>
           <button class="btn-primary" id="verifyChangeBtn" style="font-size:0.85rem; padding:0.5rem 1rem; margin-top:0.5rem; width:100%;">
             <i class="fas fa-check-circle"></i> 前往驗證
           </button>
@@ -545,18 +543,18 @@
     </div>
   </div>
 
-  <!-- ===== 身份驗證變更密碼彈窗 ===== -->
+  <!-- ===== 身份驗證變更密碼彈窗（修改後） ===== -->
   <div class="verify-change-overlay" id="verifyChangeOverlay">
     <div class="verify-change-box">
       <h3><i class="fas fa-shield-alt" style="color:#2a5b7a;"></i> 身份驗證</h3>
       <p class="sub-title">請輸入您的管理員資料進行驗證</p>
       <div class="form-group">
         <label><i class="fas fa-user"></i> 管理員帳號 <span class="required">*</span></label>
-        <input type="text" id="verifyUsername" placeholder="請輸入您的管理員帳號（如：dader00）" />
+        <input type="text" id="verifyUsername" placeholder="請輸入管理員帳號" />
       </div>
       <div class="form-group">
-        <label><i class="fas fa-id-card"></i> 顯示名稱 <span class="required">*</span></label>
-        <input type="text" id="verifyDisplayName" placeholder="請輸入您的顯示名稱（如：版主）" />
+        <label><i class="fas fa-id-card"></i> 姓名 <span class="required">*</span></label>
+        <input type="text" id="verifyDisplayName" placeholder="請輸入您的姓名" />
       </div>
       <div class="form-group">
         <label><i class="fas fa-calendar-alt"></i> 生日 <span class="required">*</span></label>
@@ -581,7 +579,7 @@
     </div>
   </div>
 
-  <!-- ===== 強制變更說明彈窗（顯示請聯繫版主） ===== -->
+  <!-- ===== 強制變更說明彈窗 ===== -->
   <div class="force-change-overlay" id="forceChangeOverlay">
     <div class="force-change-box">
       <h3><i class="fas fa-info-circle" style="color:#2a5b7a;"></i> 查詢密碼 / 強制變更</h3>
@@ -596,7 +594,7 @@
     </div>
   </div>
 
-  <!-- ===== 查看密碼彈窗（含管理驗證資料） ===== -->
+  <!-- ===== 查看密碼彈窗 ===== -->
   <div class="view-passwords-overlay" id="viewPasswordsOverlay">
     <div class="view-passwords-box">
       <h3><i class="fas fa-eye" style="color:#2a5b7a;"></i> 管理員密碼清單</h3>
@@ -609,7 +607,7 @@
     </div>
   </div>
 
-  <!-- ===== 管理驗證資料彈窗 ===== -->
+  <!-- ===== 管理驗證資料彈窗（修改後） ===== -->
   <div class="manage-verify-overlay" id="manageVerifyOverlay">
     <div class="manage-verify-box">
       <h3><i class="fas fa-user-cog" style="color:#2a5b7a;"></i> 管理員驗證資料管理</h3>
@@ -617,18 +615,18 @@
       <div id="verifyDataList" style="max-height:250px; overflow-y:auto; margin-bottom:1rem;"></div>
       <div style="border-top:1px solid #eef3f9; padding-top:0.8rem;">
         <h4 style="font-size:0.95rem; color:#1a2c44; margin-bottom:0.5rem;"><i class="fas fa-plus-circle"></i> 新增/編輯驗證資料</h4>
-        <div class="form-group" style="margin-bottom:0.5rem;">
-          <label style="font-size:0.8rem;">管理員帳號 <span class="required">*</span></label>
+        <div class="form-group">
+          <label>管理員帳號 <span class="required">*</span></label>
           <select id="verifyAdminSelect" style="padding:0.5rem 0.8rem; font-size:0.85rem; width:100%; border:1px solid #d7dfe9; border-radius:16px; background:#fafcff;">
             <option value="">請選擇帳號</option>
           </select>
         </div>
-        <div class="form-group" style="margin-bottom:0.5rem;">
-          <label style="font-size:0.8rem;">顯示名稱 <span class="required">*</span></label>
-          <input type="text" id="verifyDisplayNameInput" placeholder="如：版主、小編01" style="padding:0.5rem 0.8rem; font-size:0.85rem; width:100%; border:1px solid #d7dfe9; border-radius:16px; background:#fafcff;" />
+        <div class="form-group">
+          <label>姓名 <span class="required">*</span></label>
+          <input type="text" id="verifyDisplayNameInput" placeholder="請輸入姓名" style="padding:0.5rem 0.8rem; font-size:0.85rem; width:100%; border:1px solid #d7dfe9; border-radius:16px; background:#fafcff;" />
         </div>
-        <div class="form-group" style="margin-bottom:0.5rem;">
-          <label style="font-size:0.8rem;">生日 <span class="required">*</span></label>
+        <div class="form-group">
+          <label>生日 <span class="required">*</span></label>
           <input type="date" id="verifyBirthdayInput" style="padding:0.5rem 0.8rem; font-size:0.85rem; width:100%; border:1px solid #d7dfe9; border-radius:16px; background:#fafcff;" />
         </div>
         <div style="display:flex; gap:8px; flex-wrap:wrap;">
@@ -1693,7 +1691,7 @@
           document.getElementById('verifyBirthday').disabled = true;
         } else {
           verifiedUser = null;
-          errorMsg.textContent = '❌ 驗證失敗，請確認帳號、名稱、生日是否正確';
+          errorMsg.textContent = '❌ 驗證失敗，請確認帳號、姓名、生日是否正確';
           errorMsg.classList.add('show');
           successMsg.classList.remove('show');
           changeArea.style.display = 'none';
@@ -1750,7 +1748,6 @@
       }
     });
 
-    // 強制變更說明（顯示請聯繫版主）
     document.getElementById('forceChangeBtn').addEventListener('click', function() {
       document.getElementById('forgotPasswordOverlay').classList.remove('active');
       document.getElementById('forceChangeOverlay').classList.add('active');
@@ -1839,7 +1836,7 @@
       const birthday = document.getElementById('verifyBirthdayInput').value;
       
       if (!username) { showToast('請選擇管理員帳號', true); return; }
-      if (!displayName) { showToast('請輸入顯示名稱', true); return; }
+      if (!displayName) { showToast('請輸入姓名', true); return; }
       if (!birthday) { showToast('請選擇生日', true); return; }
       
       const result = await saveVerifyData(username, displayName, birthday);
