@@ -144,6 +144,9 @@
     .login-box .btn-primary { width: 100%; margin-top: 0; }
     .login-box .error-msg { color: #c52a2a; font-size: 0.85rem; margin-bottom: 0.8rem; display: none; }
     .login-box .error-msg.show { display: block; }
+    .login-box .forgot-link { margin-top: 0.8rem; text-align: center; }
+    .login-box .forgot-link a { color: #2a5b7a; font-size: 0.85rem; text-decoration: none; cursor: pointer; }
+    .login-box .forgot-link a:hover { text-decoration: underline; }
 
     .change-password-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
     .change-password-overlay.active { display: flex; }
@@ -176,6 +179,9 @@
     .view-passwords-box .pwd-item .btn-change-pwd:hover { background: #1a405a; }
     .view-passwords-box .pwd-item .no-change { font-size: 0.7rem; color: #8a9db0; font-style: italic; }
     .view-passwords-box .btn-secondary { margin-top: 1rem; width: 100%; justify-content: center; }
+    .view-passwords-box .manage-verify-btn { margin-top: 0.5rem; display: flex; gap: 8px; flex-wrap: wrap; }
+    .view-passwords-box .manage-verify-btn button { flex: 1; justify-content: center; background: #2a5b7a; color: white; border: none; border-radius: 40px; padding: 0.4rem 1rem; cursor: pointer; font-size: 0.8rem; transition: 0.15s; }
+    .view-passwords-box .manage-verify-btn button:hover { background: #1a405a; }
 
     .login-logs-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
     .login-logs-overlay.active { display: flex; }
@@ -266,6 +272,53 @@
     .welcome-line { font-size: 0.9rem; color: #2a405b; font-weight: 400; }
     .welcome-line i { color: #c52a2a; margin-right: 6px; }
     .welcome-line.hidden { display: none !important; }
+
+    /* ===== 忘記密碼彈窗樣式 ===== */
+    .forgot-password-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1100; justify-content: center; align-items: center; }
+    .forgot-password-overlay.active { display: flex; }
+    .forgot-password-box { background: white; padding: 2rem; border-radius: 28px; max-width: 700px; width: 92%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .forgot-password-box h3 { text-align: center; margin-bottom: 0.3rem; color: #0b1e33; }
+    .forgot-password-box .sub-title { color: #6b8097; font-size: 0.85rem; text-align: center; margin-bottom: 1rem; }
+
+    .forgot-password-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 0.5rem 0 1rem; }
+    @media (max-width: 600px) { .forgot-password-grid { grid-template-columns: 1fr; } }
+
+    .forgot-password-card { background: #f8fafc; border: 1px solid #e9edf4; border-radius: 16px; padding: 1.5rem; text-align: center; transition: 0.15s; }
+    .forgot-password-card:hover { border-color: #2a5b7a; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .forgot-password-card .card-icon { font-size: 2rem; color: #2a5b7a; margin-bottom: 0.5rem; }
+    .forgot-password-card h4 { color: #1a2c44; margin-bottom: 0.3rem; }
+    .forgot-password-card p { font-size: 0.8rem; color: #6b8097; }
+
+    /* ===== 身份驗證彈窗樣式 ===== */
+    .verify-change-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1200; justify-content: center; align-items: center; }
+    .verify-change-overlay.active { display: flex; }
+    .verify-change-box { background: white; padding: 2rem; border-radius: 28px; max-width: 420px; width: 92%; box-shadow: 0 20px 60px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
+    .verify-change-box h3 { text-align: center; margin-bottom: 0.3rem; color: #0b1e33; }
+    .verify-change-box .sub-title { color: #6b8097; font-size: 0.85rem; text-align: center; margin-bottom: 1rem; }
+    .verify-change-box .error-msg { color: #c52a2a; font-size: 0.85rem; margin-bottom: 0.8rem; display: none; text-align: center; }
+    .verify-change-box .error-msg.show { display: block; }
+    .verify-change-box .success-msg { color: #28a745; font-size: 0.85rem; margin-bottom: 0.8rem; display: none; text-align: center; }
+    .verify-change-box .success-msg.show { display: block; }
+    .verify-change-box .form-group { margin-bottom: 0.8rem; }
+
+    /* ===== 強制變更說明彈窗 ===== */
+    .force-change-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1100; justify-content: center; align-items: center; }
+    .force-change-overlay.active { display: flex; }
+    .force-change-box { background: white; padding: 2rem; border-radius: 28px; max-width: 420px; width: 92%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); text-align: center; }
+    .force-change-box h3 { margin-bottom: 0.5rem; color: #0b1e33; }
+
+    /* ===== 管理驗證資料彈窗 ===== */
+    .manage-verify-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1200; justify-content: center; align-items: center; }
+    .manage-verify-overlay.active { display: flex; }
+    .manage-verify-box { background: white; padding: 2rem; border-radius: 28px; max-width: 480px; width: 92%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+    .manage-verify-box h3 { text-align: center; margin-bottom: 0.3rem; color: #0b1e33; }
+    .manage-verify-box .sub-title { color: #6b8097; font-size: 0.85rem; text-align: center; margin-bottom: 1rem; }
+    .verify-data-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #eef3f9; font-size:0.85rem; flex-wrap: wrap; gap:4px; }
+    .verify-data-item:hover { background: #f6f9ff; }
+    .verify-data-item .vdata-left { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+    .verify-data-item .vdata-left .badge { font-size:0.6rem; padding:1px 8px; border-radius:12px; background:#2a5b7a; color:white; }
+    .verify-data-item .vdata-right button { background:transparent; border:none; color:#2a5b7a; cursor:pointer; font-size:0.75rem; }
+    .verify-data-item .vdata-right button:hover { color:#1a405a; text-decoration:underline; }
   </style>
 </head>
 <body>
@@ -450,7 +503,7 @@
     </div>
   </div>
 
-  <!-- ===== 管理員登入彈窗 ===== -->
+  <!-- ===== 管理員登入彈窗（含忘記密碼） ===== -->
   <div class="login-overlay" id="adminLoginOverlay">
     <div class="login-box">
       <h3><i class="fas fa-user-shield" style="color:#c52a2a;"></i> 管理員登入</h3>
@@ -459,31 +512,135 @@
       <input type="text" id="adminUsername" placeholder="管理員帳號" />
       <input type="password" id="adminPassword" placeholder="管理員密碼" />
       <button class="btn-primary" id="adminLoginConfirmBtn"><i class="fas fa-sign-in-alt"></i> 登入</button>
+      <div class="forgot-link">
+        <a href="#" id="forgotPasswordLink"><i class="fas fa-key"></i> 忘記密碼？</a>
+      </div>
     </div>
   </div>
 
-  <!-- ===== 變更密碼彈窗 ===== -->
-  <div class="change-password-overlay" id="changePasswordOverlay">
-    <div class="change-password-box">
-      <h3><i class="fas fa-key" style="color:#c52a2a;"></i> 變更管理員密碼</h3>
-      <p style="color:#6b8097;font-size:0.9rem;margin-bottom:1.2rem;">請輸入目前密碼並設定新密碼</p>
-      <div class="error-msg" id="cpErrorMsg">❌ 錯誤訊息</div>
-      <div class="success-msg" id="cpSuccessMsg">✅ 密碼變更成功！</div>
-      <input type="password" id="cpCurrentPassword" placeholder="目前密碼" />
-      <input type="password" id="cpNewPassword" placeholder="新密碼" />
-      <input type="password" id="cpConfirmPassword" placeholder="確認新密碼" />
-      <button class="btn-primary" id="cpConfirmBtn"><i class="fas fa-save"></i> 確認變更</button>
-      <button class="btn-secondary" id="cpCancelBtn" style="margin-top:0.5rem; width:100%; justify-content:center;">取消</button>
+  <!-- ===== 忘記密碼彈窗 ===== -->
+  <div class="forgot-password-overlay" id="forgotPasswordOverlay">
+    <div class="forgot-password-box">
+      <h3><i class="fas fa-key" style="color:#2a5b7a;"></i> 忘記密碼</h3>
+      <p class="sub-title">請選擇以下方式處理</p>
+      <div class="forgot-password-grid">
+        <div class="forgot-password-card" id="verifyChangeCard">
+          <div class="card-icon"><i class="fas fa-shield-alt"></i></div>
+          <h4>身份驗證變更密碼</h4>
+          <p>透過帳號、名稱、生日驗證身份後變更密碼</p>
+          <button class="btn-primary" id="verifyChangeBtn" style="font-size:0.85rem; padding:0.5rem 1rem; margin-top:0.5rem; width:100%;">
+            <i class="fas fa-check-circle"></i> 前往驗證
+          </button>
+        </div>
+        <div class="forgot-password-card" id="forceChangeCard">
+          <div class="card-icon"><i class="fas fa-user-shield"></i></div>
+          <h4>查詢密碼 / 強制變更</h4>
+          <p>請聯繫版主協助處理</p>
+          <button class="btn-secondary" id="forceChangeBtn" style="font-size:0.85rem; padding:0.5rem 1rem; margin-top:0.5rem; width:100%;">
+            <i class="fas fa-info-circle"></i> 了解詳情
+          </button>
+        </div>
+      </div>
+      <button class="btn-secondary" id="forgotPasswordCloseBtn" style="margin-top:0.5rem; width:100%; justify-content:center;">關閉</button>
     </div>
   </div>
 
-  <!-- ===== 查看密碼彈窗 ===== -->
+  <!-- ===== 身份驗證變更密碼彈窗 ===== -->
+  <div class="verify-change-overlay" id="verifyChangeOverlay">
+    <div class="verify-change-box">
+      <h3><i class="fas fa-shield-alt" style="color:#2a5b7a;"></i> 身份驗證</h3>
+      <p class="sub-title">請輸入您的管理員資料進行驗證</p>
+      <div class="form-group">
+        <label><i class="fas fa-user"></i> 管理員帳號 <span class="required">*</span></label>
+        <input type="text" id="verifyUsername" placeholder="請輸入您的管理員帳號（如：dader00）" />
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-id-card"></i> 顯示名稱 <span class="required">*</span></label>
+        <input type="text" id="verifyDisplayName" placeholder="請輸入您的顯示名稱（如：版主）" />
+      </div>
+      <div class="form-group">
+        <label><i class="fas fa-calendar-alt"></i> 生日 <span class="required">*</span></label>
+        <input type="date" id="verifyBirthday" />
+      </div>
+      <div class="error-msg" id="verifyErrorMsg">❌ 驗證失敗，請確認資料是否正確</div>
+      <div class="success-msg" id="verifySuccessMsg">✅ 驗證成功！請設定新密碼</div>
+      <div id="verifyChangePwdArea" style="display:none; margin-top:0.5rem; border-top:1px solid #eef3f9; padding-top:0.8rem;">
+        <div class="form-group">
+          <label><i class="fas fa-key"></i> 新密碼 <span class="required">*</span></label>
+          <input type="password" id="verifyNewPassword" placeholder="請輸入新密碼（至少6個字元）" />
+        </div>
+        <div class="form-group">
+          <label><i class="fas fa-check-circle"></i> 確認新密碼 <span class="required">*</span></label>
+          <input type="password" id="verifyConfirmPassword" placeholder="請再次輸入新密碼" />
+        </div>
+        <button class="btn-primary" id="verifyChangePwdBtn" style="margin-top:0.5rem;">
+          <i class="fas fa-save"></i> 確認變更密碼
+        </button>
+      </div>
+      <button class="btn-secondary" id="verifyChangeCloseBtn" style="margin-top:0.8rem; width:100%; justify-content:center;">返回</button>
+    </div>
+  </div>
+
+  <!-- ===== 強制變更說明彈窗（顯示請聯繫版主） ===== -->
+  <div class="force-change-overlay" id="forceChangeOverlay">
+    <div class="force-change-box">
+      <h3><i class="fas fa-info-circle" style="color:#2a5b7a;"></i> 查詢密碼 / 強制變更</h3>
+      <div style="text-align:center; padding:1.5rem 0;">
+        <i class="fas fa-user-shield" style="font-size:3rem; color:#2a7a5b; opacity:0.6; margin-bottom:1rem; display:block;"></i>
+        <p style="font-size:1.1rem; color:#1a2c44; font-weight:500;">請聯繫版主</p>
+        <p style="color:#6b8097; font-size:0.9rem; margin-top:0.5rem;">
+          版主可以協助查詢或強制變更密碼
+        </p>
+      </div>
+      <button class="btn-secondary" id="forceChangeCloseBtn" style="width:100%; justify-content:center;">我知道了</button>
+    </div>
+  </div>
+
+  <!-- ===== 查看密碼彈窗（含管理驗證資料） ===== -->
   <div class="view-passwords-overlay" id="viewPasswordsOverlay">
     <div class="view-passwords-box">
-      <h3><i class="fas fa-eye" style="color:#2a7a5b;"></i> 管理員密碼清單</h3>
+      <h3><i class="fas fa-eye" style="color:#2a5b7a;"></i> 管理員密碼清單</h3>
       <p class="sub-title">根據權限顯示可查看/變更的帳號</p>
       <div id="passwordList"></div>
+      <div class="manage-verify-btn" id="manageVerifyBtnContainer" style="display:none;">
+        <button id="manageVerifyDataBtn"><i class="fas fa-user-cog"></i> 管理驗證資料（所有權專用）</button>
+      </div>
       <button class="btn-secondary" id="viewPasswordsCloseBtn">關閉</button>
+    </div>
+  </div>
+
+  <!-- ===== 管理驗證資料彈窗 ===== -->
+  <div class="manage-verify-overlay" id="manageVerifyOverlay">
+    <div class="manage-verify-box">
+      <h3><i class="fas fa-user-cog" style="color:#2a5b7a;"></i> 管理員驗證資料管理</h3>
+      <p class="sub-title">建立或編輯管理員的身份驗證資料（用於忘記密碼時驗證）</p>
+      <div id="verifyDataList" style="max-height:250px; overflow-y:auto; margin-bottom:1rem;"></div>
+      <div style="border-top:1px solid #eef3f9; padding-top:0.8rem;">
+        <h4 style="font-size:0.95rem; color:#1a2c44; margin-bottom:0.5rem;"><i class="fas fa-plus-circle"></i> 新增/編輯驗證資料</h4>
+        <div class="form-group" style="margin-bottom:0.5rem;">
+          <label style="font-size:0.8rem;">管理員帳號 <span class="required">*</span></label>
+          <select id="verifyAdminSelect" style="padding:0.5rem 0.8rem; font-size:0.85rem; width:100%; border:1px solid #d7dfe9; border-radius:16px; background:#fafcff;">
+            <option value="">請選擇帳號</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0.5rem;">
+          <label style="font-size:0.8rem;">顯示名稱 <span class="required">*</span></label>
+          <input type="text" id="verifyDisplayNameInput" placeholder="如：版主、小編01" style="padding:0.5rem 0.8rem; font-size:0.85rem; width:100%; border:1px solid #d7dfe9; border-radius:16px; background:#fafcff;" />
+        </div>
+        <div class="form-group" style="margin-bottom:0.5rem;">
+          <label style="font-size:0.8rem;">生日 <span class="required">*</span></label>
+          <input type="date" id="verifyBirthdayInput" style="padding:0.5rem 0.8rem; font-size:0.85rem; width:100%; border:1px solid #d7dfe9; border-radius:16px; background:#fafcff;" />
+        </div>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn-primary" id="saveVerifyDataBtn" style="font-size:0.8rem; padding:0.4rem 1.2rem; width:auto; margin-top:0; flex:1;">
+            <i class="fas fa-save"></i> 儲存
+          </button>
+          <button class="btn-secondary" id="deleteVerifyDataBtn" style="font-size:0.8rem; padding:0.4rem 1.2rem; width:auto; margin-top:0; background:#dc3545; color:white; border:none; border-radius:40px; cursor:pointer; flex:1;">
+            <i class="fas fa-trash"></i> 刪除
+          </button>
+        </div>
+      </div>
+      <button class="btn-secondary" id="manageVerifyCloseBtn" style="margin-top:0.8rem; width:100%; justify-content:center;">關閉</button>
     </div>
   </div>
 
@@ -536,9 +693,6 @@
       publicKey: "KU2Ya4rXsyHXopGAM"
     };
 
-    // ============================================================
-    // 🔥 管理員帳號
-    // ============================================================
     const DEFAULT_ADMINS = [
       { username: "dader60", password: "dader6020230527", role: "owner", roleName: "所有權", displayName: "所有權" },
       { username: "dader00", password: "dader6000941010@", role: "moderator", roleName: "版主", displayName: "版主" },
@@ -556,10 +710,6 @@
     const STATUS_LIST = ['待處理', '調查中', '已處理', '不予受理', '需要補充資料', '已轉交相關人員'];
     const ROLE_NAMES = { owner: '所有權', moderator: '版主', vice: '副版主', editor: '小編' };
 
-    // ============================================================
-    // 2. 初始化
-    // ============================================================
-
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
     const auth = firebase.auth();
@@ -573,9 +723,10 @@
     let unsubscribeSnapshot = null;
     let selectedFiles = [];
     let isPasswordLoaded = false;
+    let verifiedUser = null;
 
     // ============================================================
-    // 3. 工具函數
+    // 2. 工具函數
     // ============================================================
 
     function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
@@ -600,7 +751,7 @@
     function getAdminPassword(username) { const admin = ADMIN_ACCOUNTS.find(a => a.username === username); return admin ? admin.password : null; }
 
     // ============================================================
-    // 🔑 權限控制函數
+    // 3. 權限控制函數
     // ============================================================
 
     function canChangePassword(operator, target) {
@@ -754,7 +905,74 @@
     }
 
     // ============================================================
-    // 📊 登入紀錄功能（簡化版）
+    // 5. 驗證資料管理（Firestore）
+    // ============================================================
+
+    async function loadVerifyData() {
+      try {
+        const snapshot = await db.collection('adminVerify').orderBy('username').get();
+        const data = [];
+        snapshot.forEach(doc => {
+          data.push({ id: doc.id, ...doc.data() });
+        });
+        return data;
+      } catch (error) {
+        console.error('❌ 載入驗證資料失敗:', error);
+        return [];
+      }
+    }
+
+    async function saveVerifyData(username, displayName, birthday) {
+      try {
+        const existing = await db.collection('adminVerify').where('username', '==', username).get();
+        if (!existing.empty) {
+          const doc = existing.docs[0];
+          await doc.ref.update({ displayName, birthday });
+          return { success: true, action: 'update' };
+        } else {
+          await db.collection('adminVerify').add({ username, displayName, birthday });
+          return { success: true, action: 'add' };
+        }
+      } catch (error) {
+        console.error('❌ 儲存驗證資料失敗:', error);
+        return { success: false, error: error.message };
+      }
+    }
+
+    async function deleteVerifyData(username) {
+      try {
+        const existing = await db.collection('adminVerify').where('username', '==', username).get();
+        if (!existing.empty) {
+          const doc = existing.docs[0];
+          await doc.ref.delete();
+          return { success: true };
+        }
+        return { success: false, error: '找不到該帳號的驗證資料' };
+      } catch (error) {
+        console.error('❌ 刪除驗證資料失敗:', error);
+        return { success: false, error: error.message };
+      }
+    }
+
+    async function verifyAdminIdentityFirestore(username, displayName, birthday) {
+      try {
+        const snapshot = await db.collection('adminVerify')
+          .where('username', '==', username)
+          .where('displayName', '==', displayName)
+          .where('birthday', '==', birthday)
+          .get();
+        if (!snapshot.empty) {
+          return snapshot.docs[0].data();
+        }
+        return null;
+      } catch (error) {
+        console.error('❌ 驗證失敗:', error);
+        return null;
+      }
+    }
+
+    // ============================================================
+    // 6. 登入紀錄
     // ============================================================
 
     async function recordLogin(user, isAdminLogin = false, adminUsername = null) {
@@ -815,7 +1033,7 @@
     }
 
     // ============================================================
-    // 📊 載入登入紀錄（簡化版）
+    // 7. 載入登入紀錄
     // ============================================================
 
     async function loadLoginLogs() {
@@ -910,7 +1128,7 @@
     }
 
     // ============================================================
-    // 5. ImgBB 圖片上傳
+    // 8. ImgBB 圖片上傳
     // ============================================================
 
     async function uploadToImgBB(file) {
@@ -935,7 +1153,7 @@
     }
 
     // ============================================================
-    // 6. 圖片管理
+    // 9. 圖片管理
     // ============================================================
 
     function updateImagePreview() {
@@ -973,7 +1191,7 @@
     }
 
     // ============================================================
-    // 7. Firestore 操作
+    // 10. Firestore 操作
     // ============================================================
 
     function listenComplaints() {
@@ -1049,7 +1267,7 @@
     }
 
     // ============================================================
-    // 8. Email 通知
+    // 11. Email 通知
     // ============================================================
 
     async function sendNewComplaintEmail(complaint) {
@@ -1092,7 +1310,7 @@
     }
 
     // ============================================================
-    // 9. 渲染
+    // 12. 渲染
     // ============================================================
 
     function render() {
@@ -1222,7 +1440,7 @@
     }
 
     // ============================================================
-    // 10. 圖片燈箱
+    // 13. 圖片燈箱
     // ============================================================
 
     let lightboxImages = [], lightboxIndex = 0;
@@ -1255,7 +1473,7 @@
     });
 
     // ============================================================
-    // 11. UI 更新
+    // 14. UI 更新
     // ============================================================
 
     function updateUI(user) {
@@ -1294,6 +1512,12 @@
           } else {
             viewPwdBtn.classList.remove('show');
           }
+          const manageBtnContainer = document.getElementById('manageVerifyBtnContainer');
+          if (role === 'owner') {
+            manageBtnContainer.style.display = 'flex';
+          } else {
+            manageBtnContainer.style.display = 'none';
+          }
         } else {
           nameDisplay.textContent = `${displayName}`;
           welcomeLine.innerHTML = `<i class="fas fa-smile" style="color:#c52a2a;"></i> ${displayName} 您好，歡迎使用投訴系統`;
@@ -1303,6 +1527,7 @@
           changePwdBtn.classList.remove('show');
           viewPwdBtn.classList.remove('show');
           loginLogsBtn.classList.remove('show');
+          document.getElementById('manageVerifyBtnContainer').style.display = 'none';
         }
         googleBtn.style.display = 'none';
         googleBtn2.style.display = 'none';
@@ -1319,6 +1544,7 @@
         roleDisplay.textContent = '';
         roleDisplay.className = 'user-role';
         loginLogsBtn.classList.remove('show');
+        document.getElementById('manageVerifyBtnContainer').style.display = 'none';
         googleBtn.style.display = 'inline-flex';
         googleBtn2.style.display = 'inline-flex';
         logoutBtn.classList.remove('show');
@@ -1337,7 +1563,7 @@
     }
 
     // ============================================================
-    // 12. 查看密碼功能（顯示完整名稱）
+    // 15. 查看密碼功能
     // ============================================================
 
     const viewPwdBtn = document.getElementById('viewPasswordsBtn');
@@ -1358,7 +1584,6 @@
         const div = document.createElement('div');
         div.className = 'pwd-item';
         
-        // 🔥 使用 displayName 顯示完整名稱（如：小編01、小編02）
         const displayName = a.displayName;
         
         let actionHtml = '';
@@ -1412,7 +1637,240 @@
     viewOverlay.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
 
     // ============================================================
-    // 13. 登入紀錄按鈕
+    // 16. 忘記密碼功能
+    // ============================================================
+
+    document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('adminLoginOverlay').classList.remove('active');
+      document.getElementById('forgotPasswordOverlay').classList.add('active');
+    });
+
+    document.getElementById('forgotPasswordCloseBtn').addEventListener('click', function() {
+      document.getElementById('forgotPasswordOverlay').classList.remove('active');
+    });
+
+    document.getElementById('verifyChangeBtn').addEventListener('click', function() {
+      document.getElementById('forgotPasswordOverlay').classList.remove('active');
+      document.getElementById('verifyChangeOverlay').classList.add('active');
+      document.getElementById('verifyUsername').value = '';
+      document.getElementById('verifyDisplayName').value = '';
+      document.getElementById('verifyBirthday').value = '';
+      document.getElementById('verifyNewPassword').value = '';
+      document.getElementById('verifyConfirmPassword').value = '';
+      document.getElementById('verifyChangePwdArea').style.display = 'none';
+      document.getElementById('verifyErrorMsg').classList.remove('show');
+      document.getElementById('verifySuccessMsg').classList.remove('show');
+      document.getElementById('verifyUsername').disabled = false;
+      document.getElementById('verifyDisplayName').disabled = false;
+      document.getElementById('verifyBirthday').disabled = false;
+    });
+
+    document.getElementById('verifyChangeCloseBtn').addEventListener('click', function() {
+      document.getElementById('verifyChangeOverlay').classList.remove('active');
+      document.getElementById('forgotPasswordOverlay').classList.add('active');
+    });
+
+    async function checkVerifyFields() {
+      const username = document.getElementById('verifyUsername').value.trim();
+      const displayName = document.getElementById('verifyDisplayName').value.trim();
+      const birthday = document.getElementById('verifyBirthday').value;
+      
+      const errorMsg = document.getElementById('verifyErrorMsg');
+      const successMsg = document.getElementById('verifySuccessMsg');
+      const changeArea = document.getElementById('verifyChangePwdArea');
+      
+      if (username && displayName && birthday) {
+        const admin = await verifyAdminIdentityFirestore(username, displayName, birthday);
+        if (admin) {
+          verifiedUser = admin;
+          errorMsg.classList.remove('show');
+          successMsg.textContent = `✅ 驗證成功！歡迎 ${admin.displayName}，請設定新密碼`;
+          successMsg.classList.add('show');
+          changeArea.style.display = 'block';
+          document.getElementById('verifyUsername').disabled = true;
+          document.getElementById('verifyDisplayName').disabled = true;
+          document.getElementById('verifyBirthday').disabled = true;
+        } else {
+          verifiedUser = null;
+          errorMsg.textContent = '❌ 驗證失敗，請確認帳號、名稱、生日是否正確';
+          errorMsg.classList.add('show');
+          successMsg.classList.remove('show');
+          changeArea.style.display = 'none';
+          document.getElementById('verifyUsername').disabled = false;
+          document.getElementById('verifyDisplayName').disabled = false;
+          document.getElementById('verifyBirthday').disabled = false;
+        }
+      } else {
+        errorMsg.classList.remove('show');
+        successMsg.classList.remove('show');
+        changeArea.style.display = 'none';
+        document.getElementById('verifyUsername').disabled = false;
+        document.getElementById('verifyDisplayName').disabled = false;
+        document.getElementById('verifyBirthday').disabled = false;
+      }
+    }
+
+    document.getElementById('verifyUsername').addEventListener('input', checkVerifyFields);
+    document.getElementById('verifyDisplayName').addEventListener('input', checkVerifyFields);
+    document.getElementById('verifyBirthday').addEventListener('change', checkVerifyFields);
+
+    document.getElementById('verifyChangePwdBtn').addEventListener('click', async function() {
+      if (!verifiedUser) {
+        showToast('請先完成身份驗證', true);
+        return;
+      }
+      
+      const newPwd = document.getElementById('verifyNewPassword').value.trim();
+      const confirmPwd = document.getElementById('verifyConfirmPassword').value.trim();
+      
+      if (!newPwd || !confirmPwd) {
+        showToast('請填寫新密碼和確認密碼', true);
+        return;
+      }
+      
+      if (newPwd.length < 6) {
+        showToast('密碼至少需要 6 個字元', true);
+        return;
+      }
+      
+      if (newPwd !== confirmPwd) {
+        showToast('新密碼與確認密碼不符', true);
+        return;
+      }
+      
+      const success = await updateAdminPasswordInFirestore(verifiedUser.username, newPwd);
+      if (success) {
+        showToast(`✅ 「${verifiedUser.displayName}」密碼已變更成功！`);
+        document.getElementById('verifyChangeOverlay').classList.remove('active');
+        document.getElementById('forgotPasswordOverlay').classList.remove('active');
+        document.getElementById('adminLoginOverlay').classList.add('active');
+      } else {
+        showToast('❌ 密碼變更失敗，請稍後再試', true);
+      }
+    });
+
+    // 強制變更說明（顯示請聯繫版主）
+    document.getElementById('forceChangeBtn').addEventListener('click', function() {
+      document.getElementById('forgotPasswordOverlay').classList.remove('active');
+      document.getElementById('forceChangeOverlay').classList.add('active');
+    });
+
+    document.getElementById('forceChangeCloseBtn').addEventListener('click', function() {
+      document.getElementById('forceChangeOverlay').classList.remove('active');
+      document.getElementById('forgotPasswordOverlay').classList.add('active');
+    });
+
+    document.getElementById('forceChangeOverlay').addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.remove('active');
+        document.getElementById('forgotPasswordOverlay').classList.add('active');
+      }
+    });
+
+    // ============================================================
+    // 17. 管理驗證資料（所有權專用）
+    // ============================================================
+
+    document.getElementById('manageVerifyDataBtn').addEventListener('click', async function() {
+      const role = getAdminRole(currentAdminUsername);
+      if (role !== 'owner') {
+        showToast('只有所有權可以管理驗證資料', true);
+        return;
+      }
+      document.getElementById('manageVerifyOverlay').classList.add('active');
+      await refreshVerifyDataList();
+    });
+
+    async function refreshVerifyDataList() {
+      const listEl = document.getElementById('verifyDataList');
+      const selectEl = document.getElementById('verifyAdminSelect');
+      
+      const data = await loadVerifyData();
+      
+      if (data.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center; padding:1rem; color:#8a9db0; font-size:0.85rem;">尚無驗證資料</div>';
+      } else {
+        let html = '';
+        data.forEach(item => {
+          html += `
+            <div class="verify-data-item">
+              <div class="vdata-left">
+                <strong>${escapeHtml(item.username)}</strong>
+                <span>${escapeHtml(item.displayName)}</span>
+                <span class="badge">${escapeHtml(item.birthday)}</span>
+              </div>
+              <div class="vdata-right">
+                <button onclick="editVerifyData('${item.username}')"><i class="fas fa-edit"></i> 編輯</button>
+              </div>
+            </div>
+          `;
+        });
+        listEl.innerHTML = html;
+      }
+      
+      const currentValue = selectEl.value;
+      selectEl.innerHTML = '<option value="">請選擇帳號</option>';
+      ADMIN_ACCOUNTS.forEach(admin => {
+        const option = document.createElement('option');
+        option.value = admin.username;
+        option.textContent = `${admin.username} (${admin.displayName})`;
+        selectEl.appendChild(option);
+      });
+      if (currentValue) selectEl.value = currentValue;
+      
+      document.getElementById('verifyDisplayNameInput').value = '';
+      document.getElementById('verifyBirthdayInput').value = '';
+    }
+
+    window.editVerifyData = async function(username) {
+      const data = await loadVerifyData();
+      const item = data.find(d => d.username === username);
+      if (item) {
+        document.getElementById('verifyAdminSelect').value = item.username;
+        document.getElementById('verifyDisplayNameInput').value = item.displayName;
+        document.getElementById('verifyBirthdayInput').value = item.birthday;
+      }
+    };
+
+    document.getElementById('saveVerifyDataBtn').addEventListener('click', async function() {
+      const username = document.getElementById('verifyAdminSelect').value;
+      const displayName = document.getElementById('verifyDisplayNameInput').value.trim();
+      const birthday = document.getElementById('verifyBirthdayInput').value;
+      
+      if (!username) { showToast('請選擇管理員帳號', true); return; }
+      if (!displayName) { showToast('請輸入顯示名稱', true); return; }
+      if (!birthday) { showToast('請選擇生日', true); return; }
+      
+      const result = await saveVerifyData(username, displayName, birthday);
+      if (result.success) {
+        showToast(`✅ 驗證資料已${result.action === 'update' ? '更新' : '新增'}`);
+        await refreshVerifyDataList();
+      } else {
+        showToast('❌ 儲存失敗：' + result.error, true);
+      }
+    });
+
+    document.getElementById('deleteVerifyDataBtn').addEventListener('click', async function() {
+      const username = document.getElementById('verifyAdminSelect').value;
+      if (!username) { showToast('請選擇要刪除的帳號', true); return; }
+      if (!confirm(`確定要刪除「${username}」的驗證資料嗎？`)) return;
+      
+      const result = await deleteVerifyData(username);
+      if (result.success) {
+        showToast(`✅ 已刪除「${username}」的驗證資料`);
+        await refreshVerifyDataList();
+      } else {
+        showToast('❌ 刪除失敗：' + result.error, true);
+      }
+    });
+
+    document.getElementById('manageVerifyCloseBtn').addEventListener('click', function() {
+      document.getElementById('manageVerifyOverlay').classList.remove('active');
+    });
+
+    // ============================================================
+    // 18. 登入紀錄按鈕
     // ============================================================
 
     document.getElementById('viewLoginLogsBtn').addEventListener('click', function() {
@@ -1431,7 +1889,7 @@
     });
 
     // ============================================================
-    // 14. 其他事件處理
+    // 19. 其他事件處理
     // ============================================================
 
     async function googleLogin() {
@@ -1465,7 +1923,6 @@
       } catch (error) { console.error('登出失敗:', error); }
     });
 
-    // 管理員登入
     const adminLoginBtn = document.getElementById('adminLoginBtn');
     const adminOverlay = document.getElementById('adminLoginOverlay');
     const adminConfirmBtn = document.getElementById('adminLoginConfirmBtn');
@@ -1488,6 +1945,7 @@
         document.getElementById('changePasswordBtn').classList.remove('show');
         document.getElementById('viewPasswordsBtn').classList.remove('show');
         document.getElementById('viewLoginLogsBtn').classList.remove('show');
+        document.getElementById('manageVerifyBtnContainer').style.display = 'none';
         updateUI(currentUser);
         showToast('已登出管理模式');
         render();
@@ -1520,6 +1978,12 @@
           viewPwdBtn.classList.add('show');
         } else { viewPwdBtn.classList.remove('show'); }
         document.getElementById('viewLoginLogsBtn').classList.add('show');
+        const manageBtnContainer = document.getElementById('manageVerifyBtnContainer');
+        if (found.role === 'owner') {
+          manageBtnContainer.style.display = 'flex';
+        } else {
+          manageBtnContainer.style.display = 'none';
+        }
         const nameDisplay = document.getElementById('userNameDisplay');
         const welcomeLine = document.getElementById('welcomeLine');
         const fullDisplayName = found.displayName;
@@ -1694,7 +2158,7 @@
     });
 
     // ============================================================
-    // 15. Firebase Auth 監聽
+    // 20. Firebase Auth 監聽
     // ============================================================
 
     auth.onAuthStateChanged((user) => {
@@ -1716,7 +2180,7 @@
     });
 
     // ============================================================
-    // 16. 啟動
+    // 21. 啟動
     // ============================================================
 
     async function init() {
@@ -1728,6 +2192,7 @@
       console.log('📊 登入紀錄功能已啟用');
       console.log('🔑 權限：所有權/版主可查看所有管理員，副版主/小編僅看自己');
       console.log('🔒 所有權/版主可強制登出管理員');
+      console.log('🔐 忘記密碼功能已啟用，所有權可管理驗證資料');
     }
 
     init();
