@@ -694,15 +694,28 @@
       publicKey: "KU2Ya4rXsyHXopGAM"
     };
 
+    // ============================================================
+    // ✅ 管理員帳號（寫死在程式中，固定）
+    // ============================================================
     const DEFAULT_ADMINS = [
+      // 所有權
       { username: "dader60", password: "dader6020230527", role: "owner", roleName: "所有權", displayName: "所有權" },
+      // 版主
       { username: "dader00", password: "dader6000941010@", role: "moderator", roleName: "版主", displayName: "版主" },
+      // 副版主
       { username: "dader01", password: "dader6000941010@", role: "vice", roleName: "副版主", displayName: "副版主" },
+      // 小編 01~05 (原有)
       { username: "dader02", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編01" },
       { username: "dader03", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編02" },
       { username: "dader04", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編03" },
       { username: "dader05", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編04" },
-      { username: "dader06", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編05" }
+      { username: "dader06", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編05" },
+      // 小編 06~10 (新增)
+      { username: "dader07", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編06" },
+      { username: "dader08", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編07" },
+      { username: "dader09", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編08" },
+      { username: "dader10", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編09" },
+      { username: "dader11", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編10" }
     ];
 
     let ADMIN_ACCOUNTS = DEFAULT_ADMINS;
@@ -1375,25 +1388,44 @@
     }
 
     // ============================================================
-    // 10. Firestore 密碼管理
+    // 10. Firestore 密碼管理（跨瀏覽器同步）
     // ============================================================
 
+    /**
+     * 從 Firestore 載入密碼（跨瀏覽器同步）
+     */
     async function loadAdminsFromFirestore() {
       try {
         const docRef = db.collection('config').doc('adminPasswords');
         const doc = await docRef.get();
+        
         if (doc.exists) {
           const pwdMap = doc.data();
+          console.log('📥 從 Firestore 載入密碼:', Object.keys(pwdMap));
+          
+          let updatedCount = 0;
           DEFAULT_ADMINS.forEach(admin => {
             if (pwdMap[admin.username] && pwdMap[admin.username] !== admin.password) {
+              console.log(`🔄 更新密碼: ${admin.username} -> ${pwdMap[admin.username]}`);
               admin.password = pwdMap[admin.username];
+              updatedCount++;
             }
           });
+          
+          if (updatedCount > 0) {
+            console.log(`✅ 已更新 ${updatedCount} 個帳號的密碼`);
+          } else {
+            console.log('✅ 密碼已是最新，無需更新');
+          }
         } else {
+          console.log('📤 Firestore 中無密碼資料，上傳預設密碼...');
           await saveAdminsToFirestore();
         }
+        
         ADMIN_ACCOUNTS = DEFAULT_ADMINS;
         isPasswordLoaded = true;
+        updateAllPasswordDisplays();
+        
         return DEFAULT_ADMINS;
       } catch (error) {
         console.error('❌ 載入密碼失敗:', error);
@@ -1403,11 +1435,18 @@
       }
     }
 
+    /**
+     * 儲存所有管理員密碼到 Firestore（跨瀏覽器同步）
+     */
     async function saveAdminsToFirestore() {
       try {
         const pwdMap = {};
-        DEFAULT_ADMINS.forEach(admin => { pwdMap[admin.username] = admin.password; });
+        DEFAULT_ADMINS.forEach(admin => {
+          pwdMap[admin.username] = admin.password;
+        });
+        
         await db.collection('config').doc('adminPasswords').set(pwdMap);
+        console.log('✅ 密碼已儲存到 Firestore，共', Object.keys(pwdMap).length, '個帳號');
         return true;
       } catch (error) {
         console.error('❌ 儲存密碼失敗:', error);
@@ -1415,76 +1454,139 @@
       }
     }
 
+    /**
+     * 更新單一管理員密碼（跨瀏覽器同步）
+     */
     async function updateAdminPasswordInFirestore(username, newPassword) {
       const admin = DEFAULT_ADMINS.find(a => a.username === username);
-      if (!admin) return false;
+      if (!admin) {
+        console.error('❌ 找不到帳號:', username);
+        return false;
+      }
+      
+      if (admin.password === newPassword) {
+        showToast('⚠️ 新密碼與舊密碼相同，無需變更', true);
+        return false;
+      }
+      
       admin.password = newPassword;
       const success = await saveAdminsToFirestore();
+      
       if (success) {
+        console.log(`✅ 密碼已變更: ${username} -> ${newPassword}`);
         updateAllPasswordDisplays();
+        
         if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
           renderPasswordList();
         }
+        
         if (isAdmin && currentAdminUsername === username) {
           forceLogoutAdmin(username);
         }
+        
         return true;
       }
+      
       return false;
     }
 
+    /**
+     * 監聽 Firestore 密碼變更（跨瀏覽器即時同步）
+     */
     function listenAdminPasswords() {
-      db.collection('config').doc('adminPasswords').onSnapshot((doc) => {
-        if (doc.exists && isPasswordLoaded) {
+      if (window.passwordListener) {
+        window.passwordListener();
+        window.passwordListener = null;
+      }
+      
+      window.passwordListener = db.collection('config').doc('adminPasswords')
+        .onSnapshot((doc) => {
+          if (!doc.exists || !isPasswordLoaded) {
+            console.log('⏳ 密碼文件不存在或尚未載入');
+            return;
+          }
+          
           const pwdMap = doc.data();
+          console.log('📡 收到 Firestore 密碼更新通知');
+          
           let changed = false;
           let changedUsername = null;
+          
           DEFAULT_ADMINS.forEach(admin => {
             if (pwdMap[admin.username] && pwdMap[admin.username] !== admin.password) {
+              console.log(`🔄 密碼已變更: ${admin.username} -> ${pwdMap[admin.username]}`);
               admin.password = pwdMap[admin.username];
               changed = true;
               changedUsername = admin.username;
             }
           });
+          
           if (changed) {
             updateAllPasswordDisplays();
+            
             if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
               renderPasswordList();
             }
+            
             if (isAdmin && currentAdminUsername === changedUsername) {
+              showToast(`🔒 您的密碼已在其他瀏覽器變更，請重新登入`, true);
               forceLogoutAdmin(changedUsername);
+            } else {
+              showToast(`📢 管理員「${changedUsername}」的密碼已在其他瀏覽器變更`, false);
             }
           }
-        }
-      }, (error) => { console.error('❌ 監聽密碼變更失敗:', error); });
+        }, (error) => {
+          console.error('❌ 監聽密碼變更失敗:', error);
+        });
     }
 
+    /**
+     * 更新所有密碼顯示
+     */
     function updateAllPasswordDisplays() {
       document.querySelectorAll('.pwd-display').forEach(el => {
         const uname = el.id.replace('pwd_', '');
         const found = DEFAULT_ADMINS.find(a => a.username === uname);
-        if (found) { el.textContent = found.password; }
+        if (found) {
+          el.textContent = found.password;
+        }
       });
     }
 
+    /**
+     * 強制登出管理員
+     */
     function forceLogoutAdmin(username) {
       if (isAdmin && currentAdminUsername === username) {
         isAdmin = false;
         sessionStorage.setItem('isAdmin', 'false');
         sessionStorage.removeItem('currentAdminUsername');
+        
         const adminLoginBtn = document.getElementById('adminLoginBtn');
         adminLoginBtn.textContent = '管理';
         adminLoginBtn.className = 'btn-admin-login';
+        
         const roleDisplay = document.getElementById('userRoleDisplay');
         if (roleDisplay) {
-          if (currentUser) { roleDisplay.textContent = '一般使用者'; roleDisplay.className = 'user-role'; } 
-          else { roleDisplay.textContent = ''; roleDisplay.className = 'user-role'; }
+          if (currentUser) {
+            roleDisplay.textContent = '一般使用者';
+            roleDisplay.className = 'user-role';
+          } else {
+            roleDisplay.textContent = '';
+            roleDisplay.className = 'user-role';
+          }
         }
+        
         document.getElementById('changePasswordBtn').classList.remove('show');
         document.getElementById('viewPasswordsBtn').classList.remove('show');
         document.getElementById('viewLoginLogsBtn').classList.remove('show');
+        document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+        
+        db.collection('adminSessions').doc(username).delete().catch(() => {});
+        
         updateUI(currentUser);
         render();
+        
         showToast(`🔒 您已被強制登出（密碼已變更），請重新登入`, true);
         return true;
       }
@@ -2666,8 +2768,13 @@
     // ============================================================
 
     async function init() {
+      // 載入密碼（從 Firestore）
       await loadAdminsFromFirestore();
+      
+      // 監聽密碼變更（跨瀏覽器同步）
       listenAdminPasswords();
+      
+      // 監聽投訴
       listenComplaints();
       
       if (isAdmin && currentAdminUsername) {
@@ -2680,14 +2787,10 @@
       console.log('✅ 靠北達德投訴系統已啟動');
       console.log('👑 管理員帳號:', DEFAULT_ADMINS.map(a => a.username).join(', '));
       console.log('📊 登入紀錄功能已啟用');
+      console.log('📋 小編帳號：dader02~dader11 (共10位小編)');
+      console.log('🔄 跨瀏覽器密碼同步已啟用 (onSnapshot 監聽)');
       console.log('🔑 權限：所有權/版主可查看所有管理員，副版主/小編僅看自己');
       console.log('🔒 所有權可強制登出所有管理員，版主可強制登出副版主+小編');
-      console.log('🔑 所有角色皆可強制登出同瀏覽器其他分頁的自己（帳號被冒用時自救）');
-      console.log('🔄 當前分頁不能強制登出自己，但可登出同瀏覽器其他分頁');
-      console.log('🟢 在線狀態即時顯示（此裝置/其他裝置）');
-      console.log('🔐 忘記密碼功能已啟用，所有權可管理驗證資料');
-      console.log('🔑 變更密碼功能已修復並啟用');
-      console.log('🔄 跨瀏覽器強制登出已啟用，強制登出後不留下紀錄');
     }
 
     init();
