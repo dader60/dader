@@ -4,19 +4,13 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>靠北達德投訴系統</title>
-  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
-
-  <!-- Firebase -->
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-
-  <!-- EmailJS -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
-    /* ... 原有樣式保持不變 ... */
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
     body { background: #f4f7fc; min-height: 100vh; padding: 2rem 1rem; display: flex; justify-content: center; align-items: flex-start; }
     .container { max-width: 1300px; width: 100%; background: white; border-radius: 32px; box-shadow: 0 20px 60px rgba(0,20,40,0.08); padding: 2rem 2rem 2.5rem; }
@@ -33,7 +27,6 @@
     .user-role.admin-role { background: #c52a2a; color: white; }
     .btn-google { background: white; border: 1px solid #d7dfe9; border-radius: 40px; padding: 0.4rem 1.2rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-weight: 500; color: #2a405b; transition: 0.15s; font-size: 0.9rem; }
     .btn-google:hover { background: #f4f8ff; border-color: #b0c0d0; }
-    .btn-google svg { width: 18px; height: 18px; }
     .btn-logout { background: transparent; border: 1px solid #f5d8d8; color: #b43b3b; border-radius: 40px; padding: 0.3rem 1.2rem; cursor: pointer; font-size: 0.85rem; transition: 0.15s; display: none; }
     .btn-logout:hover { background: #fff3f3; }
     .btn-logout.show { display: inline-block; }
@@ -148,7 +141,6 @@
     .login-box .forgot-link a { color: #2a5b7a; font-size: 0.85rem; text-decoration: none; cursor: pointer; }
     .login-box .forgot-link a:hover { text-decoration: underline; }
 
-    /* ===== 變更密碼彈窗樣式 ===== */
     .change-password-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
     .change-password-overlay.active { display: flex; }
     .change-password-box { background: white; padding: 2.5rem; border-radius: 28px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); text-align: center; }
@@ -166,10 +158,8 @@
     .forgot-password-box { background: white; padding: 2rem; border-radius: 28px; max-width: 700px; width: 92%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
     .forgot-password-box h3 { text-align: center; margin-bottom: 0.3rem; color: #0b1e33; }
     .forgot-password-box .sub-title { color: #6b8097; font-size: 0.85rem; text-align: center; margin-bottom: 1rem; }
-
     .forgot-password-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 0.5rem 0 1rem; }
     @media (max-width: 600px) { .forgot-password-grid { grid-template-columns: 1fr; } }
-
     .forgot-password-card { background: #f8fafc; border: 1px solid #e9edf4; border-radius: 16px; padding: 1.5rem; text-align: center; transition: 0.15s; }
     .forgot-password-card:hover { border-color: #2a5b7a; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
     .forgot-password-card .card-icon { font-size: 2rem; color: #2a5b7a; margin-bottom: 0.5rem; }
@@ -245,7 +235,7 @@
     .login-log-item .user-info .type-badge { font-size: 0.6rem; padding: 1px 10px; border-radius: 20px; }
     .login-log-item .user-info .type-badge.google { background: #4285F4; color: white; }
     .login-log-item .user-info .type-badge.admin { background: #c52a2a; color: white; }
-    .login-log-item .user-info .online-badge { font-size: 0.6rem; color: #28a745; margin-left: 4px; }
+    .login-log-item .user-info .online-badge { font-size: 0.6rem; color: #28a745; margin-left: 4px; padding: 1px 8px; border-radius: 12px; display: inline-block; }
     .login-log-item .login-time { font-size: 0.8rem; color: #6b8097; white-space: nowrap; }
     .login-log-item .login-time i { margin-right: 4px; }
     .login-log-item .actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
@@ -334,7 +324,6 @@
       </div>
     </header>
 
-    <!-- top-nav -->
     <div class="top-nav">
       <div class="user-info" id="userInfo">
         <div class="user-avatar" id="userAvatar">👤</div>
@@ -354,7 +343,6 @@
       </div>
     </div>
 
-    <!-- 主內容 -->
     <div class="row">
       <div class="card">
         <div class="card-title"><i class="fas fa-pen"></i> 新增投訴</div>
@@ -687,7 +675,7 @@
 
   <script>
     // ============================================================
-    // 1. ⚙️ 設定區
+    // 1. 設定區
     // ============================================================
 
     const firebaseConfig = {
@@ -758,17 +746,13 @@
     let broadcastChannel = null;
     try {
       broadcastChannel = new BroadcastChannel('admin_force_logout');
-    } catch (e) {
-      console.warn('Broadcast Channel 不支援');
-    }
+    } catch (e) {}
 
     if (broadcastChannel) {
       broadcastChannel.onmessage = function(event) {
         const data = event.data;
         if (data.type === 'force_logout' && data.username === currentAdminUsername) {
-          if (data.forcedBy === currentAdminUsername && data.tabId === currentTabId) {
-            return;
-          }
+          if (data.forcedBy === currentAdminUsername && data.tabId === currentTabId) return;
           if (isAdmin) {
             isAdmin = false;
             sessionStorage.setItem('isAdmin', 'false');
@@ -961,7 +945,7 @@
     }
 
     // ============================================================
-    // 6. 載入登入紀錄（顯示在線狀態 + 強制登出）
+    // 6. 載入登入紀錄（修復同帳號多分頁顯示問題 + 簡化權限說明）
     // ============================================================
 
     async function loadLoginLogs() {
@@ -975,7 +959,7 @@
         
         const snapshot = await db.collection('loginLogs')
           .orderBy('loginTime', 'desc')
-          .limit(100)
+          .limit(200)
           .get();
         
         if (snapshot.empty) {
@@ -987,15 +971,10 @@
         snapshot.forEach(doc => {
           const data = doc.data();
           if (data.userType !== 'admin') return;
-          if (role === 'owner' || role === 'moderator') {
-            loginData.push({ id: doc.id, ...data });
-          } else {
-            if (data.userId === currentAdminUsername) {
-              loginData.push({ id: doc.id, ...data });
-            }
-          }
+          loginData.push({ id: doc.id, ...data });
         });
         
+        // 去重：每個帳號只保留最新的紀錄
         const seen = new Set();
         loginData = loginData.filter(data => {
           if (seen.has(data.userId)) return false;
@@ -1020,11 +999,15 @@
           const displayName = data.displayName || '未知使用者';
           const isCurrentUser = data.userId === currentAdminUsername;
           
+          // 獲取在線狀態
           const statusInfo = onlineStatus[data.userId] || { isOnline: false, sessionId: null, tabId: null };
           const isOnline = statusInfo.isOnline;
           const isSameSession = statusInfo.sessionId === currentSessionId;
           const isSameTab = statusInfo.tabId === currentTabId;
           
+          // ============================================================
+          // 權限判斷
+          // ============================================================
           let canForceLogoutTarget = false;
           let isSelfLogout = false;
           let isOtherTab = false;
@@ -1037,11 +1020,13 @@
           if (isCurrentUser) {
             showOnlineBadge = true;
             if (isSameTab) {
+              // 同一個分頁：不能登出自己
               canForceLogoutTarget = false;
               buttonText = '🚫 當前分頁';
               buttonDisabled = true;
               buttonTitle = '當前分頁不能強制登出自己';
             } else if (isSameSession) {
+              // 同一個瀏覽器，不同分頁：可以登出其他分頁的自己
               canForceLogoutTarget = true;
               isSelfLogout = true;
               isOtherTab = true;
@@ -1049,6 +1034,7 @@
               buttonClass = 'btn-force-logout btn-force-self';
               buttonTitle = '強制登出同瀏覽器的其他分頁';
             } else {
+              // 不同瀏覽器：可以登出其他瀏覽器的自己
               canForceLogoutTarget = true;
               isSelfLogout = true;
               buttonText = '🔒 強制登出';
@@ -1058,10 +1044,12 @@
           } else {
             const targetRole = getAdminRole(data.userId);
             if (role === 'owner') {
+              // 所有權可以登出所有人
               canForceLogoutTarget = true;
               showOnlineBadge = true;
               buttonText = '🔒 強制登出';
             } else if (role === 'moderator') {
+              // 版主可以登出副版主 + 小編
               if (targetRole === 'vice' || targetRole === 'editor') {
                 canForceLogoutTarget = true;
                 showOnlineBadge = true;
@@ -1071,16 +1059,20 @@
                 showOnlineBadge = false;
               }
             } else {
+              // 副版主/小編不能登出其他人
               canForceLogoutTarget = false;
               showOnlineBadge = false;
             }
           }
           
+          // ============================================================
+          // 在線狀態顯示
+          // ============================================================
           let onlineBadge = '';
           if (showOnlineBadge) {
             if (isCurrentUser) {
               if (isSameTab) {
-                onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線（當前分頁）</span>';
+                onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線（此裝置）</span>';
               } else {
                 onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線</span>';
               }
@@ -1095,6 +1087,9 @@
           
           const showActions = canForceLogoutTarget || isCurrentUser;
           
+          // 判斷是否顯示「可登出」標籤（同瀏覽器其他分頁）
+          const showCanLogoutBadge = isSameSession && !isSameTab && isCurrentUser;
+          
           html += `
             <div class="login-log-item" style="${isCurrentUser ? 'border-left: 3px solid #28a745;' : ''}">
               <div class="user-info">
@@ -1105,7 +1100,7 @@
                     <span class="type-badge ${avatarClass}">${typeBadge}</span>
                     ${onlineBadge}
                     ${isCurrentUser ? '<span class="online-badge" style="background:#dc3545;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🔑 可管理</span>' : ''}
-                    ${isSameSession && !isSameTab && isCurrentUser ? '<span class="online-badge" style="background:#ff6b35;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">📌 可登出</span>' : ''}
+                    ${showCanLogoutBadge ? '<span class="online-badge" style="background:#ff6b35;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">📌 可登出</span>' : ''}
                   </div>
                 </div>
               </div>
@@ -1120,11 +1115,21 @@
         });
         
         const count = loginData.length;
+        
+        // ============================================================
+        // 權限說明文字（已簡化）
+        // ============================================================
         let roleInfo = '';
-        if (role === 'owner') roleInfo = '👑 所有權：可強制登出所有管理員，可登出同瀏覽器其他分頁的自己';
-        else if (role === 'moderator') roleInfo = '📋 版主：可強制登出副版主 + 小編，可登出同瀏覽器其他分頁的自己';
-        else if (role === 'vice') roleInfo = '📌 副版主：僅可查看自己，可登出同瀏覽器其他分頁的自己';
-        else if (role === 'editor') roleInfo = '✏️ 小編：僅可查看自己，可登出同瀏覽器其他分頁的自己';
+        if (role === 'owner') {
+          roleInfo = '👑 所有權：可強制登出所有管理員';
+        } else if (role === 'moderator') {
+          roleInfo = '📋 版主：可強制登出副版主 + 小編';
+        } else if (role === 'vice') {
+          roleInfo = '📌 副版主：僅可查看自己';
+        } else if (role === 'editor') {
+          roleInfo = '✏️ 小編：僅可查看自己';
+        }
+        
         html = `<div class="log-header"><span><i class="fas fa-users"></i> 共 ${count} 筆紀錄</span><span><i class="fas fa-info-circle"></i> ${roleInfo}</span></div>` + html;
         listEl.innerHTML = html;
         
@@ -1140,7 +1145,7 @@
     }
 
     // ============================================================
-    // 7. 強制登出處理函數
+    // 7. 強制登出處理函數（強制登出後刪除紀錄）
     // ============================================================
 
     async function handleForceLogout(e) {
@@ -1179,6 +1184,7 @@
       btn.textContent = '處理中...';
       
       try {
+        // 1. 刪除該管理員的所有登入紀錄（強制登出後不留紀錄）
         const snapshot = await db.collection('loginLogs')
           .where('userId', '==', username)
           .where('userType', '==', 'admin')
@@ -1188,25 +1194,20 @@
         snapshot.forEach(doc => { batch.delete(doc.ref); });
         await batch.commit();
         
+        // 2. 刪除該管理員的 Session（強制下線）
         await db.collection('adminSessions').doc(username).delete();
         
-        const logData = {
-          userId: username,
-          userType: 'admin',
-          displayName: username,
-          email: username,
-          loginTime: Date.now(),
-          date: getToday(),
-          time: getNowTime(),
-          forcedLogout: true,
+        // 3. 發送強制登出信號（跨瀏覽器同步）
+        await db.collection('forceLogoutSignals').doc(username).set({
+          timestamp: Date.now(),
           forcedBy: currentAdminUsername,
           isSelfLogout: isSelf,
           sessionId: currentSessionId,
           tabId: currentTabId,
           isOtherTab: isOtherTab
-        };
-        await db.collection('loginLogs').add(logData);
+        });
         
+        // 4. 如果是同瀏覽器不同分頁，使用 Broadcast Channel 通知
         if (isSelf && isOtherTab && broadcastChannel) {
           broadcastChannel.postMessage({
             type: 'force_logout',
@@ -1217,6 +1218,7 @@
           });
         }
         
+        // 5. 如果目前登入的帳號就是被強制登出的帳號，立即登出
         if (isAdmin && currentAdminUsername === username) {
           if (!isOtherTab || !isSameSession) {
             isAdmin = false;
@@ -1274,47 +1276,50 @@
         forcedLogoutUnsubscribe = null;
       }
       
-      forcedLogoutUnsubscribe = db.collection('loginLogs')
-        .where('forcedLogout', '==', true)
-        .onSnapshot((snapshot) => {
+      if (!currentAdminUsername) return;
+      
+      forcedLogoutUnsubscribe = db.collection('forceLogoutSignals')
+        .doc(currentAdminUsername)
+        .onSnapshot((doc) => {
           if (!isAdmin || !currentAdminUsername) return;
+          if (!doc.exists) return;
           
-          snapshot.forEach((doc) => {
-            const data = doc.data();
-            if (data.userId === currentAdminUsername) {
-              if (data.forcedBy === currentAdminUsername && data.tabId === currentTabId) {
-                return;
+          const data = doc.data();
+          if (!data) return;
+          
+          if (data.forcedBy === currentAdminUsername && data.tabId === currentTabId) {
+            return;
+          }
+          
+          const timeDiff = Date.now() - data.timestamp;
+          if (timeDiff < 15000) {
+            isAdmin = false;
+            sessionStorage.setItem('isAdmin', 'false');
+            sessionStorage.removeItem('currentAdminUsername');
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            adminLoginBtn.textContent = '管理';
+            adminLoginBtn.className = 'btn-admin-login';
+            document.getElementById('viewLoginLogsBtn').classList.remove('show');
+            document.getElementById('changePasswordBtn').classList.remove('show');
+            document.getElementById('viewPasswordsBtn').classList.remove('show');
+            document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+            db.collection('adminSessions').doc(currentAdminUsername).delete().catch(() => {});
+            updateUI(currentUser);
+            render();
+            document.getElementById('loginLogsOverlay').classList.remove('active');
+            
+            db.collection('forceLogoutSignals').doc(currentAdminUsername).delete().catch(() => {});
+            
+            if (data.isSelfLogout) {
+              if (data.sessionId === currentSessionId && data.tabId !== currentTabId) {
+                showToast(`🔒 您已在同瀏覽器的其他分頁強制登出自己`, true);
+              } else {
+                showToast(`🔒 您已在其他瀏覽器強制登出自己，請重新登入`, true);
               }
-              if (data.sessionId === currentSessionId && data.tabId !== currentTabId) {}
-              
-              const timeDiff = Date.now() - data.loginTime;
-              if (timeDiff < 15000) {
-                isAdmin = false;
-                sessionStorage.setItem('isAdmin', 'false');
-                sessionStorage.removeItem('currentAdminUsername');
-                const adminLoginBtn = document.getElementById('adminLoginBtn');
-                adminLoginBtn.textContent = '管理';
-                adminLoginBtn.className = 'btn-admin-login';
-                document.getElementById('viewLoginLogsBtn').classList.remove('show');
-                document.getElementById('changePasswordBtn').classList.remove('show');
-                document.getElementById('viewPasswordsBtn').classList.remove('show');
-                document.getElementById('manageVerifyBtnContainer').style.display = 'none';
-                db.collection('adminSessions').doc(currentAdminUsername).delete().catch(() => {});
-                updateUI(currentUser);
-                render();
-                document.getElementById('loginLogsOverlay').classList.remove('active');
-                if (data.isSelfLogout) {
-                  if (data.sessionId === currentSessionId && data.tabId !== currentTabId) {
-                    showToast(`🔒 您已在同瀏覽器的其他分頁強制登出自己`, true);
-                  } else {
-                    showToast(`🔒 您已在其他瀏覽器強制登出自己，請重新登入`, true);
-                  }
-                } else {
-                  showToast(`🔒 您已被管理員強制登出`, true);
-                }
-              }
+            } else {
+              showToast(`🔒 您已被管理員強制登出`, true);
             }
-          });
+          }
         }, (error) => {
           console.error('監聽強制登出失敗:', error);
         });
@@ -2676,10 +2681,10 @@
       console.log('🔒 所有權可強制登出所有管理員，版主可強制登出副版主+小編');
       console.log('🔑 所有角色皆可強制登出同瀏覽器其他分頁的自己（帳號被冒用時自救）');
       console.log('🔄 當前分頁不能強制登出自己，但可登出同瀏覽器其他分頁');
-      console.log('🟢 在線狀態即時顯示（含分頁識別）');
+      console.log('🟢 在線狀態即時顯示（此裝置/其他裝置）');
       console.log('🔐 忘記密碼功能已啟用，所有權可管理驗證資料');
       console.log('🔑 變更密碼功能已修復並啟用');
-      console.log('🔄 跨瀏覽器強制登出已啟用');
+      console.log('🔄 跨瀏覽器強制登出已啟用，強制登出後不留下紀錄');
     }
 
     init();
