@@ -945,7 +945,7 @@
     }
 
     // ============================================================
-    // 6. 載入登入紀錄（修復同帳號多分頁顯示問題 + 簡化權限說明）
+    // 6. 載入登入紀錄
     // ============================================================
 
     async function loadLoginLogs() {
@@ -1020,13 +1020,13 @@
           if (isCurrentUser) {
             showOnlineBadge = true;
             if (isSameTab) {
-              // 同一個分頁：不能登出自己
+              // 🔴 同一個分頁：不能登出自己
               canForceLogoutTarget = false;
               buttonText = '🚫 當前分頁';
               buttonDisabled = true;
               buttonTitle = '當前分頁不能強制登出自己';
             } else if (isSameSession) {
-              // 同一個瀏覽器，不同分頁：可以登出其他分頁的自己
+              // 🟡 同一個瀏覽器，不同分頁：可以登出其他分頁的自己
               canForceLogoutTarget = true;
               isSelfLogout = true;
               isOtherTab = true;
@@ -1034,7 +1034,7 @@
               buttonClass = 'btn-force-logout btn-force-self';
               buttonTitle = '強制登出同瀏覽器的其他分頁';
             } else {
-              // 不同瀏覽器：可以登出其他瀏覽器的自己
+              // 🔵 不同瀏覽器：可以登出其他瀏覽器的自己
               canForceLogoutTarget = true;
               isSelfLogout = true;
               buttonText = '🔒 強制登出';
@@ -1072,11 +1072,14 @@
           if (showOnlineBadge) {
             if (isCurrentUser) {
               if (isSameTab) {
+                // ✅ 當前分頁看自己：顯示「🟢 在線（此裝置）」
                 onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線（此裝置）</span>';
               } else {
+                // ✅ 其他分頁看自己：顯示「🟢 在線」
                 onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線</span>';
               }
             } else {
+              // 非當前用戶
               if (isOnline) {
                 onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線</span>';
               } else {
@@ -1145,7 +1148,7 @@
     }
 
     // ============================================================
-    // 7. 強制登出處理函數（強制登出後刪除紀錄）
+    // 7. 強制登出處理函數
     // ============================================================
 
     async function handleForceLogout(e) {
