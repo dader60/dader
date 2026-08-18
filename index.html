@@ -258,6 +258,8 @@
     .btn-force-logout { background: #dc3545; color: white; border: none; border-radius: 20px; padding: 3px 14px; font-size: 0.65rem; cursor: pointer; transition: 0.15s; }
     .btn-force-logout:hover { background: #b02a37; transform: scale(1.02); }
     .btn-force-logout:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+    .btn-force-self { background: #ff6b35; }
+    .btn-force-self:hover { background: #e55a2b; }
     .no-permission { font-size: 0.6rem; color: #8a9db0; font-style: italic; }
 
     .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; cursor: pointer; }
@@ -735,6 +737,7 @@
     let selectedFiles = [];
     let isPasswordLoaded = false;
     let verifiedUser = null;
+    let forcedLogoutUnsubscribe = null;
 
     // ============================================================
     // 2. 工具函數
@@ -785,18 +788,21 @@
       return false;
     }
 
-    function canForceLogoutTarget(operator, target) {
+    // 判斷誰可以強制登出誰（包含自己）
+    function canForceLogout(operator, target) {
+      // 強制登出自己：所有人都可以
+      if (operator === target) return true;
+      
       const operatorRole = getAdminRole(operator);
       const targetRole = getAdminRole(target);
-      if (operatorRole === 'owner') return true;
+      
+      if (operatorRole === 'owner') return true; // 所有權可以登出所有人
       if (operatorRole === 'moderator') {
-        if (target === operator) return true;
-        if (targetRole === 'vice') return true;
-        if (targetRole === 'editor') return true;
+        // 版主可以登出副版主 + 小編
+        if (targetRole === 'vice' || targetRole === 'editor') return true;
         return false;
       }
-      if (operatorRole === 'vice') { if (target === operator) return true; return false; }
-      if (operatorRole === 'editor') { if (target === operator) return true; return false; }
+      // 副版主和小編不能登出其他人
       return false;
     }
 
@@ -851,7 +857,10 @@
         if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
           renderPasswordList();
         }
-        forceLogoutAdmin(username);
+        // 如果變更的是自己的密碼，強制登出自己
+        if (isAdmin && currentAdminUsername === username) {
+          forceLogoutAdmin(username);
+        }
         return true;
       }
       return false;
@@ -909,7 +918,7 @@
         document.getElementById('viewLoginLogsBtn').classList.remove('show');
         updateUI(currentUser);
         render();
-        showToast(`🔒 您的密碼已被管理員變更，請重新登入`, true);
+        showToast(`🔒 您已被強制登出（密碼已變更），請重新登入`, true);
         return true;
       }
       return false;
@@ -1016,35 +1025,8 @@
       } catch (error) { console.error('❌ 儲存登入紀錄失敗:', error); }
     }
 
-    async function forceLogoutAdminUser(username) {
-      try {
-        const snapshot = await db.collection('loginLogs')
-          .where('userId', '==', username)
-          .where('userType', '==', 'admin')
-          .get();
-        const batch = db.batch();
-        snapshot.forEach(doc => { batch.delete(doc.ref); });
-        await batch.commit();
-        if (isAdmin && currentAdminUsername === username) {
-          showToast('🔒 您已被強制登出', true);
-          setTimeout(() => {
-            isAdmin = false;
-            sessionStorage.setItem('isAdmin', 'false');
-            sessionStorage.removeItem('currentAdminUsername');
-            const adminLoginBtn = document.getElementById('adminLoginBtn');
-            adminLoginBtn.textContent = '管理';
-            adminLoginBtn.className = 'btn-admin-login';
-            document.getElementById('viewLoginLogsBtn').classList.remove('show');
-            updateUI(currentUser);
-            render();
-          }, 1500);
-        }
-        return true;
-      } catch (error) { console.error('強制登出失敗:', error); return false; }
-    }
-
     // ============================================================
-    // 7. 載入登入紀錄
+    // 7. 載入登入紀錄 + 強制登出功能
     // ============================================================
 
     async function loadLoginLogs() {
@@ -1056,90 +1038,264 @@
           .orderBy('loginTime', 'desc')
           .limit(100)
           .get();
+        
         if (snapshot.empty) {
           listEl.innerHTML = `<div class="login-log-empty"><i class="fas fa-inbox"></i><p>尚無登入紀錄</p><span class="text-muted">登入後將會記錄在這裡</span></div>`;
           return;
         }
+        
         let loginData = [];
         snapshot.forEach(doc => {
           const data = doc.data();
           if (data.userType !== 'admin') return;
+          // 所有權和版主可以看到所有管理員
           if (role === 'owner' || role === 'moderator') {
             loginData.push({ id: doc.id, ...data });
           } else {
+            // 副版主和小編只能看到自己
             if (data.userId === currentAdminUsername) {
               loginData.push({ id: doc.id, ...data });
             }
           }
         });
+        
         loginData.sort((a, b) => b.loginTime - a.loginTime);
         loginData = loginData.slice(0, 50);
+        
         if (loginData.length === 0) {
           listEl.innerHTML = `<div class="login-log-empty"><i class="fas fa-inbox"></i><p>${(role === 'owner' || role === 'moderator') ? '尚無管理員登入紀錄' : '尚無您的登入紀錄'}</p><span class="text-muted">登入後將會記錄在這裡</span></div>`;
           return;
         }
+        
         let html = '';
         loginData.forEach((data) => {
-          const isAdmin = data.userType === 'admin';
-          const avatarClass = isAdmin ? 'admin' : 'google';
-          const avatarText = isAdmin ? '👑' : '👤';
-          const typeBadge = isAdmin ? '管理員' : '一般使用者';
+          const isAdminUser = data.userType === 'admin';
+          const avatarClass = isAdminUser ? 'admin' : 'google';
+          const avatarText = isAdminUser ? '👑' : '👤';
+          const typeBadge = isAdminUser ? '管理員' : '一般使用者';
           const displayName = data.displayName || '未知使用者';
           const isCurrentUser = data.userId === currentAdminUsername;
-          const canForceLogout = canForceLogoutTarget(currentAdminUsername, data.userId);
+          
+          // 權限判斷：誰可以強制登出誰
+          let canForceLogoutTarget = false;
+          let isSelfLogout = false;
+          
+          if (isCurrentUser) {
+            // ✅ 所有人都可以強制登出自己
+            canForceLogoutTarget = true;
+            isSelfLogout = true;
+          } else {
+            // 檢查是否可以強制登出其他人
+            const targetRole = getAdminRole(data.userId);
+            if (role === 'owner') {
+              canForceLogoutTarget = true;
+            } else if (role === 'moderator') {
+              if (targetRole === 'vice' || targetRole === 'editor') {
+                canForceLogoutTarget = true;
+              }
+            }
+          }
+          
+          // 如果是自己，顯示特殊樣式
+          const isSelf = isCurrentUser;
+          
+          // 按鈕文字
+          let buttonText = '強制登出';
+          let buttonClass = 'btn-force-logout';
+          if (isSelf) {
+            buttonText = '🔒 強制登出自己';
+            buttonClass = 'btn-force-logout btn-force-self';
+          } else if (role === 'owner') {
+            buttonText = '👑 強制登出';
+          } else if (role === 'moderator') {
+            buttonText = '📋 強制登出';
+          }
+          
           html += `
-            <div class="login-log-item" style="${isCurrentUser ? 'border-left: 3px solid #28a745;' : ''}">
+            <div class="login-log-item" style="${isSelf ? 'border-left: 3px solid #28a745;' : ''}">
               <div class="user-info">
                 <div class="avatar ${avatarClass}">${avatarText}</div>
                 <div>
                   <div>
                     <span class="name">${escapeHtml(displayName)}</span>
                     <span class="type-badge ${avatarClass}">${typeBadge}</span>
-                    ${isCurrentUser ? '<span class="online-badge">🟢 目前上線</span>' : ''}
+                    ${isSelf ? '<span class="online-badge">🟢 目前上線</span>' : ''}
+                    ${isSelf ? '<span class="online-badge" style="background:#dc3545;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🔑 可登出自己</span>' : ''}
                   </div>
                 </div>
               </div>
               <div class="actions">
                 <div class="login-time"><i class="far fa-clock"></i> ${data.date || ''} ${data.time || ''}</div>
-                ${canForceLogout && !isCurrentUser ? `<button class="btn-force-logout" data-username="${escapeHtml(data.userId)}"><i class="fas fa-power-off"></i> 強制登出</button>` : ''}
-                ${!canForceLogout && !isCurrentUser && isAdmin ? `<span class="no-permission">🔒 無權限</span>` : ''}
+                ${canForceLogoutTarget ? `<button class="${buttonClass}" data-username="${escapeHtml(data.userId)}" data-is-self="${isSelf}"><i class="fas fa-power-off"></i> ${buttonText}</button>` : ''}
+                ${!canForceLogoutTarget && !isCurrentUser && isAdmin ? `<span class="no-permission">🔒 無權限</span>` : ''}
               </div>
             </div>
           `;
         });
+        
         const count = loginData.length;
         let roleInfo = '';
-        if (role === 'owner') roleInfo = '👑 所有權：可強制登出所有管理員';
-        else if (role === 'moderator') roleInfo = '📋 版主：可查看所有管理員，可強制登出自己 + 副版主 + 小編';
-        else if (role === 'vice') roleInfo = '📌 副版主：僅可查看/強制登出自己';
-        else if (role === 'editor') roleInfo = '✏️ 小編：僅可查看/強制登出自己';
+        if (role === 'owner') roleInfo = '👑 所有權：可強制登出所有管理員，也可強制登出自己';
+        else if (role === 'moderator') roleInfo = '📋 版主：可強制登出副版主 + 小編，也可強制登出自己';
+        else if (role === 'vice') roleInfo = '📌 副版主：僅可查看自己，可強制登出自己（帳號被冒用時）';
+        else if (role === 'editor') roleInfo = '✏️ 小編：僅可查看自己，可強制登出自己（帳號被冒用時）';
         html = `<div class="log-header"><span><i class="fas fa-users"></i> 共 ${count} 筆紀錄</span><span><i class="fas fa-info-circle"></i> ${roleInfo}</span></div>` + html;
         listEl.innerHTML = html;
+        
         document.querySelectorAll('.btn-force-logout').forEach(btn => {
           btn.removeEventListener('click', handleForceLogout);
           btn.addEventListener('click', handleForceLogout);
         });
+        
       } catch (error) {
         console.error('❌ 載入登入紀錄失敗:', error);
         listEl.innerHTML = `<div class="login-log-empty"><i class="fas fa-exclamation-triangle" style="color:#c52a2a;"></i><p>載入失敗，請稍後再試</p></div>`;
       }
     }
 
+    // ============================================================
+    // 8. 強制登出處理函數（支援自己強制登出 + 跨瀏覽器同步）
+    // ============================================================
+
     async function handleForceLogout(e) {
       const btn = e.currentTarget;
       const username = btn.dataset.username;
-      if (!confirm(`確定要強制登出「${username}」嗎？\n\n該管理員將立即被登出系統！`)) return;
+      const isSelf = btn.dataset.isSelf === 'true';
+      
+      // 確認對話框
+      let confirmMessage = '';
+      if (isSelf) {
+        const role = getAdminRole(username);
+        const roleName = role ? (ROLE_NAMES[role] || '管理員') : '管理員';
+        confirmMessage = `⚠️ 您確定要強制登出自己（${username}）嗎？\n\n角色：${roleName}\n\n這將登出您在所有瀏覽器的管理員權限，\n請確認您的帳號是否遭到冒用！\n\n如果您是主動登出，建議立即變更密碼。`;
+      } else {
+        const targetRole = getAdminRole(username);
+        const roleName = targetRole ? (ROLE_NAMES[targetRole] || '管理員') : '管理員';
+        confirmMessage = `確定要強制登出「${username}」（${roleName}）嗎？\n\n該管理員將立即被登出系統！`;
+      }
+      
+      if (!confirm(confirmMessage)) return;
+      
       btn.disabled = true;
       btn.textContent = '處理中...';
-      const success = await forceLogoutAdminUser(username);
-      if (success) { showToast(`✅ 已強制登出「${username}」`); setTimeout(() => loadLoginLogs(), 500); } 
-      else { showToast('❌ 強制登出失敗，請稍後再試', true); }
+      
+      try {
+        // 1. 刪除該管理員的所有登入紀錄（強制登出效果）
+        const snapshot = await db.collection('loginLogs')
+          .where('userId', '==', username)
+          .where('userType', '==', 'admin')
+          .get();
+        
+        const batch = db.batch();
+        snapshot.forEach(doc => { batch.delete(doc.ref); });
+        await batch.commit();
+        
+        // 2. 在 Firestore 中記錄一個「強制登出」事件，讓其他瀏覽器知道
+        await db.collection('loginLogs').add({
+          userId: username,
+          userType: 'admin',
+          displayName: username,
+          email: username,
+          loginTime: Date.now(),
+          date: getToday(),
+          time: getNowTime(),
+          forcedLogout: true,
+          forcedBy: currentAdminUsername,
+          isSelfLogout: isSelf
+        });
+        
+        // 3. 如果目前登入的帳號就是被強制登出的帳號，立即登出
+        if (isAdmin && currentAdminUsername === username) {
+          isAdmin = false;
+          sessionStorage.setItem('isAdmin', 'false');
+          sessionStorage.removeItem('currentAdminUsername');
+          
+          const adminLoginBtn = document.getElementById('adminLoginBtn');
+          adminLoginBtn.textContent = '管理';
+          adminLoginBtn.className = 'btn-admin-login';
+          document.getElementById('viewLoginLogsBtn').classList.remove('show');
+          document.getElementById('changePasswordBtn').classList.remove('show');
+          document.getElementById('viewPasswordsBtn').classList.remove('show');
+          document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+          
+          updateUI(currentUser);
+          render();
+          
+          if (isSelf) {
+            showToast(`🔒 您已成功強制登出自己，請重新登入並建議變更密碼`, true);
+          } else {
+            showToast(`🔒 您已被管理員強制登出`, true);
+          }
+        }
+        
+        if (isSelf) {
+          showToast(`✅ 已強制登出自己（${username}）`);
+        } else {
+          showToast(`✅ 已強制登出「${username}」`);
+        }
+        
+        setTimeout(() => loadLoginLogs(), 500);
+        
+      } catch (error) {
+        console.error('強制登出失敗:', error);
+        showToast('❌ 強制登出失敗，請稍後再試', true);
+      }
+      
       btn.disabled = false;
-      btn.innerHTML = '<i class="fas fa-power-off"></i> 強制登出';
+      const isSelfBtn = btn.dataset.isSelf === 'true';
+      btn.innerHTML = isSelfBtn ? '<i class="fas fa-power-off"></i> 🔒 強制登出自己' : '<i class="fas fa-power-off"></i> 強制登出';
     }
 
     // ============================================================
-    // 8. ImgBB 圖片上傳
+    // 9. 監聽強制登出事件（跨瀏覽器同步）
+    // ============================================================
+
+    function listenForcedLogout() {
+      if (forcedLogoutUnsubscribe) {
+        forcedLogoutUnsubscribe();
+        forcedLogoutUnsubscribe = null;
+      }
+      
+      forcedLogoutUnsubscribe = db.collection('loginLogs')
+        .where('forcedLogout', '==', true)
+        .onSnapshot((snapshot) => {
+          if (!isAdmin || !currentAdminUsername) return;
+          
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.userId === currentAdminUsername) {
+              const timeDiff = Date.now() - data.loginTime;
+              if (timeDiff < 10000) {
+                isAdmin = false;
+                sessionStorage.setItem('isAdmin', 'false');
+                sessionStorage.removeItem('currentAdminUsername');
+                
+                const adminLoginBtn = document.getElementById('adminLoginBtn');
+                adminLoginBtn.textContent = '管理';
+                adminLoginBtn.className = 'btn-admin-login';
+                document.getElementById('viewLoginLogsBtn').classList.remove('show');
+                document.getElementById('changePasswordBtn').classList.remove('show');
+                document.getElementById('viewPasswordsBtn').classList.remove('show');
+                document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+                
+                updateUI(currentUser);
+                render();
+                
+                if (data.isSelfLogout) {
+                  showToast(`🔒 您已在其他瀏覽器強制登出自己，請重新登入`, true);
+                } else {
+                  showToast(`🔒 您已被管理員強制登出`, true);
+                }
+              }
+            }
+          });
+        }, (error) => {
+          console.error('監聽強制登出失敗:', error);
+        });
+    }
+
+    // ============================================================
+    // 10. ImgBB 圖片上傳
     // ============================================================
 
     async function uploadToImgBB(file) {
@@ -1164,7 +1320,7 @@
     }
 
     // ============================================================
-    // 9. 圖片管理
+    // 11. 圖片管理
     // ============================================================
 
     function updateImagePreview() {
@@ -1202,7 +1358,7 @@
     }
 
     // ============================================================
-    // 10. Firestore 操作
+    // 12. Firestore 操作
     // ============================================================
 
     function listenComplaints() {
@@ -1278,7 +1434,7 @@
     }
 
     // ============================================================
-    // 11. Email 通知
+    // 13. Email 通知
     // ============================================================
 
     async function sendNewComplaintEmail(complaint) {
@@ -1321,7 +1477,7 @@
     }
 
     // ============================================================
-    // 12. 渲染
+    // 14. 渲染
     // ============================================================
 
     function render() {
@@ -1451,7 +1607,7 @@
     }
 
     // ============================================================
-    // 13. 圖片燈箱
+    // 15. 圖片燈箱
     // ============================================================
 
     let lightboxImages = [], lightboxIndex = 0;
@@ -1484,7 +1640,7 @@
     });
 
     // ============================================================
-    // 14. UI 更新
+    // 16. UI 更新
     // ============================================================
 
     function updateUI(user) {
@@ -1574,7 +1730,7 @@
     }
 
     // ============================================================
-    // 15. 查看密碼功能
+    // 17. 查看密碼功能
     // ============================================================
 
     const viewPwdBtn = document.getElementById('viewPasswordsBtn');
@@ -1648,7 +1804,7 @@
     viewOverlay.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
 
     // ============================================================
-    // 16. 忘記密碼功能
+    // 18. 忘記密碼功能
     // ============================================================
 
     document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
@@ -1779,7 +1935,7 @@
     });
 
     // ============================================================
-    // 17. 管理驗證資料（所有權專用）
+    // 19. 管理驗證資料（所有權專用）
     // ============================================================
 
     document.getElementById('manageVerifyDataBtn').addEventListener('click', async function() {
@@ -1880,7 +2036,7 @@
     });
 
     // ============================================================
-    // 18. 登入紀錄按鈕
+    // 20. 登入紀錄按鈕
     // ============================================================
 
     document.getElementById('viewLoginLogsBtn').addEventListener('click', function() {
@@ -1899,7 +2055,7 @@
     });
 
     // ============================================================
-    // 19. 其他事件處理
+    // 21. 其他事件處理
     // ============================================================
 
     async function googleLogin() {
@@ -2001,6 +2157,8 @@
         welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${fullDisplayName} 您好，歡迎使用投訴系統`;
         welcomeLine.classList.remove('hidden');
         await recordLogin(null, true, username);
+        // 重新監聽強制登出
+        listenForcedLogout();
         showToast(`👋 ${fullDisplayName} 您好，歡迎使用投訴系統`);
         render();
       } else {
@@ -2059,7 +2217,6 @@
         return;
       }
 
-      // 檢查目前密碼是否正確
       if (current !== getAdminPassword(currentAdminUsername)) {
         cpErrorMsg.textContent = '❌ 目前密碼錯誤';
         cpErrorMsg.classList.add('show');
@@ -2106,7 +2263,6 @@
       }
     });
 
-    // 鍵盤快捷鍵支援
     cpCurrent.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpNew.focus(); });
     cpNew.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirm.focus(); });
     cpConfirm.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirmBtn.click(); });
@@ -2213,7 +2369,7 @@
     });
 
     // ============================================================
-    // 20. Firebase Auth 監聽
+    // 22. Firebase Auth 監聽
     // ============================================================
 
     auth.onAuthStateChanged((user) => {
@@ -2222,12 +2378,18 @@
         isAdmin = false;
         sessionStorage.setItem('isAdmin', 'false');
         sessionStorage.removeItem('currentAdminUsername');
+        if (forcedLogoutUnsubscribe) {
+          forcedLogoutUnsubscribe();
+          forcedLogoutUnsubscribe = null;
+        }
       } else {
         const storedAdmin = sessionStorage.getItem('isAdmin');
         if (storedAdmin === 'true') {
           isAdmin = true;
           const storedUsername = sessionStorage.getItem('currentAdminUsername');
           if (storedUsername) currentAdminUsername = storedUsername;
+          // 重新監聽強制登出
+          listenForcedLogout();
         }
       }
       updateUI(user);
@@ -2235,20 +2397,27 @@
     });
 
     // ============================================================
-    // 21. 啟動
+    // 23. 啟動
     // ============================================================
 
     async function init() {
       await loadAdminsFromFirestore();
       listenAdminPasswords();
       listenComplaints();
+      // 如果已經登入管理員，啟動監聽
+      if (isAdmin && currentAdminUsername) {
+        listenForcedLogout();
+      }
+      
       console.log('✅ 靠北達德投訴系統已啟動');
       console.log('👑 管理員帳號:', DEFAULT_ADMINS.map(a => a.username).join(', '));
       console.log('📊 登入紀錄功能已啟用');
       console.log('🔑 權限：所有權/版主可查看所有管理員，副版主/小編僅看自己');
-      console.log('🔒 所有權/版主可強制登出管理員');
+      console.log('🔒 所有權可強制登出所有管理員，版主可強制登出副版主+小編');
+      console.log('🔑 所有角色皆可強制登出自己（帳號被冒用時自救）');
       console.log('🔐 忘記密碼功能已啟用，所有權可管理驗證資料');
       console.log('🔑 變更密碼功能已修復並啟用');
+      console.log('🔄 跨瀏覽器強制登出已啟用');
     }
 
     init();
