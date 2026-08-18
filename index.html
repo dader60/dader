@@ -258,8 +258,8 @@
     .btn-force-logout { background: #dc3545; color: white; border: none; border-radius: 20px; padding: 3px 14px; font-size: 0.65rem; cursor: pointer; transition: 0.15s; }
     .btn-force-logout:hover { background: #b02a37; transform: scale(1.02); }
     .btn-force-logout:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
-    .btn-force-self { background: #ff6b35; }
-    .btn-force-self:hover { background: #e55a2b; }
+    .btn-force-self { background: #dc3545; }
+    .btn-force-self:hover { background: #b02a37; }
     .no-permission { font-size: 0.6rem; color: #8a9db0; font-style: italic; }
 
     .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; cursor: pointer; }
@@ -738,6 +738,65 @@
     let isPasswordLoaded = false;
     let verifiedUser = null;
     let forcedLogoutUnsubscribe = null;
+    let onlineStatusListener = null;
+    let onlineStatusCache = {};
+
+    // Session 管理
+    let currentSessionId = sessionStorage.getItem('sessionId');
+    if (!currentSessionId) {
+      currentSessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+      sessionStorage.setItem('sessionId', currentSessionId);
+    }
+
+    let currentTabId = sessionStorage.getItem('tabId');
+    if (!currentTabId) {
+      currentTabId = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
+      sessionStorage.setItem('tabId', currentTabId);
+    }
+
+    // Broadcast Channel
+    let broadcastChannel = null;
+    try {
+      broadcastChannel = new BroadcastChannel('admin_force_logout');
+    } catch (e) {
+      console.warn('Broadcast Channel 不支援');
+    }
+
+    if (broadcastChannel) {
+      broadcastChannel.onmessage = function(event) {
+        const data = event.data;
+        if (data.type === 'force_logout' && data.username === currentAdminUsername) {
+          if (data.forcedBy === currentAdminUsername && data.tabId === currentTabId) {
+            return;
+          }
+          if (isAdmin) {
+            isAdmin = false;
+            sessionStorage.setItem('isAdmin', 'false');
+            sessionStorage.removeItem('currentAdminUsername');
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            adminLoginBtn.textContent = '管理';
+            adminLoginBtn.className = 'btn-admin-login';
+            document.getElementById('viewLoginLogsBtn').classList.remove('show');
+            document.getElementById('changePasswordBtn').classList.remove('show');
+            document.getElementById('viewPasswordsBtn').classList.remove('show');
+            document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+            updateUI(currentUser);
+            render();
+            db.collection('adminSessions').doc(currentAdminUsername).delete().catch(() => {});
+            if (data.forcedBy === currentAdminUsername) {
+              showToast(`🔒 您已在同瀏覽器的其他分頁強制登出自己`, true);
+            } else {
+              showToast(`🔒 您已被管理員強制登出（${data.forcedBy}）`, true);
+            }
+            document.getElementById('loginLogsOverlay').classList.remove('active');
+          }
+        } else if (data.type === 'refresh_online_status') {
+          if (document.getElementById('loginLogsOverlay').classList.contains('active')) {
+            loadLoginLogs();
+          }
+        }
+      };
+    }
 
     // ============================================================
     // 2. 工具函數
@@ -788,26 +847,527 @@
       return false;
     }
 
-    // 判斷誰可以強制登出誰（包含自己）
-    function canForceLogout(operator, target) {
-      // 強制登出自己：所有人都可以
-      if (operator === target) return true;
-      
-      const operatorRole = getAdminRole(operator);
-      const targetRole = getAdminRole(target);
-      
-      if (operatorRole === 'owner') return true; // 所有權可以登出所有人
-      if (operatorRole === 'moderator') {
-        // 版主可以登出副版主 + 小編
-        if (targetRole === 'vice' || targetRole === 'editor') return true;
-        return false;
+    // ============================================================
+    // 4. Session 管理
+    // ============================================================
+
+    async function recordAdminSession(username) {
+      try {
+        await db.collection('adminSessions').doc(username).set({
+          username: username,
+          sessionId: currentSessionId,
+          tabId: currentTabId,
+          lastActive: Date.now(),
+          isOnline: true,
+          loginTime: Date.now(),
+          displayName: getAdminDisplayName(username),
+          role: getAdminRole(username)
+        });
+      } catch (error) {
+        console.error('記錄 Session 失敗:', error);
       }
-      // 副版主和小編不能登出其他人
-      return false;
+    }
+
+    async function updateAdminHeartbeat(username) {
+      try {
+        await db.collection('adminSessions').doc(username).update({
+          lastActive: Date.now(),
+          isOnline: true,
+          tabId: currentTabId
+        });
+      } catch (error) {
+        try { await recordAdminSession(username); } catch (e) {}
+      }
+    }
+
+    async function getAdminOnlineStatus() {
+      try {
+        const snapshot = await db.collection('adminSessions').get();
+        const status = {};
+        const now = Date.now();
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const isOnline = (now - (data.lastActive || 0)) < 30000;
+          status[doc.id] = {
+            isOnline: isOnline,
+            sessionId: data.sessionId,
+            tabId: data.tabId || '',
+            displayName: data.displayName,
+            role: data.role,
+            lastActive: data.lastActive
+          };
+        });
+        return status;
+      } catch (error) {
+        console.error('獲取在線狀態失敗:', error);
+        return {};
+      }
+    }
+
+    function listenAdminSessions(callback) {
+      return db.collection('adminSessions').onSnapshot((snapshot) => {
+        const status = {};
+        const now = Date.now();
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          const isOnline = (now - (data.lastActive || 0)) < 30000;
+          status[doc.id] = {
+            isOnline: isOnline,
+            sessionId: data.sessionId,
+            tabId: data.tabId || '',
+            displayName: data.displayName,
+            role: data.role,
+            lastActive: data.lastActive
+          };
+        });
+        callback(status);
+      }, (error) => {
+        console.error('監聽在線狀態失敗:', error);
+      });
     }
 
     // ============================================================
-    // 4. Firestore 密碼管理
+    // 5. 登入紀錄
+    // ============================================================
+
+    async function recordLogin(user, isAdminLogin = false, adminUsername = null) {
+      try {
+        let logData = {
+          userId: user ? user.uid : adminUsername,
+          userType: isAdminLogin ? 'admin' : 'google',
+          displayName: '',
+          email: '',
+          loginTime: Date.now(),
+          date: getToday(),
+          time: getNowTime()
+        };
+        if (isAdminLogin && adminUsername) {
+          const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === adminUsername);
+          logData.displayName = adminInfo ? adminInfo.displayName : adminUsername;
+          logData.email = adminUsername;
+        } else if (user) {
+          logData.displayName = user.displayName || user.email || '使用者';
+          logData.email = user.email || '';
+        }
+        await db.collection('loginLogs').add(logData);
+        const snapshot = await db.collection('loginLogs').orderBy('loginTime', 'desc').get();
+        if (snapshot.size > 200) {
+          const batch = db.batch();
+          let count = 0;
+          snapshot.forEach(doc => { count++; if (count > 200) batch.delete(doc.ref); });
+          await batch.commit();
+        }
+      } catch (error) { console.error('❌ 儲存登入紀錄失敗:', error); }
+    }
+
+    // ============================================================
+    // 6. 載入登入紀錄（顯示在線狀態 + 強制登出）
+    // ============================================================
+
+    async function loadLoginLogs() {
+      const listEl = document.getElementById('loginLogsList');
+      listEl.innerHTML = '<div style="text-align:center; padding:2rem; color:#8a9db0;"><i class="fas fa-spinner fa-spin"></i> 載入中...</div>';
+      
+      try {
+        const role = getAdminRole(currentAdminUsername);
+        const onlineStatus = await getAdminOnlineStatus();
+        onlineStatusCache = onlineStatus;
+        
+        const snapshot = await db.collection('loginLogs')
+          .orderBy('loginTime', 'desc')
+          .limit(100)
+          .get();
+        
+        if (snapshot.empty) {
+          listEl.innerHTML = `<div class="login-log-empty"><i class="fas fa-inbox"></i><p>尚無登入紀錄</p><span class="text-muted">登入後將會記錄在這裡</span></div>`;
+          return;
+        }
+        
+        let loginData = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.userType !== 'admin') return;
+          if (role === 'owner' || role === 'moderator') {
+            loginData.push({ id: doc.id, ...data });
+          } else {
+            if (data.userId === currentAdminUsername) {
+              loginData.push({ id: doc.id, ...data });
+            }
+          }
+        });
+        
+        const seen = new Set();
+        loginData = loginData.filter(data => {
+          if (seen.has(data.userId)) return false;
+          seen.add(data.userId);
+          return true;
+        });
+        
+        loginData.sort((a, b) => b.loginTime - a.loginTime);
+        loginData = loginData.slice(0, 50);
+        
+        if (loginData.length === 0) {
+          listEl.innerHTML = `<div class="login-log-empty"><i class="fas fa-inbox"></i><p>${(role === 'owner' || role === 'moderator') ? '尚無管理員登入紀錄' : '尚無您的登入紀錄'}</p><span class="text-muted">登入後將會記錄在這裡</span></div>`;
+          return;
+        }
+        
+        let html = '';
+        loginData.forEach((data) => {
+          const isAdminUser = data.userType === 'admin';
+          const avatarClass = isAdminUser ? 'admin' : 'google';
+          const avatarText = isAdminUser ? '👑' : '👤';
+          const typeBadge = isAdminUser ? '管理員' : '一般使用者';
+          const displayName = data.displayName || '未知使用者';
+          const isCurrentUser = data.userId === currentAdminUsername;
+          
+          const statusInfo = onlineStatus[data.userId] || { isOnline: false, sessionId: null, tabId: null };
+          const isOnline = statusInfo.isOnline;
+          const isSameSession = statusInfo.sessionId === currentSessionId;
+          const isSameTab = statusInfo.tabId === currentTabId;
+          
+          let canForceLogoutTarget = false;
+          let isSelfLogout = false;
+          let isOtherTab = false;
+          let buttonText = '🔒 強制登出';
+          let buttonClass = 'btn-force-logout';
+          let buttonDisabled = false;
+          let buttonTitle = '';
+          let showOnlineBadge = false;
+          
+          if (isCurrentUser) {
+            showOnlineBadge = true;
+            if (isSameTab) {
+              canForceLogoutTarget = false;
+              buttonText = '🚫 當前分頁';
+              buttonDisabled = true;
+              buttonTitle = '當前分頁不能強制登出自己';
+            } else if (isSameSession) {
+              canForceLogoutTarget = true;
+              isSelfLogout = true;
+              isOtherTab = true;
+              buttonText = '🔒 強制登出';
+              buttonClass = 'btn-force-logout btn-force-self';
+              buttonTitle = '強制登出同瀏覽器的其他分頁';
+            } else {
+              canForceLogoutTarget = true;
+              isSelfLogout = true;
+              buttonText = '🔒 強制登出';
+              buttonClass = 'btn-force-logout btn-force-self';
+              buttonTitle = '強制登出其他瀏覽器上的自己';
+            }
+          } else {
+            const targetRole = getAdminRole(data.userId);
+            if (role === 'owner') {
+              canForceLogoutTarget = true;
+              showOnlineBadge = true;
+              buttonText = '🔒 強制登出';
+            } else if (role === 'moderator') {
+              if (targetRole === 'vice' || targetRole === 'editor') {
+                canForceLogoutTarget = true;
+                showOnlineBadge = true;
+                buttonText = '🔒 強制登出';
+              } else {
+                canForceLogoutTarget = false;
+                showOnlineBadge = false;
+              }
+            } else {
+              canForceLogoutTarget = false;
+              showOnlineBadge = false;
+            }
+          }
+          
+          let onlineBadge = '';
+          if (showOnlineBadge) {
+            if (isCurrentUser) {
+              if (isSameTab) {
+                onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線（當前分頁）</span>';
+              } else {
+                onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線</span>';
+              }
+            } else {
+              if (isOnline) {
+                onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線</span>';
+              } else {
+                onlineBadge = '<span class="online-badge" style="background:#6c757d;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">⚪ 離線</span>';
+              }
+            }
+          }
+          
+          const showActions = canForceLogoutTarget || isCurrentUser;
+          
+          html += `
+            <div class="login-log-item" style="${isCurrentUser ? 'border-left: 3px solid #28a745;' : ''}">
+              <div class="user-info">
+                <div class="avatar ${avatarClass}">${avatarText}</div>
+                <div>
+                  <div>
+                    <span class="name">${escapeHtml(displayName)}</span>
+                    <span class="type-badge ${avatarClass}">${typeBadge}</span>
+                    ${onlineBadge}
+                    ${isCurrentUser ? '<span class="online-badge" style="background:#dc3545;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🔑 可管理</span>' : ''}
+                    ${isSameSession && !isSameTab && isCurrentUser ? '<span class="online-badge" style="background:#ff6b35;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">📌 可登出</span>' : ''}
+                  </div>
+                </div>
+              </div>
+              ${showActions ? `
+              <div class="actions">
+                <div class="login-time"><i class="far fa-clock"></i> ${data.date || ''} ${data.time || ''}</div>
+                ${canForceLogoutTarget ? `<button class="${buttonClass}" data-username="${escapeHtml(data.userId)}" data-is-self="${isSelfLogout}" data-is-other-tab="${isOtherTab}" ${buttonDisabled ? 'disabled' : ''} title="${buttonTitle}"><i class="fas fa-power-off"></i> ${buttonText}</button>` : ''}
+              </div>
+              ` : ''}
+            </div>
+          `;
+        });
+        
+        const count = loginData.length;
+        let roleInfo = '';
+        if (role === 'owner') roleInfo = '👑 所有權：可強制登出所有管理員，可登出同瀏覽器其他分頁的自己';
+        else if (role === 'moderator') roleInfo = '📋 版主：可強制登出副版主 + 小編，可登出同瀏覽器其他分頁的自己';
+        else if (role === 'vice') roleInfo = '📌 副版主：僅可查看自己，可登出同瀏覽器其他分頁的自己';
+        else if (role === 'editor') roleInfo = '✏️ 小編：僅可查看自己，可登出同瀏覽器其他分頁的自己';
+        html = `<div class="log-header"><span><i class="fas fa-users"></i> 共 ${count} 筆紀錄</span><span><i class="fas fa-info-circle"></i> ${roleInfo}</span></div>` + html;
+        listEl.innerHTML = html;
+        
+        document.querySelectorAll('.btn-force-logout').forEach(btn => {
+          btn.removeEventListener('click', handleForceLogout);
+          btn.addEventListener('click', handleForceLogout);
+        });
+        
+      } catch (error) {
+        console.error('❌ 載入登入紀錄失敗:', error);
+        listEl.innerHTML = `<div class="login-log-empty"><i class="fas fa-exclamation-triangle" style="color:#c52a2a;"></i><p>載入失敗，請稍後再試</p></div>`;
+      }
+    }
+
+    // ============================================================
+    // 7. 強制登出處理函數
+    // ============================================================
+
+    async function handleForceLogout(e) {
+      const btn = e.currentTarget;
+      const username = btn.dataset.username;
+      const isSelf = btn.dataset.isSelf === 'true';
+      const isOtherTab = btn.dataset.isOtherTab === 'true';
+      
+      const statusInfo = onlineStatusCache[username] || {};
+      const isSameTab = statusInfo.tabId === currentTabId;
+      const isSameSession = statusInfo.sessionId === currentSessionId;
+      
+      if (isSelf && isSameTab) {
+        showToast('❌ 當前分頁不能強制登出自己', true);
+        return;
+      }
+      
+      let confirmMessage = '';
+      if (isSelf && isOtherTab) {
+        confirmMessage = `⚠️ 您確定要強制登出同瀏覽器的其他分頁嗎？\n\n帳號：${username}\n\n這將登出您在其他分頁的管理員權限！\n\n💡 提示：如果您懷疑帳號被冒用，建議立即變更密碼。`;
+      } else if (isSelf) {
+        const role = getAdminRole(username);
+        const roleName = role ? (ROLE_NAMES[role] || '管理員') : '管理員';
+        confirmMessage = `⚠️ 您確定要強制登出自己（${username}）嗎？\n\n角色：${roleName}\n\n這將登出您在其他瀏覽器的管理員權限！\n\n請確認您的帳號是否遭到冒用！`;
+      } else {
+        const targetRole = getAdminRole(username);
+        const roleName = targetRole ? (ROLE_NAMES[targetRole] || '管理員') : '管理員';
+        const onlineStatus = onlineStatusCache[username] || {};
+        const isOnline = onlineStatus.isOnline ? '🟢 在線' : '⚪ 離線';
+        confirmMessage = `確定要強制登出「${username}」（${roleName}）嗎？\n\n狀態：${isOnline}\n\n該管理員將立即被登出系統！`;
+      }
+      
+      if (!confirm(confirmMessage)) return;
+      
+      btn.disabled = true;
+      btn.textContent = '處理中...';
+      
+      try {
+        const snapshot = await db.collection('loginLogs')
+          .where('userId', '==', username)
+          .where('userType', '==', 'admin')
+          .get();
+        
+        const batch = db.batch();
+        snapshot.forEach(doc => { batch.delete(doc.ref); });
+        await batch.commit();
+        
+        await db.collection('adminSessions').doc(username).delete();
+        
+        const logData = {
+          userId: username,
+          userType: 'admin',
+          displayName: username,
+          email: username,
+          loginTime: Date.now(),
+          date: getToday(),
+          time: getNowTime(),
+          forcedLogout: true,
+          forcedBy: currentAdminUsername,
+          isSelfLogout: isSelf,
+          sessionId: currentSessionId,
+          tabId: currentTabId,
+          isOtherTab: isOtherTab
+        };
+        await db.collection('loginLogs').add(logData);
+        
+        if (isSelf && isOtherTab && broadcastChannel) {
+          broadcastChannel.postMessage({
+            type: 'force_logout',
+            username: username,
+            forcedBy: currentAdminUsername,
+            tabId: currentTabId,
+            timestamp: Date.now()
+          });
+        }
+        
+        if (isAdmin && currentAdminUsername === username) {
+          if (!isOtherTab || !isSameSession) {
+            isAdmin = false;
+            sessionStorage.setItem('isAdmin', 'false');
+            sessionStorage.removeItem('currentAdminUsername');
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            adminLoginBtn.textContent = '管理';
+            adminLoginBtn.className = 'btn-admin-login';
+            document.getElementById('viewLoginLogsBtn').classList.remove('show');
+            document.getElementById('changePasswordBtn').classList.remove('show');
+            document.getElementById('viewPasswordsBtn').classList.remove('show');
+            document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+            updateUI(currentUser);
+            render();
+            if (isSelf) {
+              showToast(`🔒 您已在其他瀏覽器強制登出自己，請重新登入`, true);
+            } else {
+              showToast(`🔒 您已被管理員強制登出`, true);
+            }
+          }
+        }
+        
+        if (isSelf && isOtherTab) {
+          showToast(`✅ 已強制登出同瀏覽器的其他分頁（${username}）`);
+        } else if (isSelf) {
+          showToast(`✅ 已強制登出其他瀏覽器的自己（${username}）`);
+        } else {
+          showToast(`✅ 已強制登出「${username}」`);
+        }
+        
+        delete onlineStatusCache[username];
+        
+        if (broadcastChannel) {
+          broadcastChannel.postMessage({ type: 'refresh_online_status', timestamp: Date.now() });
+        }
+        
+        setTimeout(() => loadLoginLogs(), 500);
+        
+      } catch (error) {
+        console.error('強制登出失敗:', error);
+        showToast('❌ 強制登出失敗，請稍後再試', true);
+      }
+      
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-power-off"></i> 🔒 強制登出';
+    }
+
+    // ============================================================
+    // 8. 監聽強制登出事件
+    // ============================================================
+
+    function listenForcedLogout() {
+      if (forcedLogoutUnsubscribe) {
+        forcedLogoutUnsubscribe();
+        forcedLogoutUnsubscribe = null;
+      }
+      
+      forcedLogoutUnsubscribe = db.collection('loginLogs')
+        .where('forcedLogout', '==', true)
+        .onSnapshot((snapshot) => {
+          if (!isAdmin || !currentAdminUsername) return;
+          
+          snapshot.forEach((doc) => {
+            const data = doc.data();
+            if (data.userId === currentAdminUsername) {
+              if (data.forcedBy === currentAdminUsername && data.tabId === currentTabId) {
+                return;
+              }
+              if (data.sessionId === currentSessionId && data.tabId !== currentTabId) {}
+              
+              const timeDiff = Date.now() - data.loginTime;
+              if (timeDiff < 15000) {
+                isAdmin = false;
+                sessionStorage.setItem('isAdmin', 'false');
+                sessionStorage.removeItem('currentAdminUsername');
+                const adminLoginBtn = document.getElementById('adminLoginBtn');
+                adminLoginBtn.textContent = '管理';
+                adminLoginBtn.className = 'btn-admin-login';
+                document.getElementById('viewLoginLogsBtn').classList.remove('show');
+                document.getElementById('changePasswordBtn').classList.remove('show');
+                document.getElementById('viewPasswordsBtn').classList.remove('show');
+                document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+                db.collection('adminSessions').doc(currentAdminUsername).delete().catch(() => {});
+                updateUI(currentUser);
+                render();
+                document.getElementById('loginLogsOverlay').classList.remove('active');
+                if (data.isSelfLogout) {
+                  if (data.sessionId === currentSessionId && data.tabId !== currentTabId) {
+                    showToast(`🔒 您已在同瀏覽器的其他分頁強制登出自己`, true);
+                  } else {
+                    showToast(`🔒 您已在其他瀏覽器強制登出自己，請重新登入`, true);
+                  }
+                } else {
+                  showToast(`🔒 您已被管理員強制登出`, true);
+                }
+              }
+            }
+          });
+        }, (error) => {
+          console.error('監聽強制登出失敗:', error);
+        });
+    }
+
+    // ============================================================
+    // 9. 心跳機制
+    // ============================================================
+
+    function startHeartbeat() {
+      setInterval(async () => {
+        if (isAdmin && currentAdminUsername) {
+          await updateAdminHeartbeat(currentAdminUsername);
+        }
+      }, 15000);
+      
+      window.addEventListener('beforeunload', async () => {
+        if (isAdmin && currentAdminUsername) {
+          try {
+            await db.collection('adminSessions').doc(currentAdminUsername).update({
+              isOnline: false,
+              lastActive: Date.now()
+            });
+          } catch (e) {}
+        }
+      });
+      
+      document.addEventListener('visibilitychange', async () => {
+        if (document.visibilityState === 'visible' && isAdmin && currentAdminUsername) {
+          await updateAdminHeartbeat(currentAdminUsername);
+        } else if (document.visibilityState === 'hidden' && isAdmin && currentAdminUsername) {
+          try {
+            await db.collection('adminSessions').doc(currentAdminUsername).update({
+              isOnline: false,
+              lastActive: Date.now()
+            });
+          } catch (e) {}
+        }
+      });
+    }
+
+    function startOnlineStatusListener() {
+      if (onlineStatusListener) {
+        onlineStatusListener();
+        onlineStatusListener = null;
+      }
+      onlineStatusListener = listenAdminSessions((status) => {
+        onlineStatusCache = status;
+      });
+    }
+
+    // ============================================================
+    // 10. Firestore 密碼管理
     // ============================================================
 
     async function loadAdminsFromFirestore() {
@@ -857,7 +1417,6 @@
         if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
           renderPasswordList();
         }
-        // 如果變更的是自己的密碼，強制登出自己
         if (isAdmin && currentAdminUsername === username) {
           forceLogoutAdmin(username);
         }
@@ -925,7 +1484,7 @@
     }
 
     // ============================================================
-    // 5. 驗證資料管理（Firestore）
+    // 11. 驗證資料管理
     // ============================================================
 
     async function loadVerifyData() {
@@ -992,310 +1551,7 @@
     }
 
     // ============================================================
-    // 6. 登入紀錄
-    // ============================================================
-
-    async function recordLogin(user, isAdminLogin = false, adminUsername = null) {
-      try {
-        let logData = {
-          userId: user ? user.uid : adminUsername,
-          userType: isAdminLogin ? 'admin' : 'google',
-          displayName: '',
-          email: '',
-          loginTime: Date.now(),
-          date: getToday(),
-          time: getNowTime()
-        };
-        if (isAdminLogin && adminUsername) {
-          const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === adminUsername);
-          logData.displayName = adminInfo ? adminInfo.displayName : adminUsername;
-          logData.email = adminUsername;
-        } else if (user) {
-          logData.displayName = user.displayName || user.email || '使用者';
-          logData.email = user.email || '';
-        }
-        await db.collection('loginLogs').add(logData);
-        const snapshot = await db.collection('loginLogs').orderBy('loginTime', 'desc').get();
-        if (snapshot.size > 200) {
-          const batch = db.batch();
-          let count = 0;
-          snapshot.forEach(doc => { count++; if (count > 200) batch.delete(doc.ref); });
-          await batch.commit();
-        }
-      } catch (error) { console.error('❌ 儲存登入紀錄失敗:', error); }
-    }
-
-    // ============================================================
-    // 7. 載入登入紀錄 + 強制登出功能
-    // ============================================================
-
-    async function loadLoginLogs() {
-      const listEl = document.getElementById('loginLogsList');
-      listEl.innerHTML = '<div style="text-align:center; padding:2rem; color:#8a9db0;"><i class="fas fa-spinner fa-spin"></i> 載入中...</div>';
-      try {
-        const role = getAdminRole(currentAdminUsername);
-        const snapshot = await db.collection('loginLogs')
-          .orderBy('loginTime', 'desc')
-          .limit(100)
-          .get();
-        
-        if (snapshot.empty) {
-          listEl.innerHTML = `<div class="login-log-empty"><i class="fas fa-inbox"></i><p>尚無登入紀錄</p><span class="text-muted">登入後將會記錄在這裡</span></div>`;
-          return;
-        }
-        
-        let loginData = [];
-        snapshot.forEach(doc => {
-          const data = doc.data();
-          if (data.userType !== 'admin') return;
-          // 所有權和版主可以看到所有管理員
-          if (role === 'owner' || role === 'moderator') {
-            loginData.push({ id: doc.id, ...data });
-          } else {
-            // 副版主和小編只能看到自己
-            if (data.userId === currentAdminUsername) {
-              loginData.push({ id: doc.id, ...data });
-            }
-          }
-        });
-        
-        loginData.sort((a, b) => b.loginTime - a.loginTime);
-        loginData = loginData.slice(0, 50);
-        
-        if (loginData.length === 0) {
-          listEl.innerHTML = `<div class="login-log-empty"><i class="fas fa-inbox"></i><p>${(role === 'owner' || role === 'moderator') ? '尚無管理員登入紀錄' : '尚無您的登入紀錄'}</p><span class="text-muted">登入後將會記錄在這裡</span></div>`;
-          return;
-        }
-        
-        let html = '';
-        loginData.forEach((data) => {
-          const isAdminUser = data.userType === 'admin';
-          const avatarClass = isAdminUser ? 'admin' : 'google';
-          const avatarText = isAdminUser ? '👑' : '👤';
-          const typeBadge = isAdminUser ? '管理員' : '一般使用者';
-          const displayName = data.displayName || '未知使用者';
-          const isCurrentUser = data.userId === currentAdminUsername;
-          
-          // 權限判斷：誰可以強制登出誰
-          let canForceLogoutTarget = false;
-          let isSelfLogout = false;
-          
-          if (isCurrentUser) {
-            // ✅ 所有人都可以強制登出自己
-            canForceLogoutTarget = true;
-            isSelfLogout = true;
-          } else {
-            // 檢查是否可以強制登出其他人
-            const targetRole = getAdminRole(data.userId);
-            if (role === 'owner') {
-              canForceLogoutTarget = true;
-            } else if (role === 'moderator') {
-              if (targetRole === 'vice' || targetRole === 'editor') {
-                canForceLogoutTarget = true;
-              }
-            }
-          }
-          
-          // 如果是自己，顯示特殊樣式
-          const isSelf = isCurrentUser;
-          
-          // 按鈕文字
-          let buttonText = '強制登出';
-          let buttonClass = 'btn-force-logout';
-          if (isSelf) {
-            buttonText = '🔒 強制登出自己';
-            buttonClass = 'btn-force-logout btn-force-self';
-          } else if (role === 'owner') {
-            buttonText = '👑 強制登出';
-          } else if (role === 'moderator') {
-            buttonText = '📋 強制登出';
-          }
-          
-          html += `
-            <div class="login-log-item" style="${isSelf ? 'border-left: 3px solid #28a745;' : ''}">
-              <div class="user-info">
-                <div class="avatar ${avatarClass}">${avatarText}</div>
-                <div>
-                  <div>
-                    <span class="name">${escapeHtml(displayName)}</span>
-                    <span class="type-badge ${avatarClass}">${typeBadge}</span>
-                    ${isSelf ? '<span class="online-badge">🟢 目前上線</span>' : ''}
-                    ${isSelf ? '<span class="online-badge" style="background:#dc3545;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🔑 可登出自己</span>' : ''}
-                  </div>
-                </div>
-              </div>
-              <div class="actions">
-                <div class="login-time"><i class="far fa-clock"></i> ${data.date || ''} ${data.time || ''}</div>
-                ${canForceLogoutTarget ? `<button class="${buttonClass}" data-username="${escapeHtml(data.userId)}" data-is-self="${isSelf}"><i class="fas fa-power-off"></i> ${buttonText}</button>` : ''}
-                ${!canForceLogoutTarget && !isCurrentUser && isAdmin ? `<span class="no-permission">🔒 無權限</span>` : ''}
-              </div>
-            </div>
-          `;
-        });
-        
-        const count = loginData.length;
-        let roleInfo = '';
-        if (role === 'owner') roleInfo = '👑 所有權：可強制登出所有管理員，也可強制登出自己';
-        else if (role === 'moderator') roleInfo = '📋 版主：可強制登出副版主 + 小編，也可強制登出自己';
-        else if (role === 'vice') roleInfo = '📌 副版主：僅可查看自己，可強制登出自己（帳號被冒用時）';
-        else if (role === 'editor') roleInfo = '✏️ 小編：僅可查看自己，可強制登出自己（帳號被冒用時）';
-        html = `<div class="log-header"><span><i class="fas fa-users"></i> 共 ${count} 筆紀錄</span><span><i class="fas fa-info-circle"></i> ${roleInfo}</span></div>` + html;
-        listEl.innerHTML = html;
-        
-        document.querySelectorAll('.btn-force-logout').forEach(btn => {
-          btn.removeEventListener('click', handleForceLogout);
-          btn.addEventListener('click', handleForceLogout);
-        });
-        
-      } catch (error) {
-        console.error('❌ 載入登入紀錄失敗:', error);
-        listEl.innerHTML = `<div class="login-log-empty"><i class="fas fa-exclamation-triangle" style="color:#c52a2a;"></i><p>載入失敗，請稍後再試</p></div>`;
-      }
-    }
-
-    // ============================================================
-    // 8. 強制登出處理函數（支援自己強制登出 + 跨瀏覽器同步）
-    // ============================================================
-
-    async function handleForceLogout(e) {
-      const btn = e.currentTarget;
-      const username = btn.dataset.username;
-      const isSelf = btn.dataset.isSelf === 'true';
-      
-      // 確認對話框
-      let confirmMessage = '';
-      if (isSelf) {
-        const role = getAdminRole(username);
-        const roleName = role ? (ROLE_NAMES[role] || '管理員') : '管理員';
-        confirmMessage = `⚠️ 您確定要強制登出自己（${username}）嗎？\n\n角色：${roleName}\n\n這將登出您在所有瀏覽器的管理員權限，\n請確認您的帳號是否遭到冒用！\n\n如果您是主動登出，建議立即變更密碼。`;
-      } else {
-        const targetRole = getAdminRole(username);
-        const roleName = targetRole ? (ROLE_NAMES[targetRole] || '管理員') : '管理員';
-        confirmMessage = `確定要強制登出「${username}」（${roleName}）嗎？\n\n該管理員將立即被登出系統！`;
-      }
-      
-      if (!confirm(confirmMessage)) return;
-      
-      btn.disabled = true;
-      btn.textContent = '處理中...';
-      
-      try {
-        // 1. 刪除該管理員的所有登入紀錄（強制登出效果）
-        const snapshot = await db.collection('loginLogs')
-          .where('userId', '==', username)
-          .where('userType', '==', 'admin')
-          .get();
-        
-        const batch = db.batch();
-        snapshot.forEach(doc => { batch.delete(doc.ref); });
-        await batch.commit();
-        
-        // 2. 在 Firestore 中記錄一個「強制登出」事件，讓其他瀏覽器知道
-        await db.collection('loginLogs').add({
-          userId: username,
-          userType: 'admin',
-          displayName: username,
-          email: username,
-          loginTime: Date.now(),
-          date: getToday(),
-          time: getNowTime(),
-          forcedLogout: true,
-          forcedBy: currentAdminUsername,
-          isSelfLogout: isSelf
-        });
-        
-        // 3. 如果目前登入的帳號就是被強制登出的帳號，立即登出
-        if (isAdmin && currentAdminUsername === username) {
-          isAdmin = false;
-          sessionStorage.setItem('isAdmin', 'false');
-          sessionStorage.removeItem('currentAdminUsername');
-          
-          const adminLoginBtn = document.getElementById('adminLoginBtn');
-          adminLoginBtn.textContent = '管理';
-          adminLoginBtn.className = 'btn-admin-login';
-          document.getElementById('viewLoginLogsBtn').classList.remove('show');
-          document.getElementById('changePasswordBtn').classList.remove('show');
-          document.getElementById('viewPasswordsBtn').classList.remove('show');
-          document.getElementById('manageVerifyBtnContainer').style.display = 'none';
-          
-          updateUI(currentUser);
-          render();
-          
-          if (isSelf) {
-            showToast(`🔒 您已成功強制登出自己，請重新登入並建議變更密碼`, true);
-          } else {
-            showToast(`🔒 您已被管理員強制登出`, true);
-          }
-        }
-        
-        if (isSelf) {
-          showToast(`✅ 已強制登出自己（${username}）`);
-        } else {
-          showToast(`✅ 已強制登出「${username}」`);
-        }
-        
-        setTimeout(() => loadLoginLogs(), 500);
-        
-      } catch (error) {
-        console.error('強制登出失敗:', error);
-        showToast('❌ 強制登出失敗，請稍後再試', true);
-      }
-      
-      btn.disabled = false;
-      const isSelfBtn = btn.dataset.isSelf === 'true';
-      btn.innerHTML = isSelfBtn ? '<i class="fas fa-power-off"></i> 🔒 強制登出自己' : '<i class="fas fa-power-off"></i> 強制登出';
-    }
-
-    // ============================================================
-    // 9. 監聽強制登出事件（跨瀏覽器同步）
-    // ============================================================
-
-    function listenForcedLogout() {
-      if (forcedLogoutUnsubscribe) {
-        forcedLogoutUnsubscribe();
-        forcedLogoutUnsubscribe = null;
-      }
-      
-      forcedLogoutUnsubscribe = db.collection('loginLogs')
-        .where('forcedLogout', '==', true)
-        .onSnapshot((snapshot) => {
-          if (!isAdmin || !currentAdminUsername) return;
-          
-          snapshot.forEach((doc) => {
-            const data = doc.data();
-            if (data.userId === currentAdminUsername) {
-              const timeDiff = Date.now() - data.loginTime;
-              if (timeDiff < 10000) {
-                isAdmin = false;
-                sessionStorage.setItem('isAdmin', 'false');
-                sessionStorage.removeItem('currentAdminUsername');
-                
-                const adminLoginBtn = document.getElementById('adminLoginBtn');
-                adminLoginBtn.textContent = '管理';
-                adminLoginBtn.className = 'btn-admin-login';
-                document.getElementById('viewLoginLogsBtn').classList.remove('show');
-                document.getElementById('changePasswordBtn').classList.remove('show');
-                document.getElementById('viewPasswordsBtn').classList.remove('show');
-                document.getElementById('manageVerifyBtnContainer').style.display = 'none';
-                
-                updateUI(currentUser);
-                render();
-                
-                if (data.isSelfLogout) {
-                  showToast(`🔒 您已在其他瀏覽器強制登出自己，請重新登入`, true);
-                } else {
-                  showToast(`🔒 您已被管理員強制登出`, true);
-                }
-              }
-            }
-          });
-        }, (error) => {
-          console.error('監聽強制登出失敗:', error);
-        });
-    }
-
-    // ============================================================
-    // 10. ImgBB 圖片上傳
+    // 12. ImgBB 圖片上傳
     // ============================================================
 
     async function uploadToImgBB(file) {
@@ -1320,7 +1576,7 @@
     }
 
     // ============================================================
-    // 11. 圖片管理
+    // 13. 圖片管理
     // ============================================================
 
     function updateImagePreview() {
@@ -1358,7 +1614,7 @@
     }
 
     // ============================================================
-    // 12. Firestore 操作
+    // 14. Firestore 操作
     // ============================================================
 
     function listenComplaints() {
@@ -1433,8 +1689,24 @@
       catch (error) { console.error('標記已讀失敗:', error); return false; }
     }
 
+    async function deleteComplaint(docId) {
+      try { await db.collection('complaints').doc(docId).delete(); return true; } 
+      catch (error) { console.error('刪除失敗:', error); showToast('刪除失敗', true); return false; }
+    }
+
+    async function clearAllComplaints() {
+      try {
+        const snapshot = await db.collection('complaints').get();
+        const batch = db.batch();
+        snapshot.forEach((doc) => batch.delete(doc.ref));
+        await batch.commit();
+        showToast('已清空所有投訴');
+        return true;
+      } catch (error) { console.error('清空失敗:', error); showToast('清空失敗', true); return false; }
+    }
+
     // ============================================================
-    // 13. Email 通知
+    // 15. Email 通知
     // ============================================================
 
     async function sendNewComplaintEmail(complaint) {
@@ -1460,24 +1732,8 @@
       } catch (error) { console.error('❌ 回覆通知發送失敗:', error); }
     }
 
-    async function deleteComplaint(docId) {
-      try { await db.collection('complaints').doc(docId).delete(); return true; } 
-      catch (error) { console.error('刪除失敗:', error); showToast('刪除失敗', true); return false; }
-    }
-
-    async function clearAllComplaints() {
-      try {
-        const snapshot = await db.collection('complaints').get();
-        const batch = db.batch();
-        snapshot.forEach((doc) => batch.delete(doc.ref));
-        await batch.commit();
-        showToast('已清空所有投訴');
-        return true;
-      } catch (error) { console.error('清空失敗:', error); showToast('清空失敗', true); return false; }
-    }
-
     // ============================================================
-    // 14. 渲染
+    // 16. 渲染
     // ============================================================
 
     function render() {
@@ -1607,7 +1863,7 @@
     }
 
     // ============================================================
-    // 15. 圖片燈箱
+    // 17. 圖片燈箱
     // ============================================================
 
     let lightboxImages = [], lightboxIndex = 0;
@@ -1640,7 +1896,7 @@
     });
 
     // ============================================================
-    // 16. UI 更新
+    // 18. UI 更新
     // ============================================================
 
     function updateUI(user) {
@@ -1730,7 +1986,7 @@
     }
 
     // ============================================================
-    // 17. 查看密碼功能
+    // 19. 查看密碼功能
     // ============================================================
 
     const viewPwdBtn = document.getElementById('viewPasswordsBtn');
@@ -1804,7 +2060,7 @@
     viewOverlay.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
 
     // ============================================================
-    // 18. 忘記密碼功能
+    // 20. 忘記密碼功能
     // ============================================================
 
     document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
@@ -1935,7 +2191,7 @@
     });
 
     // ============================================================
-    // 19. 管理驗證資料（所有權專用）
+    // 21. 管理驗證資料（所有權專用）
     // ============================================================
 
     document.getElementById('manageVerifyDataBtn').addEventListener('click', async function() {
@@ -2036,7 +2292,7 @@
     });
 
     // ============================================================
-    // 20. 登入紀錄按鈕
+    // 22. 登入紀錄按鈕
     // ============================================================
 
     document.getElementById('viewLoginLogsBtn').addEventListener('click', function() {
@@ -2055,7 +2311,7 @@
     });
 
     // ============================================================
-    // 21. 其他事件處理
+    // 23. 其他事件處理
     // ============================================================
 
     async function googleLogin() {
@@ -2157,7 +2413,9 @@
         welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${fullDisplayName} 您好，歡迎使用投訴系統`;
         welcomeLine.classList.remove('hidden');
         await recordLogin(null, true, username);
-        // 重新監聽強制登出
+        await recordAdminSession(username);
+        startHeartbeat();
+        startOnlineStatusListener();
         listenForcedLogout();
         showToast(`👋 ${fullDisplayName} 您好，歡迎使用投訴系統`);
         render();
@@ -2369,7 +2627,7 @@
     });
 
     // ============================================================
-    // 22. Firebase Auth 監聽
+    // 24. Firebase Auth 監聽
     // ============================================================
 
     auth.onAuthStateChanged((user) => {
@@ -2388,7 +2646,6 @@
           isAdmin = true;
           const storedUsername = sessionStorage.getItem('currentAdminUsername');
           if (storedUsername) currentAdminUsername = storedUsername;
-          // 重新監聽強制登出
           listenForcedLogout();
         }
       }
@@ -2397,15 +2654,18 @@
     });
 
     // ============================================================
-    // 23. 啟動
+    // 25. 啟動
     // ============================================================
 
     async function init() {
       await loadAdminsFromFirestore();
       listenAdminPasswords();
       listenComplaints();
-      // 如果已經登入管理員，啟動監聽
+      
       if (isAdmin && currentAdminUsername) {
+        await recordAdminSession(currentAdminUsername);
+        startHeartbeat();
+        startOnlineStatusListener();
         listenForcedLogout();
       }
       
@@ -2414,7 +2674,9 @@
       console.log('📊 登入紀錄功能已啟用');
       console.log('🔑 權限：所有權/版主可查看所有管理員，副版主/小編僅看自己');
       console.log('🔒 所有權可強制登出所有管理員，版主可強制登出副版主+小編');
-      console.log('🔑 所有角色皆可強制登出自己（帳號被冒用時自救）');
+      console.log('🔑 所有角色皆可強制登出同瀏覽器其他分頁的自己（帳號被冒用時自救）');
+      console.log('🔄 當前分頁不能強制登出自己，但可登出同瀏覽器其他分頁');
+      console.log('🟢 在線狀態即時顯示（含分頁識別）');
       console.log('🔐 忘記密碼功能已啟用，所有權可管理驗證資料');
       console.log('🔑 變更密碼功能已修復並啟用');
       console.log('🔄 跨瀏覽器強制登出已啟用');
