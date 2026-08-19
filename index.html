@@ -11,109 +11,641 @@
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
   <style>
+    /* ============================================================
+       全域樣式
+       ============================================================ */
     * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Roboto, system-ui, sans-serif; }
-    body { background: #f4f7fc; min-height: 100vh; padding: 2rem 1rem; display: flex; justify-content: center; align-items: flex-start; }
-    .container { max-width: 1300px; width: 100%; background: white; border-radius: 32px; box-shadow: 0 20px 60px rgba(0,20,40,0.08); padding: 2rem 2rem 2.5rem; }
-    h1 { font-size: 2rem; font-weight: 600; color: #0b1e33; display: flex; align-items: center; gap: 12px; margin-bottom: 0.3rem; }
+
+    body { 
+      background: #f4f7fc; 
+      min-height: 100vh; 
+      padding: 2rem 1rem; 
+      display: flex; 
+      justify-content: center; 
+      align-items: flex-start; 
+    }
+
+    .container { 
+      max-width: 1300px; 
+      width: 100%; 
+      background: white; 
+      border-radius: 32px; 
+      box-shadow: 0 20px 60px rgba(0,20,40,0.08); 
+      padding: 2rem 2rem 2.5rem; 
+    }
+
+    h1 { 
+      font-size: 2rem; 
+      font-weight: 600; 
+      color: #0b1e33; 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      margin-bottom: 0.3rem; 
+    }
+
     h1 i { color: #d93c3c; font-size: 2rem; }
-    .subhead { color: #5b6f82; margin-bottom: 2rem; border-left: 4px solid #d93c3c; padding-left: 1rem; font-weight: 400; font-size: 1rem; display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
-    .badge-count { background: #eef3f9; padding: 0.4rem 1rem; border-radius: 40px; font-size: 0.9rem; color: #1f3a57; }
+
+    .subhead { 
+      color: #5b6f82; 
+      margin-bottom: 2rem; 
+      border-left: 4px solid #d93c3c; 
+      padding-left: 1rem; 
+      font-weight: 400; 
+      font-size: 1rem; 
+      display: flex; 
+      justify-content: space-between; 
+      flex-wrap: wrap; 
+      align-items: center; 
+      gap: 0.5rem; 
+    }
+
+    .badge-count { 
+      background: #eef3f9; 
+      padding: 0.4rem 1rem; 
+      border-radius: 40px; 
+      font-size: 0.9rem; 
+      color: #1f3a57; 
+    }
+
     .badge-count i { margin-right: 6px; color: #c22d2d; }
-    .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0 1rem 0; border-bottom: 1px solid #eef3f9; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem; }
-    .user-info { display: flex; align-items: center; gap: 12px; }
-    .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: #c52a2a; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; }
+
+    /* ============================================================
+       TOP 導航
+       ============================================================ */
+    .top-nav { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      padding: 0.5rem 0 1rem 0; 
+      border-bottom: 1px solid #eef3f9; 
+      margin-bottom: 1.5rem; 
+      flex-wrap: wrap; 
+      gap: 0.8rem; 
+    }
+
+    .user-info { 
+      display: flex; 
+      align-items: center; 
+      gap: 12px; 
+      flex-wrap: wrap; 
+    }
+
+    .user-avatar { 
+      width: 36px; 
+      height: 36px; 
+      border-radius: 50%; 
+      background: #c52a2a; 
+      color: white; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-weight: 600; 
+      font-size: 1rem; 
+      flex-shrink: 0; 
+    }
+
     .user-name { font-weight: 500; color: #1a2c44; }
-    .user-role { font-size: 0.75rem; color: #7e93ab; background: #eef3f9; padding: 0.15rem 0.8rem; border-radius: 40px; }
+
+    .user-role { 
+      font-size: 0.75rem; 
+      color: #7e93ab; 
+      background: #eef3f9; 
+      padding: 0.15rem 0.8rem; 
+      border-radius: 40px; 
+      white-space: nowrap; 
+    }
+
     .user-role.admin-role { background: #c52a2a; color: white; }
-    .btn-google { background: white; border: 1px solid #d7dfe9; border-radius: 40px; padding: 0.4rem 1.2rem; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; font-weight: 500; color: #2a405b; transition: 0.15s; font-size: 0.9rem; }
+
+    .top-nav-actions {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .top-nav-actions button {
+      white-space: nowrap;
+    }
+
+    .btn-google { 
+      background: white; 
+      border: 1px solid #d7dfe9; 
+      border-radius: 40px; 
+      padding: 0.4rem 1.2rem; 
+      cursor: pointer; 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 8px; 
+      font-weight: 500; 
+      color: #2a405b; 
+      transition: 0.15s; 
+      font-size: 0.9rem; 
+    }
+
     .btn-google:hover { background: #f4f8ff; border-color: #b0c0d0; }
-    .btn-logout { background: transparent; border: 1px solid #f5d8d8; color: #b43b3b; border-radius: 40px; padding: 0.3rem 1.2rem; cursor: pointer; font-size: 0.85rem; transition: 0.15s; display: none; }
+
+    .btn-logout { 
+      background: transparent; 
+      border: 1px solid #f5d8d8; 
+      color: #b43b3b; 
+      border-radius: 40px; 
+      padding: 0.3rem 1.2rem; 
+      cursor: pointer; 
+      font-size: 0.85rem; 
+      transition: 0.15s; 
+      display: none; 
+    }
+
     .btn-logout:hover { background: #fff3f3; }
     .btn-logout.show { display: inline-block; }
-    .btn-admin-login { background: #2a405b; color: white; border: none; border-radius: 40px; padding: 0.3rem 1.2rem; cursor: pointer; font-size: 0.85rem; transition: 0.15s; }
+
+    .btn-admin-login { 
+      background: #2a405b; 
+      color: white; 
+      border: none; 
+      border-radius: 40px; 
+      padding: 0.3rem 1.2rem; 
+      cursor: pointer; 
+      font-size: 0.85rem; 
+      transition: 0.15s; 
+    }
+
     .btn-admin-login:hover { background: #1a2c44; }
     .btn-admin-login.active { background: #c52a2a; }
-    .btn-change-password { background: #6c7e94; color: white; border: none; border-radius: 40px; padding: 0.3rem 1rem; cursor: pointer; font-size: 0.75rem; transition: 0.15s; display: none; }
+
+    .btn-change-password { 
+      background: #6c7e94; 
+      color: white; 
+      border: none; 
+      border-radius: 40px; 
+      padding: 0.3rem 1rem; 
+      cursor: pointer; 
+      font-size: 0.75rem; 
+      transition: 0.15s; 
+      display: none; 
+    }
+
     .btn-change-password:hover { background: #5a6b80; }
     .btn-change-password.show { display: inline-block; }
-    .btn-view-passwords { background: #2a7a5b; color: white; border: none; border-radius: 40px; padding: 0.3rem 1rem; cursor: pointer; font-size: 0.75rem; transition: 0.15s; display: none; }
+
+    .btn-view-passwords { 
+      background: #2a7a5b; 
+      color: white; 
+      border: none; 
+      border-radius: 40px; 
+      padding: 0.3rem 1rem; 
+      cursor: pointer; 
+      font-size: 0.75rem; 
+      transition: 0.15s; 
+      display: none; 
+    }
+
     .btn-view-passwords:hover { background: #1e5f46; }
     .btn-view-passwords.show { display: inline-block; }
-    .btn-login-logs { background: #2a5b7a; color: white; border: none; border-radius: 40px; padding: 0.3rem 1rem; cursor: pointer; font-size: 0.75rem; transition: 0.15s; display: none; }
+
+    .btn-login-logs { 
+      background: #2a5b7a; 
+      color: white; 
+      border: none; 
+      border-radius: 40px; 
+      padding: 0.3rem 1rem; 
+      cursor: pointer; 
+      font-size: 0.75rem; 
+      transition: 0.15s; 
+      display: none; 
+    }
+
     .btn-login-logs:hover { background: #1a405a; }
     .btn-login-logs.show { display: inline-block; }
-    .row { display: grid; grid-template-columns: 1fr 1.4fr; gap: 2rem; margin-top: 0.5rem; }
-    @media (max-width: 820px) { .row { grid-template-columns: 1fr; gap: 1.5rem; } .container { padding: 1.5rem; } }
-    .card { background: #ffffff; border-radius: 24px; padding: 1.6rem 1.8rem 2rem; box-shadow: 0 6px 20px rgba(0,0,0,0.02); border: 1px solid #e9edf4; }
-    .card-title { font-size: 1.25rem; font-weight: 600; color: #1a2c44; display: flex; align-items: center; gap: 10px; margin-bottom: 1.5rem; }
+
+    /* ============================================================
+       主內容 - RWD 網格
+       ============================================================ */
+    .row { 
+      display: grid; 
+      grid-template-columns: 1fr 1.4fr; 
+      gap: 2rem; 
+      margin-top: 0.5rem; 
+    }
+
+    .card { 
+      background: #ffffff; 
+      border-radius: 24px; 
+      padding: 1.6rem 1.8rem 2rem; 
+      box-shadow: 0 6px 20px rgba(0,0,0,0.02); 
+      border: 1px solid #e9edf4; 
+      overflow: hidden;
+    }
+
+    .card-title { 
+      font-size: 1.25rem; 
+      font-weight: 600; 
+      color: #1a2c44; 
+      display: flex; 
+      align-items: center; 
+      gap: 10px; 
+      margin-bottom: 1.5rem; 
+    }
+
     .card-title i { color: #c52a2a; width: 28px; text-align: center; }
+
+    /* ============================================================
+       表單
+       ============================================================ */
     .form-group { margin-bottom: 1.25rem; }
-    label { display: block; font-weight: 500; font-size: 0.9rem; color: #2a405b; margin-bottom: 5px; letter-spacing: 0.3px; }
+
+    label { 
+      display: block; 
+      font-weight: 500; 
+      font-size: 0.9rem; 
+      color: #2a405b; 
+      margin-bottom: 5px; 
+      letter-spacing: 0.3px; 
+    }
+
     label i { margin-right: 6px; color: #6c7e94; width: 18px; }
     label .required { color: #c52a2a; margin-left: 2px; }
-    input, select, textarea { width: 100%; padding: 0.7rem 1rem; border: 1px solid #d7dfe9; border-radius: 16px; font-size: 0.95rem; background: #fafcff; transition: 0.15s; outline: none; }
-    input:focus, select:focus, textarea:focus { border-color: #b32b2b; box-shadow: 0 0 0 3px rgba(179,43,43,0.08); background: white; }
+
+    input, select, textarea { 
+      width: 100%; 
+      padding: 0.7rem 1rem; 
+      border: 1px solid #d7dfe9; 
+      border-radius: 16px; 
+      font-size: 0.95rem; 
+      background: #fafcff; 
+      transition: 0.15s; 
+      outline: none; 
+    }
+
+    input:focus, select:focus, textarea:focus { 
+      border-color: #b32b2b; 
+      box-shadow: 0 0 0 3px rgba(179,43,43,0.08); 
+      background: white; 
+    }
+
     textarea { resize: vertical; min-height: 60px; }
-    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
-    @media (max-width: 500px) { .form-row { grid-template-columns: 1fr; gap: 0.5rem; } }
-    .image-upload-area { border: 2px dashed #d7dfe9; border-radius: 16px; padding: 1.5rem 1.5rem 0.5rem 1.5rem; background: #fafcff; transition: 0.15s; }
+
+    .form-row { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 1rem; 
+    }
+
+    /* 圖片上傳 */
+    .image-upload-area { 
+      border: 2px dashed #d7dfe9; 
+      border-radius: 16px; 
+      padding: 1.5rem 1.5rem 0.5rem 1.5rem; 
+      background: #fafcff; 
+      transition: 0.15s; 
+    }
+
     .image-upload-area.dragover { border-color: #b32b2b; background: #f8f4f4; }
     .image-upload-area .upload-icon { font-size: 2rem; color: #8a9db0; text-align: center; }
     .image-upload-area .upload-text { color: #6b8097; font-size: 0.9rem; text-align: center; }
     .image-upload-area .upload-hint { color: #8a9db0; font-size: 0.75rem; text-align: center; margin-top: 2px; }
-    .image-preview-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
-    .image-preview-item { position: relative; width: 80px; height: 80px; border-radius: 12px; border: 1px solid #e6ecf5; overflow: hidden; }
+
+    .image-preview-grid { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 10px; 
+      margin-top: 12px; 
+    }
+
+    .image-preview-item { 
+      position: relative; 
+      width: 80px; 
+      height: 80px; 
+      border-radius: 12px; 
+      border: 1px solid #e6ecf5; 
+      overflow: hidden; 
+      flex-shrink: 0; 
+    }
+
     .image-preview-item img { width: 100%; height: 100%; object-fit: cover; }
-    .image-preview-item .remove-btn { position: absolute; top: -6px; right: -6px; width: 22px; height: 22px; border-radius: 50%; background: #c52a2a; color: white; border: none; cursor: pointer; font-size: 12px; display: flex; align-items: center; justify-content: center; transition: 0.15s; }
+
+    .image-preview-item .remove-btn { 
+      position: absolute; 
+      top: -6px; 
+      right: -6px; 
+      width: 22px; 
+      height: 22px; 
+      border-radius: 50%; 
+      background: #c52a2a; 
+      color: white; 
+      border: none; 
+      cursor: pointer; 
+      font-size: 12px; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      transition: 0.15s; 
+    }
+
     .image-preview-item .remove-btn:hover { background: #a81f1f; transform: scale(1.1); }
-    .image-preview-item .file-index { position: absolute; bottom: 2px; right: 4px; background: rgba(0,0,0,0.6); color: white; font-size: 0.6rem; padding: 0 6px; border-radius: 10px; }
+    .image-preview-item .file-index { 
+      position: absolute; 
+      bottom: 2px; 
+      right: 4px; 
+      background: rgba(0,0,0,0.6); 
+      color: white; 
+      font-size: 0.6rem; 
+      padding: 0 6px; 
+      border-radius: 10px; 
+    }
+
     .image-upload-area .file-input-wrapper { position: relative; display: inline-block; width: 100%; }
-    .image-upload-area .file-input-wrapper input[type="file"] { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; }
-    .image-upload-area .add-more-btn { display: inline-flex; align-items: center; gap: 8px; padding: 0.4rem 1.2rem; border: 1px dashed #b32b2b; border-radius: 40px; color: #b32b2b; background: transparent; cursor: pointer; font-size: 0.85rem; transition: 0.15s; margin-top: 8px; }
+    .image-upload-area .file-input-wrapper input[type="file"] { 
+      position: absolute; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      opacity: 0; 
+      cursor: pointer; 
+    }
+
+    .image-upload-area .add-more-btn { 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 8px; 
+      padding: 0.4rem 1.2rem; 
+      border: 1px dashed #b32b2b; 
+      border-radius: 40px; 
+      color: #b32b2b; 
+      background: transparent; 
+      cursor: pointer; 
+      font-size: 0.85rem; 
+      transition: 0.15s; 
+      margin-top: 8px; 
+    }
+
     .image-upload-area .add-more-btn:hover { background: #fff3f3; }
     .image-upload-area .add-more-btn:disabled { opacity: 0.4; cursor: not-allowed; }
     .image-count-badge { font-size: 0.75rem; color: #6b8097; margin-left: 8px; }
-    .btn-primary { background: #c52a2a; border: none; color: white; padding: 0.85rem 1.8rem; border-radius: 40px; font-weight: 600; font-size: 1rem; cursor: pointer; transition: 0.15s; width: 100%; display: flex; align-items: center; justify-content: center; gap: 12px; margin-top: 0.5rem; border: 1px solid #b12222; }
+
+    /* ============================================================
+       按鈕
+       ============================================================ */
+    .btn-primary { 
+      background: #c52a2a; 
+      border: none; 
+      color: white; 
+      padding: 0.85rem 1.8rem; 
+      border-radius: 40px; 
+      font-weight: 600; 
+      font-size: 1rem; 
+      cursor: pointer; 
+      transition: 0.15s; 
+      width: 100%; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      gap: 12px; 
+      margin-top: 0.5rem; 
+      border: 1px solid #b12222; 
+    }
+
     .btn-primary:hover { background: #a81f1f; transform: scale(0.99); box-shadow: 0 6px 16px rgba(197,42,42,0.2); }
     .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
     .btn-primary i { font-size: 1rem; }
-    .btn-secondary { background: #6c7e94; border: none; color: white; padding: 0.4rem 1.2rem; border-radius: 40px; font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+
+    .btn-secondary { 
+      background: #6c7e94; 
+      border: none; 
+      color: white; 
+      padding: 0.4rem 1.2rem; 
+      border-radius: 40px; 
+      font-weight: 500; 
+      font-size: 0.85rem; 
+      cursor: pointer; 
+      transition: 0.15s; 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 6px; 
+    }
+
     .btn-secondary:hover { background: #5a6b80; }
     .btn-secondary:disabled { opacity: 0.5; cursor: not-allowed; }
-    .btn-success { background: #28a745; border: none; color: white; padding: 0.4rem 1.2rem; border-radius: 40px; font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+
+    .btn-success { 
+      background: #28a745; 
+      border: none; 
+      color: white; 
+      padding: 0.4rem 1.2rem; 
+      border-radius: 40px; 
+      font-weight: 500; 
+      font-size: 0.85rem; 
+      cursor: pointer; 
+      transition: 0.15s; 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 6px; 
+    }
+
     .btn-success:hover { background: #1e7e34; }
-    .btn-danger { background: #dc3545; border: none; color: white; padding: 0.4rem 1.2rem; border-radius: 40px; font-weight: 500; font-size: 0.85rem; cursor: pointer; transition: 0.15s; display: inline-flex; align-items: center; gap: 6px; }
+
+    .btn-danger { 
+      background: #dc3545; 
+      border: none; 
+      color: white; 
+      padding: 0.4rem 1.2rem; 
+      border-radius: 40px; 
+      font-weight: 500; 
+      font-size: 0.85rem; 
+      cursor: pointer; 
+      transition: 0.15s; 
+      display: inline-flex; 
+      align-items: center; 
+      gap: 6px; 
+    }
+
     .btn-danger:hover { background: #b02a37; }
-    .list-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem; }
-    .filter-bar { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap; }
-    .filter-bar select { width: auto; padding: 0.4rem 1.8rem 0.4rem 1rem; border-radius: 40px; background: #f4f8ff; border: 1px solid #d7dfe9; font-size: 0.85rem; cursor: pointer; }
-    .filter-bar .clear-btn { background: transparent; border: 1px solid #d7dfe9; border-radius: 40px; padding: 0.4rem 1rem; font-size: 0.85rem; color: #4f657c; cursor: pointer; transition: 0.1s; display: flex; align-items: center; gap: 6px; }
+
+    /* ============================================================
+       投訴列表
+       ============================================================ */
+    .list-header { 
+      display: flex; 
+      justify-content: space-between; 
+      align-items: center; 
+      margin-bottom: 1.5rem; 
+      flex-wrap: wrap; 
+      gap: 0.5rem; 
+    }
+
+    .filter-bar { 
+      display: flex; 
+      gap: 0.5rem; 
+      align-items: center; 
+      flex-wrap: wrap; 
+    }
+
+    .filter-bar select { 
+      width: auto; 
+      padding: 0.4rem 1.8rem 0.4rem 1rem; 
+      border-radius: 40px; 
+      background: #f4f8ff; 
+      border: 1px solid #d7dfe9; 
+      font-size: 0.85rem; 
+      cursor: pointer; 
+    }
+
+    .filter-bar .clear-btn { 
+      background: transparent; 
+      border: 1px solid #d7dfe9; 
+      border-radius: 40px; 
+      padding: 0.4rem 1rem; 
+      font-size: 0.85rem; 
+      color: #4f657c; 
+      cursor: pointer; 
+      transition: 0.1s; 
+      display: flex; 
+      align-items: center; 
+      gap: 6px; 
+    }
+
     .filter-bar .clear-btn:hover { background: #f0f4fa; border-color: #b0c0d0; }
-    .empty-state { text-align: center; padding: 3rem 0.5rem; color: #7c8ea3; }
+
+    .empty-state { 
+      text-align: center; 
+      padding: 3rem 0.5rem; 
+      color: #7c8ea3; 
+    }
+
     .empty-state i { font-size: 3rem; opacity: 0.4; margin-bottom: 1rem; }
-    .complaint-list { display: flex; flex-direction: column; gap: 0.9rem; max-height: 560px; overflow-y: auto; padding-right: 4px; }
-    .complaint-item { background: #fafcff; border: 1px solid #e6ecf5; border-radius: 20px; padding: 1rem 1.2rem; transition: 0.1s; display: flex; flex-wrap: wrap; align-items: flex-start; gap: 0.6rem 1rem; }
+
+    .complaint-list { 
+      display: flex; 
+      flex-direction: column; 
+      gap: 0.9rem; 
+      max-height: 560px; 
+      overflow-y: auto; 
+      padding-right: 4px; 
+    }
+
+    .complaint-item { 
+      background: #fafcff; 
+      border: 1px solid #e6ecf5; 
+      border-radius: 20px; 
+      padding: 1rem 1.2rem; 
+      transition: 0.1s; 
+      display: flex; 
+      flex-wrap: wrap; 
+      align-items: flex-start; 
+      gap: 0.6rem 1rem; 
+    }
+
     .complaint-item:hover { background: #f6f9ff; border-color: #cbd8e9; }
-    .complaint-content { flex: 2 1 200px; }
-    .complaint-title { font-weight: 600; color: #10273e; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .status-badge { font-size: 0.7rem; font-weight: 600; padding: 0.2rem 0.9rem; border-radius: 30px; letter-spacing: 0.3px; white-space: nowrap; }
+
+    .complaint-content { flex: 2 1 200px; min-width: 0; }
+
+    .complaint-title { 
+      font-weight: 600; 
+      color: #10273e; 
+      display: flex; 
+      align-items: center; 
+      gap: 8px; 
+      flex-wrap: wrap; 
+      word-break: break-word; 
+    }
+
+    .status-badge { 
+      font-size: 0.7rem; 
+      font-weight: 600; 
+      padding: 0.2rem 0.9rem; 
+      border-radius: 30px; 
+      letter-spacing: 0.3px; 
+      white-space: nowrap; 
+    }
+
     .status-badge.待處理 { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
     .status-badge.調查中 { background: #cce5ff; color: #004085; border: 1px solid #007bff; }
     .status-badge.已處理 { background: #d4edda; color: #155724; border: 1px solid #28a745; }
     .status-badge.不予受理 { background: #f8d7da; color: #721c24; border: 1px solid #dc3545; }
     .status-badge.需要補充資料 { background: #fff3cd; color: #856404; border: 1px solid #ffc107; }
     .status-badge.已轉交相關人員 { background: #d6d8db; color: #383d41; border: 1px solid #6c757d; }
-    .complaint-meta { font-size: 0.8rem; color: #61768b; display: flex; flex-wrap: wrap; gap: 0.8rem 1.5rem; margin-top: 4px; }
+
+    .complaint-meta { 
+      font-size: 0.8rem; 
+      color: #61768b; 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 0.8rem 1.5rem; 
+      margin-top: 4px; 
+    }
+
     .complaint-meta i { width: 16px; color: #7d93ab; }
-    .complaint-images { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
-    .complaint-images img { width: 60px; height: 60px; object-fit: cover; border-radius: 10px; border: 1px solid #e6ecf5; cursor: pointer; transition: 0.15s; }
+
+    .complaint-images { 
+      display: flex; 
+      flex-wrap: wrap; 
+      gap: 6px; 
+      margin-top: 6px; 
+    }
+
+    .complaint-images img { 
+      width: 60px; 
+      height: 60px; 
+      object-fit: cover; 
+      border-radius: 10px; 
+      border: 1px solid #e6ecf5; 
+      cursor: pointer; 
+      transition: 0.15s; 
+    }
+
     .complaint-images img:hover { opacity: 0.8; transform: scale(1.05); }
-    .complaint-images .more-badge { width: 60px; height: 60px; border-radius: 10px; background: #eef3f9; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; color: #4f657c; font-weight: 500; }
-    .complaint-actions { display: flex; gap: 6px; margin-left: auto; flex-wrap: wrap; align-items: center; }
-    .complaint-actions button { background: transparent; border: 1px solid #d0dbe9; border-radius: 40px; padding: 0.25rem 0.9rem; font-size: 0.75rem; font-weight: 500; color: #2a405b; cursor: pointer; transition: 0.1s; display: flex; align-items: center; gap: 5px; }
+    .complaint-images .more-badge { 
+      width: 60px; 
+      height: 60px; 
+      border-radius: 10px; 
+      background: #eef3f9; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      font-size: 0.8rem; 
+      color: #4f657c; 
+      font-weight: 500; 
+    }
+
+    .complaint-actions { 
+      display: flex; 
+      gap: 6px; 
+      margin-left: auto; 
+      flex-wrap: wrap; 
+      align-items: center; 
+    }
+
+    .complaint-actions button { 
+      background: transparent; 
+      border: 1px solid #d0dbe9; 
+      border-radius: 40px; 
+      padding: 0.25rem 0.9rem; 
+      font-size: 0.75rem; 
+      font-weight: 500; 
+      color: #2a405b; 
+      cursor: pointer; 
+      transition: 0.1s; 
+      display: flex; 
+      align-items: center; 
+      gap: 5px; 
+    }
+
     .complaint-actions .btn-delete { border-color: #f5d8d8; color: #b43b3b; background: #fff3f3; }
     .complaint-actions .btn-delete:hover { background: #fde2e2; }
-    .status-select { padding: 0.2rem 0.6rem; border-radius: 30px; border: 1px solid #d0dbe9; font-size: 0.7rem; background: white; cursor: pointer; outline: none; }
+
+    .status-select { 
+      padding: 0.2rem 0.6rem; 
+      border-radius: 30px; 
+      border: 1px solid #d0dbe9; 
+      font-size: 0.7rem; 
+      background: white; 
+      cursor: pointer; 
+      outline: none; 
+    }
+
     .status-select:focus { border-color: #b32b2b; }
     .status-select.待處理 { background: #fff3cd; color: #856404; }
     .status-select.調查中 { background: #cce5ff; color: #004085; }
@@ -121,17 +653,86 @@
     .status-select.不予受理 { background: #f8d7da; color: #721c24; }
     .status-select.需要補充資料 { background: #fff3cd; color: #856404; }
     .status-select.已轉交相關人員 { background: #d6d8db; color: #383d41; }
-    .toast-message { background: #1f3a57; color: white; padding: 0.8rem 1.5rem; border-radius: 50px; font-size: 0.9rem; box-shadow: 0 8px 24px rgba(0,0,0,0.12); position: fixed; bottom: 2rem; left: 50%; transform: translateX(-50%); z-index: 999; transition: 0.25s; opacity: 0; pointer-events: none; white-space: nowrap; border: 1px solid rgba(255,255,255,0.1); }
+
+    /* ============================================================
+       Toast
+       ============================================================ */
+    .toast-message { 
+      background: #1f3a57; 
+      color: white; 
+      padding: 0.8rem 1.5rem; 
+      border-radius: 50px; 
+      font-size: 0.9rem; 
+      box-shadow: 0 8px 24px rgba(0,0,0,0.12); 
+      position: fixed; 
+      bottom: 2rem; 
+      left: 50%; 
+      transform: translateX(-50%); 
+      z-index: 999; 
+      transition: 0.25s; 
+      opacity: 0; 
+      pointer-events: none; 
+      white-space: nowrap; 
+      border: 1px solid rgba(255,255,255,0.1); 
+    }
+
     .toast-message.show { opacity: 1; pointer-events: auto; }
     .toast-message i { margin-right: 10px; color: #ffbaba; }
+
     .text-muted { color: #6b8097; font-size: 0.85rem; }
     hr { border: none; border-top: 1px solid #eef3f9; margin: 0.5rem 0 1.2rem; }
+
     ::-webkit-scrollbar { width: 5px; background: #eef3f9; border-radius: 10px; }
     ::-webkit-scrollbar-thumb { background: #cbd6e4; border-radius: 10px; }
-    .admin-badge { background: #2a405b; color: white; padding: 0.1rem 0.8rem; border-radius: 40px; font-size: 0.7rem; margin-left: 8px; }
-    .login-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
-    .login-overlay.active { display: flex; }
-    .login-box { background: white; padding: 2.5rem; border-radius: 28px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); text-align: center; }
+
+    .admin-badge { 
+      background: #2a405b; 
+      color: white; 
+      padding: 0.1rem 0.8rem; 
+      border-radius: 40px; 
+      font-size: 0.7rem; 
+      margin-left: 8px; 
+    }
+
+    /* ============================================================
+       彈窗共用
+       ============================================================ */
+    .login-overlay, .change-password-overlay, .forgot-password-overlay,
+    .verify-change-overlay, .force-change-overlay, .manage-verify-overlay,
+    .view-passwords-overlay, .login-logs-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.4);
+      z-index: 1000;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    .login-overlay.active, .change-password-overlay.active,
+    .forgot-password-overlay.active, .verify-change-overlay.active,
+    .force-change-overlay.active, .manage-verify-overlay.active,
+    .view-passwords-overlay.active, .login-logs-overlay.active {
+      display: flex;
+    }
+
+    .login-box, .change-password-box, .verify-change-box,
+    .force-change-box, .view-passwords-box, .manage-verify-box {
+      background: white;
+      padding: 2.5rem;
+      border-radius: 28px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      text-align: center;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
     .login-box h3 { margin-bottom: 1.5rem; color: #0b1e33; }
     .login-box input { margin-bottom: 1rem; }
     .login-box .btn-primary { width: 100%; margin-top: 0; }
@@ -141,9 +742,7 @@
     .login-box .forgot-link a { color: #2a5b7a; font-size: 0.85rem; text-decoration: none; cursor: pointer; }
     .login-box .forgot-link a:hover { text-decoration: underline; }
 
-    .change-password-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
-    .change-password-overlay.active { display: flex; }
-    .change-password-box { background: white; padding: 2.5rem; border-radius: 28px; max-width: 400px; width: 90%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); text-align: center; }
+    /* 變更密碼彈窗 */
     .change-password-box h3 { margin-bottom: 0.5rem; color: #0b1e33; }
     .change-password-box p { color: #6b8097; font-size: 0.9rem; margin-bottom: 1.2rem; }
     .change-password-box input { margin-bottom: 0.8rem; }
@@ -153,22 +752,33 @@
     .change-password-box .success-msg { color: #28a745; font-size: 0.85rem; margin-bottom: 0.8rem; display: none; }
     .change-password-box .success-msg.show { display: block; }
 
-    .forgot-password-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1100; justify-content: center; align-items: center; }
-    .forgot-password-overlay.active { display: flex; }
-    .forgot-password-box { background: white; padding: 2rem; border-radius: 28px; max-width: 700px; width: 92%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    /* 忘記密碼彈窗 */
+    .forgot-password-box { max-width: 700px; padding: 2rem; }
     .forgot-password-box h3 { text-align: center; margin-bottom: 0.3rem; color: #0b1e33; }
     .forgot-password-box .sub-title { color: #6b8097; font-size: 0.85rem; text-align: center; margin-bottom: 1rem; }
-    .forgot-password-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin: 0.5rem 0 1rem; }
-    @media (max-width: 600px) { .forgot-password-grid { grid-template-columns: 1fr; } }
-    .forgot-password-card { background: #f8fafc; border: 1px solid #e9edf4; border-radius: 16px; padding: 1.5rem; text-align: center; transition: 0.15s; }
+
+    .forgot-password-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin: 0.5rem 0 1rem;
+    }
+
+    .forgot-password-card {
+      background: #f8fafc;
+      border: 1px solid #e9edf4;
+      border-radius: 16px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: 0.15s;
+    }
     .forgot-password-card:hover { border-color: #2a5b7a; box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
     .forgot-password-card .card-icon { font-size: 2rem; color: #2a5b7a; margin-bottom: 0.5rem; }
     .forgot-password-card h4 { color: #1a2c44; margin-bottom: 0.3rem; }
     .forgot-password-card p { font-size: 0.8rem; color: #6b8097; }
 
-    .verify-change-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1200; justify-content: center; align-items: center; }
-    .verify-change-overlay.active { display: flex; }
-    .verify-change-box { background: white; padding: 2rem; border-radius: 28px; max-width: 420px; width: 92%; box-shadow: 0 20px 60px rgba(0,0,0,0.25); max-height: 90vh; overflow-y: auto; }
+    /* 身份驗證變更密碼彈窗 */
+    .verify-change-box { max-width: 420px; }
     .verify-change-box h3 { text-align: center; margin-bottom: 0.3rem; color: #0b1e33; }
     .verify-change-box .sub-title { color: #6b8097; font-size: 0.85rem; text-align: center; margin-bottom: 1rem; }
     .verify-change-box .error-msg { color: #c52a2a; font-size: 0.85rem; margin-bottom: 0.8rem; display: none; text-align: center; }
@@ -177,93 +787,305 @@
     .verify-change-box .success-msg.show { display: block; }
     .verify-change-box .form-group { margin-bottom: 0.8rem; }
 
-    .force-change-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1100; justify-content: center; align-items: center; }
-    .force-change-overlay.active { display: flex; }
-    .force-change-box { background: white; padding: 2rem; border-radius: 28px; max-width: 420px; width: 92%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); text-align: center; }
+    /* 強制變更說明彈窗 */
+    .force-change-box { max-width: 420px; }
     .force-change-box h3 { margin-bottom: 0.5rem; color: #0b1e33; }
 
-    .manage-verify-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1200; justify-content: center; align-items: center; }
-    .manage-verify-overlay.active { display: flex; }
-    .manage-verify-box { background: white; padding: 2rem; border-radius: 28px; max-width: 480px; width: 92%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto; }
+    /* 管理驗證資料彈窗 */
+    .manage-verify-box { max-width: 480px; }
     .manage-verify-box h3 { text-align: center; margin-bottom: 0.3rem; color: #0b1e33; }
     .manage-verify-box .sub-title { color: #6b8097; font-size: 0.85rem; text-align: center; margin-bottom: 1rem; }
-    .verify-data-item { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; border-bottom: 1px solid #eef3f9; font-size:0.85rem; flex-wrap: wrap; gap:4px; }
+
+    .verify-data-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid #eef3f9;
+      font-size: 0.85rem;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
     .verify-data-item:hover { background: #f6f9ff; }
-    .verify-data-item .vdata-left { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-    .verify-data-item .vdata-left .badge { font-size:0.6rem; padding:1px 8px; border-radius:12px; background:#2a5b7a; color:white; }
-    .verify-data-item .vdata-right button { background:transparent; border:none; color:#2a5b7a; cursor:pointer; font-size:0.75rem; }
-    .verify-data-item .vdata-right button:hover { color:#1a405a; text-decoration:underline; }
+    .verify-data-item .vdata-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .verify-data-item .vdata-left .badge { font-size: 0.6rem; padding: 1px 8px; border-radius: 12px; background: #2a5b7a; color: white; }
+    .verify-data-item .vdata-right button { background: transparent; border: none; color: #2a5b7a; cursor: pointer; font-size: 0.75rem; }
+    .verify-data-item .vdata-right button:hover { color: #1a405a; text-decoration: underline; }
     .manage-verify-box .form-group { margin-bottom: 0.5rem; }
     .manage-verify-box .form-group label { font-size: 0.8rem; }
 
-    .view-passwords-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
-    .view-passwords-overlay.active { display: flex; }
-    .view-passwords-box { background: white; padding: 2.5rem; border-radius: 28px; max-width: 600px; width: 92%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    /* 查看密碼彈窗 */
+    .view-passwords-box { max-width: 600px; }
     .view-passwords-box h3 { margin-bottom: 0.5rem; color: #0b1e33; text-align: center; }
     .view-passwords-box .sub-title { color: #6b8097; font-size: 0.85rem; text-align: center; margin-bottom: 1rem; }
-    .view-passwords-box .pwd-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #eef3f9; flex-wrap: wrap; gap: 8px; }
+
+    .view-passwords-box .pwd-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border-bottom: 1px solid #eef3f9;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
     .view-passwords-box .pwd-item:hover { background: #f6f9ff; }
     .view-passwords-box .pwd-item .pwd-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1; }
     .view-passwords-box .pwd-item .pwd-right { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .view-passwords-box .pwd-item .role-badge { font-size: 0.6rem; padding: 2px 10px; border-radius: 20px; color: white; }
+
+    .view-passwords-box .pwd-item .role-badge {
+      font-size: 0.6rem;
+      padding: 2px 10px;
+      border-radius: 20px;
+      color: white;
+    }
     .view-passwords-box .pwd-item .role-badge.owner { background: #c52a2a; }
     .view-passwords-box .pwd-item .role-badge.moderator { background: #2a7a5b; }
     .view-passwords-box .pwd-item .role-badge.vice { background: #2a5b7a; }
     .view-passwords-box .pwd-item .role-badge.editor { background: #7a5b2a; }
-    .view-passwords-box .pwd-item .pwd-display { font-family: monospace; color: #c52a2a; background: #f4f7fc; padding: 2px 10px; border-radius: 6px; font-size: 0.85rem; }
+
+    .view-passwords-box .pwd-item .pwd-display {
+      font-family: monospace;
+      color: #c52a2a;
+      background: #f4f7fc;
+      padding: 2px 10px;
+      border-radius: 6px;
+      font-size: 0.85rem;
+      word-break: break-all;
+    }
     .view-passwords-box .pwd-item .display-name { font-size: 0.8rem; color: #2a405b; }
-    .view-passwords-box .pwd-item .btn-change-pwd { background: #2a5b7a; color: white; border: none; border-radius: 20px; padding: 2px 14px; font-size: 0.7rem; cursor: pointer; transition: 0.15s; }
+    .view-passwords-box .pwd-item .btn-change-pwd {
+      background: #2a5b7a;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 2px 14px;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: 0.15s;
+    }
     .view-passwords-box .pwd-item .btn-change-pwd:hover { background: #1a405a; }
     .view-passwords-box .pwd-item .no-change { font-size: 0.7rem; color: #8a9db0; font-style: italic; }
     .view-passwords-box .btn-secondary { margin-top: 1rem; width: 100%; justify-content: center; }
     .view-passwords-box .manage-verify-btn { margin-top: 0.5rem; display: flex; gap: 8px; flex-wrap: wrap; }
-    .view-passwords-box .manage-verify-btn button { flex: 1; justify-content: center; background: #2a5b7a; color: white; border: none; border-radius: 40px; padding: 0.4rem 1rem; cursor: pointer; font-size: 0.8rem; transition: 0.15s; }
+    .view-passwords-box .manage-verify-btn button {
+      flex: 1;
+      justify-content: center;
+      background: #2a5b7a;
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 0.4rem 1rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: 0.15s;
+    }
     .view-passwords-box .manage-verify-btn button:hover { background: #1a405a; }
 
-    .login-logs-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; justify-content: center; align-items: center; }
-    .login-logs-overlay.active { display: flex; }
-    .login-logs-box { background: white; padding: 2rem; border-radius: 28px; max-width: 750px; width: 92%; max-height: 85vh; box-shadow: 0 20px 60px rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+    /* 登入紀錄彈窗 */
+    .login-logs-box {
+      background: white;
+      padding: 2rem;
+      border-radius: 28px;
+      max-width: 750px;
+      width: 100%;
+      max-height: 85vh;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+    }
+
     .login-logs-box h3 { margin-bottom: 0.3rem; color: #0b1e33; text-align: center; font-size: 1.2rem; }
     .login-logs-box .sub-title { color: #6b8097; font-size: 0.85rem; text-align: center; margin-bottom: 0.8rem; }
-    .login-log-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; border-bottom: 1px solid #eef3f9; flex-wrap: wrap; gap: 6px; transition: 0.1s; }
+
+    .login-log-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 14px;
+      border-bottom: 1px solid #eef3f9;
+      flex-wrap: wrap;
+      gap: 6px;
+      transition: 0.1s;
+    }
     .login-log-item:hover { background: #f6f9ff; }
-    .login-log-item .user-info { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; flex: 2 1 200px; }
-    .login-log-item .user-info .avatar { width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: 600; color: white; flex-shrink: 0; }
+
+    .login-log-item .user-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      flex: 2 1 200px;
+    }
+    .login-log-item .user-info .avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: white;
+      flex-shrink: 0;
+    }
     .login-log-item .user-info .avatar.google { background: #4285F4; }
     .login-log-item .user-info .avatar.admin { background: #c52a2a; }
     .login-log-item .user-info .name { font-weight: 500; color: #1a2c44; }
-    .login-log-item .user-info .type-badge { font-size: 0.6rem; padding: 1px 10px; border-radius: 20px; }
+
+    .login-log-item .user-info .type-badge {
+      font-size: 0.6rem;
+      padding: 1px 10px;
+      border-radius: 20px;
+    }
     .login-log-item .user-info .type-badge.google { background: #4285F4; color: white; }
     .login-log-item .user-info .type-badge.admin { background: #c52a2a; color: white; }
-    .login-log-item .user-info .online-badge { font-size: 0.6rem; color: #28a745; margin-left: 4px; padding: 1px 8px; border-radius: 12px; display: inline-block; }
-    .login-log-item .login-time { font-size: 0.8rem; color: #6b8097; white-space: nowrap; }
+
+    .login-log-item .user-info .online-badge {
+      font-size: 0.6rem;
+      color: #28a745;
+      margin-left: 4px;
+      padding: 1px 8px;
+      border-radius: 12px;
+      display: inline-block;
+      white-space: nowrap;
+    }
+
+    .login-log-item .login-time {
+      font-size: 0.8rem;
+      color: #6b8097;
+      white-space: nowrap;
+    }
     .login-log-item .login-time i { margin-right: 4px; }
-    .login-log-item .actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+    .login-log-item .actions {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
     .login-log-empty { text-align: center; padding: 2rem; color: #8a9db0; }
     .login-log-empty i { font-size: 2.5rem; opacity: 0.4; margin-bottom: 0.8rem; display: block; }
-    .login-logs-box .log-header { padding: 8px 14px; background: #eef3f9; border-radius: 8px; margin-bottom: 10px; font-size: 0.8rem; color: #1f3a57; display: flex; justify-content: space-between; flex-wrap: wrap; }
-    .login-logs-box .log-list { flex: 1; overflow-y: auto; max-height: 400px; }
-    .login-logs-box .log-footer { display: flex; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px solid #eef3f9; }
+
+    .login-logs-box .log-header {
+      padding: 8px 14px;
+      background: #eef3f9;
+      border-radius: 8px;
+      margin-bottom: 10px;
+      font-size: 0.8rem;
+      color: #1f3a57;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 4px;
+    }
+
+    .login-logs-box .log-list {
+      flex: 1;
+      overflow-y: auto;
+      max-height: 400px;
+    }
+
+    .login-logs-box .log-footer {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #eef3f9;
+    }
     .login-logs-box .log-footer button { flex: 1; justify-content: center; }
-    .btn-force-logout { background: #dc3545; color: white; border: none; border-radius: 20px; padding: 3px 14px; font-size: 0.65rem; cursor: pointer; transition: 0.15s; }
+
+    /* 強制登出按鈕 */
+    .btn-force-logout {
+      background: #dc3545;
+      color: white;
+      border: none;
+      border-radius: 20px;
+      padding: 3px 14px;
+      font-size: 0.65rem;
+      cursor: pointer;
+      transition: 0.15s;
+      white-space: nowrap;
+    }
     .btn-force-logout:hover { background: #b02a37; transform: scale(1.02); }
     .btn-force-logout:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
     .btn-force-self { background: #dc3545; }
     .btn-force-self:hover { background: #b02a37; }
+
     .no-permission { font-size: 0.6rem; color: #8a9db0; font-style: italic; }
 
-    .lightbox { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; justify-content: center; align-items: center; cursor: pointer; }
+    /* 燈箱 */
+    .lightbox {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.85);
+      z-index: 2000;
+      justify-content: center;
+      align-items: center;
+      cursor: pointer;
+    }
     .lightbox.active { display: flex; }
-    .lightbox img { max-width: 90%; max-height: 90%; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
-    .lightbox .image-counter { position: fixed; bottom: 2rem; color: white; background: rgba(0,0,0,0.5); padding: 0.3rem 1rem; border-radius: 40px; font-size: 0.9rem; }
-    .lightbox .nav-btn { position: fixed; top: 50%; transform: translateY(-50%); background: rgba(255,255,255,0.2); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; font-size: 1.5rem; cursor: pointer; transition: 0.15s; z-index: 2001; }
+    .lightbox img {
+      max-width: 90%;
+      max-height: 90%;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+    .lightbox .image-counter {
+      position: fixed;
+      bottom: 2rem;
+      color: white;
+      background: rgba(0,0,0,0.5);
+      padding: 0.3rem 1rem;
+      border-radius: 40px;
+      font-size: 0.9rem;
+    }
+    .lightbox .nav-btn {
+      position: fixed;
+      top: 50%;
+      transform: translateY(-50%);
+      background: rgba(255,255,255,0.2);
+      color: white;
+      border: none;
+      width: 50px;
+      height: 50px;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: 0.15s;
+      z-index: 2001;
+    }
     .lightbox .nav-btn:hover { background: rgba(255,255,255,0.4); }
     .lightbox .nav-btn.prev { left: 1rem; }
     .lightbox .nav-btn.next { right: 1rem; }
-    @media (max-width: 600px) { .lightbox .nav-btn { width: 36px; height: 36px; font-size: 1rem; } .lightbox .nav-btn.prev { left: 0.5rem; } .lightbox .nav-btn.next { right: 0.5rem; } }
-    .status-legend { display: flex; flex-wrap: wrap; gap: 0.8rem 1.5rem; padding-top: 0.8rem; border-top: 1px solid #eef3f9; margin-top: 0.8rem; }
-    .status-legend .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.75rem; color: #4f657c; }
-    .status-legend .legend-dot { width: 12px; height: 12px; border-radius: 50%; display: inline-block; }
+
+    /* 狀態圖例 */
+    .status-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.8rem 1.5rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid #eef3f9;
+      margin-top: 0.8rem;
+    }
+    .status-legend .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.75rem;
+      color: #4f657c;
+    }
+    .status-legend .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
     .legend-dot.待處理 { background: #ffc107; }
     .legend-dot.調查中 { background: #007bff; }
     .legend-dot.已處理 { background: #28a745; }
@@ -271,46 +1093,376 @@
     .legend-dot.需要補充資料 { background: #ffc107; }
     .legend-dot.已轉交相關人員 { background: #6c757d; }
 
+    /* 公告 */
     .notice-full-width { grid-column: 1 / -1; margin: -0.5rem 0 0 0; }
-    .notice-box { background: #fff8e1; border-left: 4px solid #ffc107; padding: 10px 16px; border-radius: 8px; font-size: 0.9rem; color: #6d5a00; display: flex; align-items: center; gap: 10px; }
+    .notice-box {
+      background: #fff8e1;
+      border-left: 4px solid #ffc107;
+      padding: 10px 16px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      color: #6d5a00;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
     .notice-box i { color: #f9a825; font-size: 1.1rem; flex-shrink: 0; }
-    @media (max-width: 600px) { .notice-box { font-size: 0.8rem; flex-wrap: wrap; } }
 
-    .radio-group { display: flex; gap: 1.5rem; padding-top: 4px; }
-    .radio-group label { display: flex; align-items: center; gap: 6px; font-weight: 400; font-size: 0.95rem; color: #2a405b; cursor: pointer; }
-    .radio-group input[type="radio"] { width: 18px; height: 18px; accent-color: #c52a2a; cursor: pointer; }
+    /* Radio 按鈕 */
+    .radio-group {
+      display: flex;
+      gap: 1.5rem;
+      padding-top: 4px;
+      flex-wrap: wrap;
+    }
+    .radio-group label {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-weight: 400;
+      font-size: 0.95rem;
+      color: #2a405b;
+      cursor: pointer;
+    }
+    .radio-group input[type="radio"] {
+      width: 18px;
+      height: 18px;
+      accent-color: #c52a2a;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
 
-    .reply-section { width: 100%; margin-top: 10px; padding-top: 10px; border-top: 1px dashed #d7dfe9; }
-    .reply-section .reply-input-area { display: flex; gap: 8px; align-items: flex-start; flex-wrap: wrap; }
-    .reply-section .reply-input-area textarea { flex: 1; min-width: 150px; padding: 0.5rem 0.8rem; border: 1px solid #d7dfe9; border-radius: 12px; font-size: 0.85rem; resize: vertical; min-height: 40px; background: #fafcff; transition: 0.15s; outline: none; }
-    .reply-section .reply-input-area textarea:focus { border-color: #b32b2b; box-shadow: 0 0 0 3px rgba(179,43,43,0.08); background: white; }
-    .reply-section .reply-input-area .btn-reply { background: #2a405b; color: white; border: none; border-radius: 40px; padding: 0.4rem 1.2rem; cursor: pointer; font-size: 0.8rem; transition: 0.15s; white-space: nowrap; }
+    /* 回覆區 */
+    .reply-section {
+      width: 100%;
+      margin-top: 10px;
+      padding-top: 10px;
+      border-top: 1px dashed #d7dfe9;
+    }
+    .reply-section .reply-input-area {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+    }
+    .reply-section .reply-input-area textarea {
+      flex: 1;
+      min-width: 150px;
+      padding: 0.5rem 0.8rem;
+      border: 1px solid #d7dfe9;
+      border-radius: 12px;
+      font-size: 0.85rem;
+      resize: vertical;
+      min-height: 40px;
+      background: #fafcff;
+      transition: 0.15s;
+      outline: none;
+    }
+    .reply-section .reply-input-area textarea:focus {
+      border-color: #b32b2b;
+      box-shadow: 0 0 0 3px rgba(179,43,43,0.08);
+      background: white;
+    }
+    .reply-section .reply-input-area .btn-reply {
+      background: #2a405b;
+      color: white;
+      border: none;
+      border-radius: 40px;
+      padding: 0.4rem 1.2rem;
+      cursor: pointer;
+      font-size: 0.8rem;
+      transition: 0.15s;
+      white-space: nowrap;
+    }
     .reply-section .reply-input-area .btn-reply:hover { background: #1a2c44; }
     .reply-section .reply-input-area .btn-reply:disabled { opacity: 0.5; cursor: not-allowed; }
-    .reply-list { margin-top: 8px; display: flex; flex-direction: column; gap: 6px; }
-    .reply-item { background: #f4f7fc; border-radius: 12px; padding: 8px 12px; font-size: 0.85rem; color: #2a405b; border-left: 3px solid #c52a2a; }
+
+    .reply-list {
+      margin-top: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .reply-item {
+      background: #f4f7fc;
+      border-radius: 12px;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+      color: #2a405b;
+      border-left: 3px solid #c52a2a;
+    }
     .reply-item .reply-author { font-weight: 600; margin-right: 6px; }
     .reply-item .reply-time { font-size: 0.7rem; color: #8a9db0; margin-left: 6px; }
-    .reply-item .reply-text { margin-top: 2px; }
+    .reply-item .reply-text { margin-top: 2px; word-break: break-word; }
     .reply-item.reply-admin { border-left-color: #2a405b; }
     .reply-item .reply-author.moderator { color: #2a7a5b; }
     .reply-item .reply-author.editor { color: #2a5b7a; }
     .reply-item .reply-author.public { color: #8a9db0; }
     .reply-item .reply-author.me { color: #c52a2a; font-weight: 700; }
+
     .no-reply { font-size: 0.8rem; color: #8a9db0; font-style: italic; }
 
     .login-required-msg { text-align: center; padding: 2rem 1rem; color: #6b8097; }
     .login-required-msg i { font-size: 2.5rem; color: #c52a2a; margin-bottom: 0.8rem; display: block; }
 
-    .processed-info { font-size: 0.75rem; color: #8a9db0; margin-top: 4px; padding: 4px 10px; background: #f4f7fc; border-radius: 6px; display: inline-block; }
+    .processed-info {
+      font-size: 0.75rem;
+      color: #8a9db0;
+      margin-top: 4px;
+      padding: 4px 10px;
+      background: #f4f7fc;
+      border-radius: 6px;
+      display: inline-block;
+    }
     .processed-info i { margin-right: 4px; color: #6c7e94; }
 
-    .new-reply-badge { background: #c52a2a; color: white; font-size: 0.6rem; padding: 1px 8px; border-radius: 20px; margin-left: 6px; animation: pulse 1.5s ease-in-out infinite; display: inline-block; }
+    .new-reply-badge {
+      background: #c52a2a;
+      color: white;
+      font-size: 0.6rem;
+      padding: 1px 8px;
+      border-radius: 20px;
+      margin-left: 6px;
+      animation: pulse 1.5s ease-in-out infinite;
+      display: inline-block;
+    }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
     .welcome-line { font-size: 0.9rem; color: #2a405b; font-weight: 400; }
     .welcome-line i { color: #c52a2a; margin-right: 6px; }
     .welcome-line.hidden { display: none !important; }
+
+    .custom-category-group { display: none; margin-top: -0.5rem; margin-bottom: 1.25rem; }
+
+    /* ============================================================
+       RWD - 平板 (769px - 1024px)
+       ============================================================ */
+    @media (min-width: 769px) and (max-width: 1024px) {
+      .container { padding: 1.5rem 1.2rem; }
+      .row { grid-template-columns: 1fr 1.2fr; gap: 1.2rem; }
+      .login-logs-box { max-width: 92%; }
+      .login-log-item { padding: 8px 12px; }
+      .top-nav { flex-direction: row; flex-wrap: wrap; }
+      .top-nav-actions button { font-size: 0.7rem; padding: 0.25rem 0.7rem; }
+    }
+
+    /* ============================================================
+       RWD - 手機 (最大 768px)
+       ============================================================ */
+    @media (max-width: 768px) {
+      .container { padding: 1rem 0.8rem 1.5rem; border-radius: 20px; }
+      h1 { font-size: 1.3rem; gap: 8px; }
+      h1 i { font-size: 1.3rem; }
+      .subhead { font-size: 0.85rem; padding-left: 0.8rem; }
+      .badge-count { font-size: 0.75rem; padding: 0.25rem 0.7rem; }
+
+      .top-nav { flex-direction: column; align-items: stretch; gap: 0.5rem; }
+      .top-nav .user-info { flex-wrap: wrap; }
+      .top-nav-actions { display: flex; flex-wrap: wrap; gap: 5px; justify-content: flex-start; }
+      .top-nav-actions button { font-size: 0.65rem; padding: 0.2rem 0.6rem; flex: 0 1 auto; white-space: nowrap; }
+
+      .row { grid-template-columns: 1fr; gap: 1rem; }
+      .card { padding: 1rem 0.8rem 1.5rem; border-radius: 16px; }
+      .card-title { font-size: 1rem; margin-bottom: 1rem; }
+      .form-row { grid-template-columns: 1fr; gap: 0.5rem; }
+      input, select, textarea { font-size: 0.9rem; padding: 0.5rem 0.8rem; }
+      .btn-primary { font-size: 0.9rem; padding: 0.6rem 1.2rem; }
+
+      /* 登入紀錄彈窗 - 手機版 */
+      .login-logs-box { padding: 0.8rem; max-width: 98%; max-height: 95vh; border-radius: 16px; }
+      .login-logs-box h3 { font-size: 1rem; }
+      .login-logs-box .sub-title { font-size: 0.7rem; }
+      .login-logs-box .log-header { font-size: 0.65rem; padding: 6px 10px; flex-wrap: wrap; gap: 4px; }
+      .login-logs-box .log-list { max-height: 55vh; }
+
+      .login-log-item { padding: 8px 10px; flex-direction: column; align-items: stretch; gap: 4px; border-radius: 8px; margin-bottom: 4px; border-left-width: 3px; }
+      .login-log-item .user-info { flex-wrap: wrap; gap: 6px; flex: 1 1 auto; }
+      .login-log-item .user-info .avatar { width: 28px; height: 28px; font-size: 0.65rem; }
+      .login-log-item .user-info .name { font-size: 0.8rem; }
+      .login-log-item .user-info .type-badge { font-size: 0.45rem; padding: 0 6px; }
+      .login-log-item .user-info .online-badge { font-size: 0.5rem; padding: 1px 6px; margin-left: 2px; white-space: nowrap; }
+      .login-log-item .actions { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; width: 100%; gap: 4px; }
+      .login-log-item .login-time { font-size: 0.6rem; white-space: normal; word-break: break-all; }
+      .login-log-item .btn-force-logout { font-size: 0.55rem; padding: 2px 10px; white-space: nowrap; }
+      .login-log-item .btn-force-logout:disabled { font-size: 0.5rem; padding: 2px 8px; }
+      .login-log-item .no-permission { font-size: 0.5rem; }
+
+      .login-logs-box .log-footer { flex-wrap: wrap; gap: 6px; }
+      .login-logs-box .log-footer button { font-size: 0.7rem; padding: 0.25rem 0.6rem; flex: 1 1 auto; min-width: 70px; }
+
+      /* 其他彈窗 - 手機版 */
+      .login-box, .change-password-box, .verify-change-box,
+      .force-change-box, .view-passwords-box, .manage-verify-box {
+        padding: 1.2rem; max-width: 96%; margin: 0.3rem; border-radius: 20px;
+      }
+      .login-box h3, .change-password-box h3,
+      .verify-change-box h3, .view-passwords-box h3 { font-size: 1rem; }
+      .login-box input, .change-password-box input,
+      .verify-change-box input { font-size: 0.85rem; padding: 0.5rem 0.8rem; }
+
+      .forgot-password-grid { grid-template-columns: 1fr; gap: 0.8rem; }
+      .forgot-password-card { padding: 1rem; }
+      .forgot-password-card .card-icon { font-size: 1.5rem; }
+      .forgot-password-card h4 { font-size: 0.9rem; }
+      .forgot-password-card p { font-size: 0.7rem; }
+
+      .view-passwords-box .pwd-item { padding: 8px 10px; flex-direction: column; align-items: stretch; gap: 4px; }
+      .view-passwords-box .pwd-item .pwd-left { flex-wrap: wrap; }
+      .view-passwords-box .pwd-item .pwd-left strong { font-size: 0.75rem; }
+      .view-passwords-box .pwd-item .display-name { font-size: 0.65rem; }
+      .view-passwords-box .pwd-item .role-badge { font-size: 0.5rem; padding: 1px 6px; }
+      .view-passwords-box .pwd-item .pwd-right { display: flex; flex-wrap: wrap; gap: 4px; justify-content: space-between; width: 100%; }
+      .view-passwords-box .pwd-item .pwd-display { font-size: 0.65rem; padding: 2px 8px; word-break: break-all; flex: 1 1 auto; min-width: 70px; }
+      .view-passwords-box .pwd-item .btn-change-pwd { font-size: 0.55rem; padding: 2px 8px; }
+      .view-passwords-box .pwd-item .no-change { font-size: 0.55rem; }
+
+      .verify-data-item { font-size: 0.7rem; padding: 6px 10px; }
+      .verify-data-item .vdata-left .badge { font-size: 0.45rem; padding: 1px 4px; }
+      .manage-verify-box .form-group label { font-size: 0.7rem; }
+      .manage-verify-box input, .manage-verify-box select { font-size: 0.75rem; padding: 0.4rem 0.6rem; }
+
+      .complaint-list { max-height: 400px; }
+      .complaint-item { padding: 0.8rem; flex-direction: column; gap: 0.4rem; }
+      .complaint-title { font-size: 0.85rem; }
+      .complaint-title .status-badge { font-size: 0.55rem; padding: 0.1rem 0.5rem; }
+      .complaint-title .status-select { font-size: 0.55rem; padding: 0.1rem 0.4rem; }
+      .complaint-meta { font-size: 0.65rem; gap: 0.3rem 0.8rem; }
+      .complaint-meta span { display: inline-block; }
+      .complaint-content > div[style] { font-size: 0.75rem !important; }
+      .complaint-images img { width: 45px; height: 45px; }
+      .complaint-images .more-badge { width: 45px; height: 45px; font-size: 0.6rem; }
+      .complaint-actions { margin-left: 0; width: 100%; justify-content: flex-end; }
+      .complaint-actions button { font-size: 0.6rem; padding: 0.15rem 0.5rem; }
+
+      .reply-section .reply-input-area { flex-direction: column; gap: 6px; }
+      .reply-section .reply-input-area textarea { min-height: 32px; font-size: 0.75rem; padding: 0.4rem 0.6rem; }
+      .reply-section .reply-input-area .btn-reply { font-size: 0.65rem; padding: 0.25rem 0.8rem; width: 100%; justify-content: center; }
+      .reply-item { font-size: 0.7rem; padding: 6px 10px; }
+      .reply-item .reply-author { font-size: 0.65rem; }
+      .reply-item .reply-time { font-size: 0.55rem; }
+
+      .status-legend { gap: 0.3rem 0.6rem; padding-top: 0.6rem; }
+      .status-legend .legend-item { font-size: 0.6rem; gap: 4px; }
+      .status-legend .legend-dot { width: 10px; height: 10px; }
+
+      .notice-box { font-size: 0.7rem; padding: 8px 12px; }
+      .notice-box i { font-size: 0.85rem; }
+
+      .toast-message { font-size: 0.75rem; padding: 0.5rem 1rem; white-space: normal; max-width: 92%; bottom: 1rem; }
+
+      .filter-bar { gap: 0.3rem; }
+      .filter-bar select { font-size: 0.65rem; padding: 0.2rem 1.2rem 0.2rem 0.6rem; }
+      .filter-bar .clear-btn { font-size: 0.65rem; padding: 0.2rem 0.6rem; }
+
+      .lightbox .nav-btn { width: 30px; height: 30px; font-size: 0.8rem; }
+      .lightbox .nav-btn.prev { left: 0.3rem; }
+      .lightbox .nav-btn.next { right: 0.3rem; }
+      .lightbox .image-counter { font-size: 0.65rem; padding: 0.2rem 0.6rem; bottom: 1rem; }
+
+      .image-preview-item { width: 60px; height: 60px; }
+      .image-preview-item .remove-btn { width: 18px; height: 18px; font-size: 10px; }
+      .image-upload-area .add-more-btn { font-size: 0.7rem; padding: 0.25rem 0.8rem; }
+
+      .user-avatar { width: 30px; height: 30px; font-size: 0.75rem; }
+      .user-name { font-size: 0.85rem; }
+      .user-role { font-size: 0.55rem; padding: 0.1rem 0.5rem; }
+      .welcome-line { font-size: 0.7rem; }
+
+      .top-nav-actions .btn-google,
+      .top-nav-actions .btn-logout,
+      .top-nav-actions .btn-admin-login,
+      .top-nav-actions .btn-change-password,
+      .top-nav-actions .btn-view-passwords,
+      .top-nav-actions .btn-login-logs {
+        font-size: 0.6rem;
+        padding: 0.15rem 0.5rem;
+      }
+
+      .login-log-item .user-info .online-badge[style*="background:#ff6b35"] {
+        font-size: 0.45rem;
+        padding: 1px 4px;
+      }
+      .no-permission { font-size: 0.5rem; }
+      .btn-force-logout:disabled { font-size: 0.5rem !important; }
+    }
+
+    /* ============================================================
+       RWD - 超小手機 (最大 375px)
+       ============================================================ */
+    @media (max-width: 375px) {
+      .container { padding: 0.5rem 0.4rem 1rem; border-radius: 12px; }
+      h1 { font-size: 1rem; }
+      h1 i { font-size: 1rem; }
+      .top-nav-actions button { font-size: 0.5rem; padding: 0.12rem 0.4rem; }
+      .login-log-item { padding: 4px 6px; }
+      .login-log-item .user-info .name { font-size: 0.7rem; }
+      .login-log-item .login-time { font-size: 0.5rem; }
+      .login-log-item .btn-force-logout { font-size: 0.45rem; padding: 1px 6px; }
+      .login-logs-box { padding: 0.5rem; }
+      .login-logs-box .log-header { font-size: 0.55rem; padding: 3px 6px; }
+      .card { padding: 0.6rem 0.5rem 1rem; }
+      .card-title { font-size: 0.8rem; }
+      .complaint-item { padding: 0.4rem 0.5rem; }
+      .complaint-title { font-size: 0.75rem; }
+      .complaint-meta { font-size: 0.55rem; }
+      .complaint-content > div[style] { font-size: 0.65rem !important; }
+      .view-passwords-box .pwd-item .pwd-display { font-size: 0.55rem; }
+      .btn-secondary, .btn-success, .btn-danger { font-size: 0.65rem; padding: 0.25rem 0.6rem; }
+    }
+
+    /* ============================================================
+       RWD - 大型桌機 (大於 1400px)
+       ============================================================ */
+    @media (min-width: 1400px) {
+      .container { max-width: 1500px; padding: 2.5rem 3rem; }
+      .row { gap: 2.5rem; }
+      .card { padding: 2rem 2.5rem; }
+      h1 { font-size: 2.2rem; }
+      .login-logs-box { max-width: 850px; }
+    }
+
+    /* ============================================================
+       通用優化
+       ============================================================ */
+    .login-log-item .btn-force-logout:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      background: #6c757d;
+    }
+    .login-log-item .btn-force-logout:disabled:hover {
+      background: #6c757d;
+      transform: none;
+    }
+
+    .btn-force-self { background: #dc3545; }
+    .btn-force-self:hover { background: #b02a37; }
+
+    .login-log-item {
+      border-left: 4px solid transparent;
+    }
+    .login-log-item[style*="border-left: 3px solid #28a745;"] {
+      border-left-color: #28a745 !important;
+    }
+
+    .complaint-content,
+    .reply-item .reply-text,
+    .view-passwords-box .pwd-item .pwd-display,
+    .login-log-item .login-time {
+      word-break: break-word;
+      overflow-wrap: break-word;
+    }
+
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+
+    .login-logs-box .log-list,
+    .complaint-list,
+    .manage-verify-box,
+    .view-passwords-box {
+      -webkit-overflow-scrolling: touch;
+    }
   </style>
 </head>
 <body>
@@ -333,7 +1485,7 @@
         </div>
         <span class="user-role" id="userRoleDisplay"></span>
       </div>
-      <div style="display:flex; gap:8px; align-items:center; flex-wrap:wrap;">
+      <div class="top-nav-actions">
         <button class="btn-google" id="googleLoginBtn">Google 登入</button>
         <button class="btn-logout" id="logoutBtn">登出</button>
         <button class="btn-admin-login" id="adminLoginBtn"><i class="fas fa-user-shield"></i> 管理</button>
@@ -396,7 +1548,7 @@
               </select>
             </div>
           </div>
-          <div class="custom-category-group" id="customCategoryGroup" style="display:none; margin-top:-0.5rem; margin-bottom:1.25rem;">
+          <div class="custom-category-group" id="customCategoryGroup">
             <label><i class="fas fa-pencil-alt"></i> 請輸入自訂類別 <span class="required">*</span></label>
             <input type="text" id="customCategory" placeholder="請輸入您的類別名稱" />
           </div>
@@ -698,19 +1850,14 @@
     // ✅ 管理員帳號（寫死在程式中，固定）
     // ============================================================
     const DEFAULT_ADMINS = [
-      // 所有權
       { username: "dader60", password: "dader6020230527", role: "owner", roleName: "所有權", displayName: "所有權" },
-      // 版主
       { username: "dader00", password: "dader6000941010@", role: "moderator", roleName: "版主", displayName: "版主" },
-      // 副版主
       { username: "dader01", password: "dader6000941010@", role: "vice", roleName: "副版主", displayName: "副版主" },
-      // 小編 01~05 (原有)
       { username: "dader02", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編01" },
       { username: "dader03", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編02" },
       { username: "dader04", password: "dader6000941010@", role: "editor", roleName: "小編", displayName: "小編03" },
       { username: "dader05", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編04" },
       { username: "dader06", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編05" },
-      // 小編 06~10 (新增)
       { username: "dader07", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編06" },
       { username: "dader08", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編07" },
       { username: "dader09", password: "dader600909575253@", role: "editor", roleName: "小編", displayName: "小編08" },
@@ -987,7 +2134,6 @@
           loginData.push({ id: doc.id, ...data });
         });
         
-        // 去重：每個帳號只保留最新的紀錄
         const seen = new Set();
         loginData = loginData.filter(data => {
           if (seen.has(data.userId)) return false;
@@ -1012,15 +2158,11 @@
           const displayName = data.displayName || '未知使用者';
           const isCurrentUser = data.userId === currentAdminUsername;
           
-          // 獲取在線狀態
           const statusInfo = onlineStatus[data.userId] || { isOnline: false, sessionId: null, tabId: null };
           const isOnline = statusInfo.isOnline;
           const isSameSession = statusInfo.sessionId === currentSessionId;
           const isSameTab = statusInfo.tabId === currentTabId;
           
-          // ============================================================
-          // 權限判斷
-          // ============================================================
           let canForceLogoutTarget = false;
           let isSelfLogout = false;
           let isOtherTab = false;
@@ -1033,13 +2175,11 @@
           if (isCurrentUser) {
             showOnlineBadge = true;
             if (isSameTab) {
-              // 🔴 同一個分頁：不能登出自己
               canForceLogoutTarget = false;
               buttonText = '🚫 當前分頁';
               buttonDisabled = true;
               buttonTitle = '當前分頁不能強制登出自己';
             } else if (isSameSession) {
-              // 🟡 同一個瀏覽器，不同分頁：可以登出其他分頁的自己
               canForceLogoutTarget = true;
               isSelfLogout = true;
               isOtherTab = true;
@@ -1047,7 +2187,6 @@
               buttonClass = 'btn-force-logout btn-force-self';
               buttonTitle = '強制登出同瀏覽器的其他分頁';
             } else {
-              // 🔵 不同瀏覽器：可以登出其他瀏覽器的自己
               canForceLogoutTarget = true;
               isSelfLogout = true;
               buttonText = '🔒 強制登出';
@@ -1057,12 +2196,10 @@
           } else {
             const targetRole = getAdminRole(data.userId);
             if (role === 'owner') {
-              // 所有權可以登出所有人
               canForceLogoutTarget = true;
               showOnlineBadge = true;
               buttonText = '🔒 強制登出';
             } else if (role === 'moderator') {
-              // 版主可以登出副版主 + 小編
               if (targetRole === 'vice' || targetRole === 'editor') {
                 canForceLogoutTarget = true;
                 showOnlineBadge = true;
@@ -1072,27 +2209,20 @@
                 showOnlineBadge = false;
               }
             } else {
-              // 副版主/小編不能登出其他人
               canForceLogoutTarget = false;
               showOnlineBadge = false;
             }
           }
           
-          // ============================================================
-          // 在線狀態顯示
-          // ============================================================
           let onlineBadge = '';
           if (showOnlineBadge) {
             if (isCurrentUser) {
               if (isSameTab) {
-                // ✅ 當前分頁看自己：顯示「🟢 在線（此裝置）」
                 onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線（此裝置）</span>';
               } else {
-                // ✅ 其他分頁看自己：顯示「🟢 在線」
                 onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線</span>';
               }
             } else {
-              // 非當前用戶
               if (isOnline) {
                 onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線</span>';
               } else {
@@ -1102,8 +2232,6 @@
           }
           
           const showActions = canForceLogoutTarget || isCurrentUser;
-          
-          // 判斷是否顯示「可登出」標籤（同瀏覽器其他分頁）
           const showCanLogoutBadge = isSameSession && !isSameTab && isCurrentUser;
           
           html += `
@@ -1131,10 +2259,6 @@
         });
         
         const count = loginData.length;
-        
-        // ============================================================
-        // 權限說明文字（已簡化）
-        // ============================================================
         let roleInfo = '';
         if (role === 'owner') {
           roleInfo = '👑 所有權：可強制登出所有管理員';
@@ -1200,7 +2324,6 @@
       btn.textContent = '處理中...';
       
       try {
-        // 1. 刪除該管理員的所有登入紀錄（強制登出後不留紀錄）
         const snapshot = await db.collection('loginLogs')
           .where('userId', '==', username)
           .where('userType', '==', 'admin')
@@ -1210,10 +2333,8 @@
         snapshot.forEach(doc => { batch.delete(doc.ref); });
         await batch.commit();
         
-        // 2. 刪除該管理員的 Session（強制下線）
         await db.collection('adminSessions').doc(username).delete();
         
-        // 3. 發送強制登出信號（跨瀏覽器同步）
         await db.collection('forceLogoutSignals').doc(username).set({
           timestamp: Date.now(),
           forcedBy: currentAdminUsername,
@@ -1223,7 +2344,6 @@
           isOtherTab: isOtherTab
         });
         
-        // 4. 如果是同瀏覽器不同分頁，使用 Broadcast Channel 通知
         if (isSelf && isOtherTab && broadcastChannel) {
           broadcastChannel.postMessage({
             type: 'force_logout',
@@ -1234,7 +2354,6 @@
           });
         }
         
-        // 5. 如果目前登入的帳號就是被強制登出的帳號，立即登出
         if (isAdmin && currentAdminUsername === username) {
           if (!isOtherTab || !isSameSession) {
             isAdmin = false;
@@ -1391,9 +2510,6 @@
     // 10. Firestore 密碼管理（跨瀏覽器同步）
     // ============================================================
 
-    /**
-     * 從 Firestore 載入密碼（跨瀏覽器同步）
-     */
     async function loadAdminsFromFirestore() {
       try {
         const docRef = db.collection('config').doc('adminPasswords');
@@ -1435,9 +2551,6 @@
       }
     }
 
-    /**
-     * 儲存所有管理員密碼到 Firestore（跨瀏覽器同步）
-     */
     async function saveAdminsToFirestore() {
       try {
         const pwdMap = {};
@@ -1454,9 +2567,6 @@
       }
     }
 
-    /**
-     * 更新單一管理員密碼（跨瀏覽器同步）
-     */
     async function updateAdminPasswordInFirestore(username, newPassword) {
       const admin = DEFAULT_ADMINS.find(a => a.username === username);
       if (!admin) {
@@ -1490,9 +2600,6 @@
       return false;
     }
 
-    /**
-     * 監聽 Firestore 密碼變更（跨瀏覽器即時同步）
-     */
     function listenAdminPasswords() {
       if (window.passwordListener) {
         window.passwordListener();
@@ -1540,9 +2647,6 @@
         });
     }
 
-    /**
-     * 更新所有密碼顯示
-     */
     function updateAllPasswordDisplays() {
       document.querySelectorAll('.pwd-display').forEach(el => {
         const uname = el.id.replace('pwd_', '');
@@ -1553,9 +2657,6 @@
       });
     }
 
-    /**
-     * 強制登出管理員
-     */
     function forceLogoutAdmin(username) {
       if (isAdmin && currentAdminUsername === username) {
         isAdmin = false;
@@ -2768,13 +3869,8 @@
     // ============================================================
 
     async function init() {
-      // 載入密碼（從 Firestore）
       await loadAdminsFromFirestore();
-      
-      // 監聽密碼變更（跨瀏覽器同步）
       listenAdminPasswords();
-      
-      // 監聽投訴
       listenComplaints();
       
       if (isAdmin && currentAdminUsername) {
@@ -2789,8 +3885,7 @@
       console.log('📊 登入紀錄功能已啟用');
       console.log('📋 小編帳號：dader02~dader11 (共10位小編)');
       console.log('🔄 跨瀏覽器密碼同步已啟用 (onSnapshot 監聽)');
-      console.log('🔑 權限：所有權/版主可查看所有管理員，副版主/小編僅看自己');
-      console.log('🔒 所有權可強制登出所有管理員，版主可強制登出副版主+小編');
+      console.log('📱 RWD 響應式設計已啟用 (支援所有裝置)');
     }
 
     init();
