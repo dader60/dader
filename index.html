@@ -19,6 +19,12 @@
     .subhead { color: #5b6f82; margin-bottom: 2rem; border-left: 4px solid #d93c3c; padding-left: 1rem; font-weight: 400; font-size: 1rem; display: flex; justify-content: space-between; flex-wrap: wrap; align-items: center; gap: 0.5rem; }
     .badge-count { background: #eef3f9; padding: 0.4rem 1rem; border-radius: 40px; font-size: 0.9rem; color: #1f3a57; }
     .badge-count i { margin-right: 6px; color: #c22d2d; }
+    .badge-count.new-badge { background: #fff3cd; border: 1px solid #ffc107; }
+    .badge-count.new-badge i { color: #ff6b00; }
+    #newCount { transition: color 0.3s ease; }
+    #newCount.has-new { color: #ff6b00; font-weight: bold; animation: newPulse 2s ease-in-out infinite; }
+    @keyframes newPulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+    
     .top-nav { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0 1rem 0; border-bottom: 1px solid #eef3f9; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.8rem; }
     .user-info { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
     .user-avatar { width: 36px; height: 36px; border-radius: 50%; background: #c52a2a; color: white; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 1rem; flex-shrink: 0; }
@@ -368,6 +374,7 @@
       .user-role { font-size: 0.55rem; padding: 0.1rem 0.5rem; }
       .welcome-line { font-size: 0.7rem; }
       .complaint-list { max-height: 400px; }
+      .subhead .badge-count { font-size: 0.7rem; padding: 0.2rem 0.6rem; }
     }
     @media (max-width: 375px) {
       .container { padding: 0.4rem; }
@@ -380,6 +387,7 @@
       .card { padding: 0.6rem; }
       .complaint-title { font-size: 0.75rem; }
       .complaint-meta { font-size: 0.55rem; }
+      .subhead .badge-count { font-size: 0.6rem; padding: 0.15rem 0.4rem; }
     }
     @media (min-width: 1400px) {
       .container { max-width: 1500px; padding: 2.5rem 3rem; }
@@ -404,7 +412,14 @@
       <h1><i class="fas fa-megaphone"></i> 靠北達德投訴系統</h1>
       <div class="subhead">
         <span><i class="fas fa-flag" style="color:#c52a2a; margin-right: 6px;"></i> 登入後即可投訴，管理員將即時處理</span>
-        <span class="badge-count"><i class="fas fa-list-ul"></i> 總投訴 <span id="totalCount">0</span></span>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <span class="badge-count new-badge">
+            <i class="fas fa-bell"></i> 新投訴 <span id="newCount">0</span>
+          </span>
+          <span class="badge-count">
+            <i class="fas fa-list-ul"></i> 總投訴 <span id="totalCount">0</span>
+          </span>
+        </div>
       </div>
     </header>
 
@@ -501,7 +516,6 @@
             <input type="url" id="postLink" placeholder="請貼上相關貼文或留言的網址" />
           </div>
           
-          <!-- 圖片上傳 -->
           <div class="form-group">
             <label><i class="fas fa-images"></i> 圖片（最多10張）</label>
             <div class="image-upload-area" id="imageUploadArea">
@@ -519,7 +533,6 @@
             </div>
           </div>
 
-          <!-- 影片上傳 -->
           <div class="form-group">
             <label><i class="fas fa-video"></i> 影片（最多5部，最大 50MB）</label>
             <div class="image-upload-area" id="videoUploadArea" style="border-color:#2a5b7a;">
@@ -540,7 +553,6 @@
             </div>
           </div>
 
-          <!-- 影片連結 -->
           <div class="form-group">
             <label><i class="fas fa-link"></i> 影片連結（超過 50MB 請上傳雲端貼網址）</label>
             <input type="url" id="videoLink" placeholder="請貼上 YouTube、Google Drive 或其他雲端影片連結" />
@@ -880,9 +892,9 @@
     let ADMIN_ACCOUNTS = DEFAULT_ADMINS;
     const MAX_IMAGES = 10;
     const MAX_VIDEOS = 5;
-    const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
-    const MAX_IMAGE_SIZE = 20 * 1024 * 1024; // 20MB
-    const MAX_IMGBB_SIZE = 32 * 1024 * 1024; // ImgBB 限制 32MB
+    const MAX_VIDEO_SIZE = 50 * 1024 * 1024;
+    const MAX_IMAGE_SIZE = 20 * 1024 * 1024;
+    const MAX_IMGBB_SIZE = 32 * 1024 * 1024;
     const IMGBB_API_KEY = "e36eefa56ac3084d8b981ee390bcba27";
     const STATUS_LIST = ['待處理', '調查中', '已處理', '不予受理', '需要補充資料', '已轉交相關人員'];
     const ROLE_NAMES = { owner: '所有權', moderator: '版主', vice: '副版主', editor: '小編' };
@@ -915,7 +927,6 @@
       currentSessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
       sessionStorage.setItem('sessionId', currentSessionId);
     }
-
     let currentTabId = sessionStorage.getItem('tabId');
     if (!currentTabId) {
       currentTabId = 'tab_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6);
@@ -924,10 +935,7 @@
 
     // Broadcast Channel
     let broadcastChannel = null;
-    try {
-      broadcastChannel = new BroadcastChannel('admin_force_logout');
-    } catch (e) {}
-
+    try { broadcastChannel = new BroadcastChannel('admin_force_logout'); } catch (e) {}
     if (broadcastChannel) {
       broadcastChannel.onmessage = function(event) {
         const data = event.data;
@@ -1027,9 +1035,7 @@
           displayName: getAdminDisplayName(username),
           role: getAdminRole(username)
         });
-      } catch (error) {
-        console.error('記錄 Session 失敗:', error);
-      }
+      } catch (error) { console.error('記錄 Session 失敗:', error); }
     }
 
     async function updateAdminHeartbeat(username) {
@@ -1039,9 +1045,7 @@
           isOnline: true,
           tabId: currentTabId
         });
-      } catch (error) {
-        try { await recordAdminSession(username); } catch (e) {}
-      }
+      } catch (error) { try { await recordAdminSession(username); } catch (e) {} }
     }
 
     async function getAdminOnlineStatus() {
@@ -1062,10 +1066,7 @@
           };
         });
         return status;
-      } catch (error) {
-        console.error('獲取在線狀態失敗:', error);
-        return {};
-      }
+      } catch (error) { console.error('獲取在線狀態失敗:', error); return {}; }
     }
 
     function listenAdminSessions(callback) {
@@ -1085,9 +1086,7 @@
           };
         });
         callback(status);
-      }, (error) => {
-        console.error('監聽在線狀態失敗:', error);
-      });
+      }, (error) => { console.error('監聽在線狀態失敗:', error); });
     }
 
     // ============================================================
@@ -1151,7 +1150,6 @@
         snapshot.forEach(doc => {
           const data = doc.data();
           if (data.userType !== 'admin') return;
-          
           if (role === 'owner' || role === 'moderator') {
             loginData.push({ id: doc.id, ...data });
           } else if (role === 'vice' || role === 'editor') {
@@ -1355,13 +1353,10 @@
           .where('userId', '==', username)
           .where('userType', '==', 'admin')
           .get();
-        
         const batch = db.batch();
         snapshot.forEach(doc => { batch.delete(doc.ref); });
         await batch.commit();
-        
         await db.collection('adminSessions').doc(username).delete();
-        
         await db.collection('forceLogoutSignals').doc(username).set({
           timestamp: Date.now(),
           forcedBy: currentAdminUsername,
@@ -1412,18 +1407,15 @@
         }
         
         delete onlineStatusCache[username];
-        
         if (broadcastChannel) {
           broadcastChannel.postMessage({ type: 'refresh_online_status', timestamp: Date.now() });
         }
-        
         setTimeout(() => loadLoginLogs(), 500);
         
       } catch (error) {
         console.error('強制登出失敗:', error);
         showToast('❌ 強制登出失敗，請稍後再試', true);
       }
-      
       btn.disabled = false;
       btn.innerHTML = '<i class="fas fa-power-off"></i> 🔒 強制登出';
     }
@@ -1437,22 +1429,15 @@
         forcedLogoutUnsubscribe();
         forcedLogoutUnsubscribe = null;
       }
-      
       if (!currentAdminUsername) return;
-      
       forcedLogoutUnsubscribe = db.collection('forceLogoutSignals')
         .doc(currentAdminUsername)
         .onSnapshot((doc) => {
           if (!isAdmin || !currentAdminUsername) return;
           if (!doc.exists) return;
-          
           const data = doc.data();
           if (!data) return;
-          
-          if (data.forcedBy === currentAdminUsername && data.tabId === currentTabId) {
-            return;
-          }
-          
+          if (data.forcedBy === currentAdminUsername && data.tabId === currentTabId) return;
           const timeDiff = Date.now() - data.timestamp;
           if (timeDiff < 15000) {
             isAdmin = false;
@@ -1469,9 +1454,7 @@
             updateUI(currentUser);
             render();
             document.getElementById('loginLogsOverlay').classList.remove('active');
-            
             db.collection('forceLogoutSignals').doc(currentAdminUsername).delete().catch(() => {});
-            
             if (data.isSelfLogout) {
               if (data.sessionId === currentSessionId && data.tabId !== currentTabId) {
                 showToast(`🔒 您已在同瀏覽器的其他分頁強制登出自己`, true);
@@ -1482,9 +1465,7 @@
               showToast(`🔒 您已被管理員強制登出`, true);
             }
           }
-        }, (error) => {
-          console.error('監聽強制登出失敗:', error);
-        });
+        }, (error) => { console.error('監聽強制登出失敗:', error); });
     }
 
     // ============================================================
@@ -1497,7 +1478,6 @@
           await updateAdminHeartbeat(currentAdminUsername);
         }
       }, 15000);
-      
       window.addEventListener('beforeunload', async () => {
         if (isAdmin && currentAdminUsername) {
           try {
@@ -1508,7 +1488,6 @@
           } catch (e) {}
         }
       });
-      
       document.addEventListener('visibilitychange', async () => {
         if (document.visibilityState === 'visible' && isAdmin && currentAdminUsername) {
           await updateAdminHeartbeat(currentAdminUsername);
@@ -1534,18 +1513,16 @@
     }
 
     // ============================================================
-    // 10. Firestore 密碼管理（跨瀏覽器同步）
+    // 10. Firestore 密碼管理
     // ============================================================
 
     async function loadAdminsFromFirestore() {
       try {
         const docRef = db.collection('config').doc('adminPasswords');
         const doc = await docRef.get();
-        
         if (doc.exists) {
           const pwdMap = doc.data();
           console.log('📥 從 Firestore 載入密碼:', Object.keys(pwdMap));
-          
           let updatedCount = 0;
           DEFAULT_ADMINS.forEach(admin => {
             if (pwdMap[admin.username] && pwdMap[admin.username] !== admin.password) {
@@ -1554,7 +1531,6 @@
               updatedCount++;
             }
           });
-          
           if (updatedCount > 0) {
             console.log(`✅ 已更新 ${updatedCount} 個帳號的密碼`);
           } else {
@@ -1564,11 +1540,9 @@
           console.log('📤 Firestore 中無密碼資料，上傳預設密碼...');
           await saveAdminsToFirestore();
         }
-        
         ADMIN_ACCOUNTS = DEFAULT_ADMINS;
         isPasswordLoaded = true;
         updateAllPasswordDisplays();
-        
         return DEFAULT_ADMINS;
       } catch (error) {
         console.error('❌ 載入密碼失敗:', error);
@@ -1584,7 +1558,6 @@
         DEFAULT_ADMINS.forEach(admin => {
           pwdMap[admin.username] = admin.password;
         });
-        
         await db.collection('config').doc('adminPasswords').set(pwdMap);
         console.log('✅ 密碼已儲存到 Firestore，共', Object.keys(pwdMap).length, '個帳號');
         return true;
@@ -1596,34 +1569,24 @@
 
     async function updateAdminPasswordInFirestore(username, newPassword) {
       const admin = DEFAULT_ADMINS.find(a => a.username === username);
-      if (!admin) {
-        console.error('❌ 找不到帳號:', username);
-        return false;
-      }
-      
+      if (!admin) { console.error('❌ 找不到帳號:', username); return false; }
       if (admin.password === newPassword) {
         showToast('⚠️ 新密碼與舊密碼相同，無需變更', true);
         return false;
       }
-      
       admin.password = newPassword;
       const success = await saveAdminsToFirestore();
-      
       if (success) {
         console.log(`✅ 密碼已變更: ${username} -> ${newPassword}`);
         updateAllPasswordDisplays();
-        
         if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
           renderPasswordList();
         }
-        
         if (isAdmin && currentAdminUsername === username) {
           forceLogoutAdmin(username);
         }
-        
         return true;
       }
-      
       return false;
     }
 
@@ -1632,20 +1595,16 @@
         window.passwordListener();
         window.passwordListener = null;
       }
-      
       window.passwordListener = db.collection('config').doc('adminPasswords')
         .onSnapshot((doc) => {
           if (!doc.exists || !isPasswordLoaded) {
             console.log('⏳ 密碼文件不存在或尚未載入');
             return;
           }
-          
           const pwdMap = doc.data();
           console.log('📡 收到 Firestore 密碼更新通知');
-          
           let changed = false;
           let changedUsername = null;
-          
           DEFAULT_ADMINS.forEach(admin => {
             if (pwdMap[admin.username] && pwdMap[admin.username] !== admin.password) {
               console.log(`🔄 密碼已變更: ${admin.username} -> ${pwdMap[admin.username]}`);
@@ -1654,14 +1613,11 @@
               changedUsername = admin.username;
             }
           });
-          
           if (changed) {
             updateAllPasswordDisplays();
-            
             if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
               renderPasswordList();
             }
-            
             if (isAdmin && currentAdminUsername === changedUsername) {
               showToast(`🔒 您的密碼已在其他瀏覽器變更，請重新登入`, true);
               forceLogoutAdmin(changedUsername);
@@ -1669,18 +1625,14 @@
               showToast(`📢 管理員「${changedUsername}」的密碼已在其他瀏覽器變更`, false);
             }
           }
-        }, (error) => {
-          console.error('❌ 監聽密碼變更失敗:', error);
-        });
+        }, (error) => { console.error('❌ 監聽密碼變更失敗:', error); });
     }
 
     function updateAllPasswordDisplays() {
       document.querySelectorAll('.pwd-display').forEach(el => {
         const uname = el.id.replace('pwd_', '');
         const found = DEFAULT_ADMINS.find(a => a.username === uname);
-        if (found) {
-          el.textContent = found.password;
-        }
+        if (found) { el.textContent = found.password; }
       });
     }
 
@@ -1689,32 +1641,21 @@
         isAdmin = false;
         sessionStorage.setItem('isAdmin', 'false');
         sessionStorage.removeItem('currentAdminUsername');
-        
         const adminLoginBtn = document.getElementById('adminLoginBtn');
         adminLoginBtn.textContent = '管理';
         adminLoginBtn.className = 'btn-admin-login';
-        
         const roleDisplay = document.getElementById('userRoleDisplay');
         if (roleDisplay) {
-          if (currentUser) {
-            roleDisplay.textContent = '一般使用者';
-            roleDisplay.className = 'user-role';
-          } else {
-            roleDisplay.textContent = '';
-            roleDisplay.className = 'user-role';
-          }
+          if (currentUser) { roleDisplay.textContent = '一般使用者'; roleDisplay.className = 'user-role'; } 
+          else { roleDisplay.textContent = ''; roleDisplay.className = 'user-role'; }
         }
-        
         document.getElementById('changePasswordBtn').classList.remove('show');
         document.getElementById('viewPasswordsBtn').classList.remove('show');
         document.getElementById('viewLoginLogsBtn').classList.remove('show');
         document.getElementById('manageVerifyBtnContainer').style.display = 'none';
-        
         db.collection('adminSessions').doc(username).delete().catch(() => {});
-        
         updateUI(currentUser);
         render();
-        
         showToast(`🔒 您已被強制登出（密碼已變更），請重新登入`, true);
         return true;
       }
@@ -1729,14 +1670,9 @@
       try {
         const snapshot = await db.collection('adminVerify').orderBy('username').get();
         const data = [];
-        snapshot.forEach(doc => {
-          data.push({ id: doc.id, ...doc.data() });
-        });
+        snapshot.forEach(doc => { data.push({ id: doc.id, ...doc.data() }); });
         return data;
-      } catch (error) {
-        console.error('❌ 載入驗證資料失敗:', error);
-        return [];
-      }
+      } catch (error) { console.error('❌ 載入驗證資料失敗:', error); return []; }
     }
 
     async function saveVerifyData(username, displayName, birthday) {
@@ -1778,41 +1714,23 @@
           .where('displayName', '==', displayName)
           .where('birthday', '==', birthday)
           .get();
-        if (!snapshot.empty) {
-          return snapshot.docs[0].data();
-        }
+        if (!snapshot.empty) { return snapshot.docs[0].data(); }
         return null;
-      } catch (error) {
-        console.error('❌ 驗證失敗:', error);
-        return null;
-      }
+      } catch (error) { console.error('❌ 驗證失敗:', error); return null; }
     }
 
     // ============================================================
-    // 12. 檔案上傳（圖片 + 影片）- 使用 ImgBB + Base64 備用
+    // 12. 檔案上傳（ImgBB + Base64）
     // ============================================================
 
     async function uploadToImgBB(file) {
       const formData = new FormData();
       formData.append('image', file);
-      
       try {
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
-          method: 'POST',
-          body: formData
-        });
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
         const data = await response.json();
-        if (data.success) {
-          console.log(`✅ ImgBB 上傳成功: ${file.name}`);
-          return data.data.url;
-        } else {
-          console.error('ImgBB 上傳失敗:', data);
-          return null;
-        }
-      } catch (error) {
-        console.error('ImgBB 上傳錯誤:', error);
-        return null;
-      }
+        return data.success ? data.data.url : null;
+      } catch (error) { console.error('ImgBB 上傳錯誤:', error); return null; }
     }
 
     function fileToBase64(file) {
@@ -1827,53 +1745,36 @@
     async function uploadImages(files) {
       if (!files || files.length === 0) return [];
       const urls = [];
-      
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        
         if (file.size > MAX_IMAGE_SIZE) {
           showToast(`⚠️ 圖片「${file.name}」超過 20MB，已跳過`, true);
           continue;
         }
-        
         let url = await uploadToImgBB(file);
-        
         if (!url && file.size < 5 * 1024 * 1024) {
           url = await fileToBase64(file);
         }
-        
-        if (url) {
-          urls.push(url);
-        } else {
-          showToast(`⚠️ 圖片「${file.name}」上傳失敗`, true);
-        }
+        if (url) { urls.push(url); } else { showToast(`⚠️ 圖片「${file.name}」上傳失敗`, true); }
       }
-      
       return urls;
     }
 
     async function uploadVideos(files) {
       if (!files || files.length === 0) return [];
       const urls = [];
-      
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        
         if (file.size > MAX_VIDEO_SIZE) {
           showToast(`⚠️ 影片「${file.name}」超過 50MB，請使用影片連結`, true);
           continue;
         }
-        
         let url = null;
-        if (file.size <= MAX_IMGBB_SIZE) {
-          url = await uploadToImgBB(file);
-        }
-        
+        if (file.size <= MAX_IMGBB_SIZE) { url = await uploadToImgBB(file); }
         if (!url && file.size < MAX_VIDEO_SIZE) {
           showToast(`📤 正在處理影片「${file.name}」...`, false);
           url = await fileToBase64(file);
         }
-        
         if (url) {
           urls.push(url);
           console.log(`✅ 影片上傳成功: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
@@ -1881,27 +1782,14 @@
           showToast(`⚠️ 影片「${file.name}」上傳失敗，請使用影片連結`, true);
         }
       }
-      
       return urls;
     }
 
     async function uploadAllFiles(images, videos) {
-      const results = {
-        imageUrls: [],
-        videoUrls: [],
-        allUrls: []
-      };
-      
-      if (images && images.length > 0) {
-        results.imageUrls = await uploadImages(images);
-      }
-      
-      if (videos && videos.length > 0) {
-        results.videoUrls = await uploadVideos(videos);
-      }
-      
+      const results = { imageUrls: [], videoUrls: [], allUrls: [] };
+      if (images && images.length > 0) { results.imageUrls = await uploadImages(images); }
+      if (videos && videos.length > 0) { results.videoUrls = await uploadVideos(videos); }
       results.allUrls = [...results.imageUrls, ...results.videoUrls];
-      
       return results;
     }
 
@@ -1914,7 +1802,6 @@
       const badge = document.getElementById('imageCountBadge');
       const addBtn = document.getElementById('addMoreBtn');
       grid.innerHTML = '';
-      
       selectedImages.forEach((file, index) => {
         const div = document.createElement('div');
         div.className = 'image-preview-item';
@@ -1938,7 +1825,6 @@
         div.appendChild(idxLabel);
         grid.appendChild(div);
       });
-      
       badge.textContent = `已選 ${selectedImages.length} / ${MAX_IMAGES}`;
       addBtn.disabled = selectedImages.length >= MAX_IMAGES;
     }
@@ -1946,13 +1832,9 @@
     function handleImageSelect(files) {
       const remaining = MAX_IMAGES - selectedImages.length;
       const toAdd = Math.min(files.length, remaining);
-      for (let i = 0; i < toAdd; i++) {
-        selectedImages.push(files[i]);
-      }
+      for (let i = 0; i < toAdd; i++) { selectedImages.push(files[i]); }
       updateImagePreview();
-      if (files.length > toAdd) {
-        showToast(`圖片已超過上限，僅新增 ${toAdd} 張`, true);
-      }
+      if (files.length > toAdd) { showToast(`圖片已超過上限，僅新增 ${toAdd} 張`, true); }
     }
 
     // ============================================================
@@ -1964,11 +1846,9 @@
       const badge = document.getElementById('videoCountBadge');
       const addBtn = document.getElementById('addVideoBtn');
       grid.innerHTML = '';
-      
       selectedVideos.forEach((file, index) => {
         const div = document.createElement('div');
         div.className = 'image-preview-item video-preview';
-        
         const video = document.createElement('video');
         video.src = URL.createObjectURL(file);
         video.muted = true;
@@ -1984,12 +1864,10 @@
           img.src = canvas.toDataURL('image/jpeg');
         };
         div.appendChild(img);
-        
         const playIcon = document.createElement('div');
         playIcon.className = 'video-play-icon';
         playIcon.innerHTML = '<i class="fas fa-play-circle"></i>';
         div.appendChild(playIcon);
-        
         video.onloadedmetadata = function() {
           const duration = video.duration;
           if (duration > 0) {
@@ -2001,14 +1879,12 @@
             div.appendChild(durationEl);
           }
         };
-        
         const typeBadge = document.createElement('span');
         typeBadge.className = 'file-type-badge';
         const ext = file.name.split('.').pop().toLowerCase();
         const typeMap = { 'mp4': 'MP4', 'mov': 'MOV', 'avi': 'AVI', 'webm': 'WEBM', 'mkv': 'MKV', 'flv': 'FLV', 'wmv': 'WMV' };
         typeBadge.textContent = typeMap[ext] || '影片';
         div.appendChild(typeBadge);
-        
         const removeBtn = document.createElement('button');
         removeBtn.className = 'remove-btn';
         removeBtn.innerHTML = '<i class="fas fa-times"></i>';
@@ -2018,15 +1894,12 @@
           updateVideoPreview();
         };
         div.appendChild(removeBtn);
-        
         const idxLabel = document.createElement('span');
         idxLabel.className = 'file-index';
         idxLabel.textContent = index + 1;
         div.appendChild(idxLabel);
-        
         grid.appendChild(div);
       });
-      
       badge.textContent = `已選 ${selectedVideos.length} / ${MAX_VIDEOS}`;
       addBtn.disabled = selectedVideos.length >= MAX_VIDEOS;
     }
@@ -2035,7 +1908,6 @@
       const remaining = MAX_VIDEOS - selectedVideos.length;
       const toAdd = Math.min(files.length, remaining);
       let hasLargeFile = false;
-      
       for (let i = 0; i < toAdd; i++) {
         const file = files[i];
         if (file.size > MAX_VIDEO_SIZE) {
@@ -2045,14 +1917,9 @@
         }
         selectedVideos.push(file);
       }
-      
       updateVideoPreview();
-      if (files.length > toAdd) {
-        showToast(`影片已超過上限，僅新增 ${toAdd} 部`, true);
-      }
-      if (hasLargeFile) {
-        showToast('⚠️ 超過 50MB 的影片請使用「影片連結」欄位', true);
-      }
+      if (files.length > toAdd) { showToast(`影片已超過上限，僅新增 ${toAdd} 部`, true); }
+      if (hasLargeFile) { showToast('⚠️ 超過 50MB 的影片請使用「影片連結」欄位', true); }
     }
 
     // ============================================================
@@ -2178,7 +2045,10 @@
       this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送出中...';
       try {
         let fileUrls = [];
-        if (supplementFiles.length > 0) { fileUrls = await uploadAllFiles(supplementFiles, []).then(r => r.allUrls); }
+        if (supplementFiles.length > 0) { 
+          const result = await uploadAllFiles(supplementFiles, []);
+          fileUrls = result.allUrls;
+        }
         const supplement = {
           text: content,
           files: fileUrls,
@@ -2254,31 +2124,17 @@
     async function addComplaint(complaint) {
       try {
         await db.collection('complaints').add({
-          id: complaint.id,
-          userName: complaint.userName,
-          igName: complaint.igName || '',
-          category: complaint.category,
-          priority: complaint.priority,
-          title: complaint.title,
-          description: complaint.description,
-          eventTime: complaint.eventTime || '',
-          postLink: complaint.postLink || '',
-          expectedResolution: complaint.expectedResolution || '',
-          needReply: complaint.needReply || '',
-          status: complaint.status || '待處理',
-          date: complaint.date,
-          time: complaint.time,
-          imageUrls: complaint.imageUrls || [],
+          id: complaint.id, userName: complaint.userName, igName: complaint.igName || '',
+          category: complaint.category, priority: complaint.priority, title: complaint.title,
+          description: complaint.description, eventTime: complaint.eventTime || '',
+          postLink: complaint.postLink || '', expectedResolution: complaint.expectedResolution || '',
+          needReply: complaint.needReply || '', status: complaint.status || '待處理',
+          date: complaint.date, time: complaint.time, imageUrls: complaint.imageUrls || [],
           videoLink: complaint.videoLink || '',
-          createdAt: Date.now(),
-          userId: currentUser ? currentUser.uid : 'anonymous',
-          userEmail: currentUser ? currentUser.email : '',
-          replies: [],
-          lastProcessedBy: '',
-          lastProcessedAt: '',
-          hasNewReply: false,
-          supplements: [],
-          statusInfo: ''
+          createdAt: Date.now(), userId: currentUser ? currentUser.uid : 'anonymous',
+          userEmail: currentUser ? currentUser.email : '', replies: [],
+          lastProcessedBy: '', lastProcessedAt: '', hasNewReply: false,
+          supplements: [], statusInfo: ''
         });
         return true;
       } catch (error) { console.error('儲存失敗:', error); showToast('儲存失敗，請稍後再試', true); return false; }
@@ -2396,18 +2252,45 @@
     }
 
     // ============================================================
-    // 18. 渲染
+    // 18. 渲染（含新投訴計數）
     // ============================================================
 
     function render() {
       const listEl = document.getElementById('complaintList');
       const filterStatus = document.getElementById('filterStatus').value;
       const totalSpan = document.getElementById('totalCount');
+      const newSpan = document.getElementById('newCount');
+      
       let filtered = [];
       if (isAdmin === true) { filtered = [...complaints]; } 
       else if (currentUser) { filtered = complaints.filter(c => c.userId === currentUser.uid); } 
       else { filtered = []; }
+      
       if (filterStatus !== 'all') { filtered = filtered.filter(c => c.status === filterStatus); }
+      
+      // ============================================================
+      // 計算新投訴數量（狀態為「待處理」）
+      // ============================================================
+      let newCount = 0;
+      if (isAdmin) {
+        newCount = complaints.filter(c => c.status === '待處理').length;
+      } else if (currentUser) {
+        newCount = complaints.filter(c => c.userId === currentUser.uid && c.status === '待處理').length;
+      }
+      
+      if (newSpan) {
+        newSpan.textContent = newCount;
+        if (newCount > 0) {
+          newSpan.style.color = '#ff6b00';
+          newSpan.style.fontWeight = 'bold';
+          newSpan.classList.add('has-new');
+        } else {
+          newSpan.style.color = '';
+          newSpan.style.fontWeight = '';
+          newSpan.classList.remove('has-new');
+        }
+      }
+      
       if (filtered.length === 0) {
         let emptyMessage = isAdmin ? '目前沒有投訴紀錄' : (currentUser ? '您還沒有提交過投訴' : '請登入查看您的投訴紀錄');
         listEl.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p style="margin-top:6px;">${emptyMessage}</p><span class="text-muted">${isAdmin ? '新增一筆投訴吧' : (currentUser ? '提交您的第一筆投訴' : '登入後即可提交投訴')}</span></div>`;
@@ -2470,6 +2353,7 @@
             newReplyBadge = `<span class="new-reply-badge">📩 新回覆</span>`;
           }
           
+          // 最後處理人：僅管理員可見
           let processedHtml = '';
           if (isAdmin && item.lastProcessedBy && item.lastProcessedAt) {
             processedHtml = `<div class="processed-info"><i class="fas fa-user-check"></i> 最後處理：${escapeHtml(item.lastProcessedBy)} (${item.lastProcessedAt})</div>`;
@@ -3508,28 +3392,20 @@
       cpCurrent.focus();
     });
 
-    cpCancelBtn.addEventListener('click', function() {
-      cpOverlay.classList.remove('active');
-    });
-
-    cpOverlay.addEventListener('click', function(e) {
-      if (e.target === this) cpOverlay.classList.remove('active');
-    });
+    cpCancelBtn.addEventListener('click', function() { cpOverlay.classList.remove('active'); });
+    cpOverlay.addEventListener('click', function(e) { if (e.target === this) cpOverlay.classList.remove('active'); });
 
     cpConfirmBtn.addEventListener('click', async function() {
       const current = cpCurrent.value.trim();
       const newPwd = cpNew.value.trim();
       const confirmPwd = cpConfirm.value.trim();
-
       cpErrorMsg.classList.remove('show');
       cpSuccessMsg.classList.remove('show');
-
       if (!current || !newPwd || !confirmPwd) {
         cpErrorMsg.textContent = '❌ 請填寫所有欄位';
         cpErrorMsg.classList.add('show');
         return;
       }
-
       if (current !== getAdminPassword(currentAdminUsername)) {
         cpErrorMsg.textContent = '❌ 目前密碼錯誤';
         cpErrorMsg.classList.add('show');
@@ -3537,7 +3413,6 @@
         cpCurrent.focus();
         return;
       }
-
       if (newPwd.length < 6) {
         cpErrorMsg.textContent = '❌ 新密碼至少需要 6 個字元';
         cpErrorMsg.classList.add('show');
@@ -3546,7 +3421,6 @@
         cpNew.focus();
         return;
       }
-
       if (newPwd !== confirmPwd) {
         cpErrorMsg.textContent = '❌ 新密碼與確認密碼不符';
         cpErrorMsg.classList.add('show');
@@ -3554,15 +3428,11 @@
         cpConfirm.focus();
         return;
       }
-
       cpConfirmBtn.disabled = true;
       cpConfirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 變更中...';
-
       const success = await updateAdminPasswordInFirestore(currentAdminUsername, newPwd);
-
       cpConfirmBtn.disabled = false;
       cpConfirmBtn.innerHTML = '<i class="fas fa-save"></i> 確認變更';
-
       if (success) {
         cpSuccessMsg.textContent = '✅ 密碼變更成功！所有瀏覽器將同步';
         cpSuccessMsg.classList.add('show');
@@ -3594,10 +3464,7 @@
 
     document.getElementById('addMoreBtn').addEventListener('click', () => document.getElementById('imageInput').click());
     document.getElementById('imageInput').addEventListener('change', function(e) {
-      if (this.files && this.files.length > 0) { 
-        handleImageSelect(this.files); 
-        this.value = '';
-      }
+      if (this.files && this.files.length > 0) { handleImageSelect(this.files); this.value = ''; }
     });
     document.getElementById('imageUploadArea').addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -3621,10 +3488,7 @@
 
     document.getElementById('addVideoBtn').addEventListener('click', () => document.getElementById('videoInput').click());
     document.getElementById('videoInput').addEventListener('change', function(e) {
-      if (this.files && this.files.length > 0) { 
-        handleVideoSelect(this.files); 
-        this.value = '';
-      }
+      if (this.files && this.files.length > 0) { handleVideoSelect(this.files); this.value = ''; }
     });
     document.getElementById('videoUploadArea').addEventListener('dragover', (e) => {
       e.preventDefault();
@@ -3680,30 +3544,15 @@
       submitBtn.disabled = true;
       
       try {
-        // 上傳圖片和影片
         const uploadResults = await uploadAllFiles(selectedImages, selectedVideos);
-        
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 儲存中...';
-        
         const newComplaint = {
-          id: newId,
-          userName: name,
-          igName: igName,
-          category: category,
-          priority: priority,
-          title: title,
-          description: description,
-          eventTime: eventTime,
-          postLink: postLink || '',
-          expectedResolution: expectedResolution || '',
-          needReply: needReply,
-          status: '待處理',
-          date: getToday(),
-          time: getNowTime(),
-          imageUrls: uploadResults.allUrls,
-          videoLink: videoLink || ''
+          id: newId, userName: name, igName: igName, category: category, priority: priority,
+          title: title, description: description, eventTime: eventTime, postLink: postLink || '',
+          expectedResolution: expectedResolution || '', needReply: needReply,
+          status: '待處理', date: getToday(), time: getNowTime(),
+          imageUrls: uploadResults.allUrls, videoLink: videoLink || ''
         };
-        
         const success = await addComplaint(newComplaint);
         if (success) {
           sendNewComplaintEmail(newComplaint).catch(err => console.error('Email 發送失敗:', err));
@@ -3841,6 +3690,8 @@
       console.log('🔄 跨瀏覽器密碼同步已啟用 (onSnapshot 監聽)');
       console.log('📱 RWD 響應式設計已啟用 (支援所有裝置)');
       console.log('📹 影片上傳限制：50MB，超過請使用影片連結');
+      console.log('🗑️ 刪除權限：版主+所有權（顯示只說版主）');
+      console.log('🔔 新投訴計數功能已啟用');
     }
 
     init();
