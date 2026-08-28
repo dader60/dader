@@ -327,6 +327,11 @@
     .supplement-record .supplement-files { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
     .supplement-record .supplement-files img, .supplement-record .supplement-files .video-thumb { width: 50px; height: 50px; border-radius: 8px; object-fit: cover; border: 1px solid #e6ecf5; cursor: pointer; }
     .complaint-meta .fa-envelope { color: #c52a2a; }
+    .video-link-box { margin-top: 6px; padding: 8px 12px; background: #f0f7ff; border-radius: 8px; border-left: 4px solid #2a5b7a; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .video-link-box i { color: #2a5b7a; }
+    .video-link-box a { color: #2a5b7a; word-break: break-all; text-decoration: underline; flex: 1; }
+    .video-link-box .link-label { font-size: 0.65rem; color: #8a9db0; white-space: nowrap; }
+
     @media (max-width: 768px) {
       .container { padding: 0.8rem; }
       h1 { font-size: 1.3rem; }
@@ -495,25 +500,55 @@
             <label><i class="fas fa-link"></i> 相關貼文／留言連結</label>
             <input type="url" id="postLink" placeholder="請貼上相關貼文或留言的網址" />
           </div>
+          
+          <!-- 圖片上傳 -->
           <div class="form-group">
-            <label><i class="fas fa-images"></i> 圖片 / 影片（選擇性，最多10個檔案）</label>
+            <label><i class="fas fa-images"></i> 圖片（最多10張）</label>
             <div class="image-upload-area" id="imageUploadArea">
               <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-              <div class="upload-text">點擊或拖曳上傳圖片 / 影片</div>
-              <div class="upload-hint">支援 JPG、PNG、GIF、MP4、MOV、AVI、WEBM，最多 10 個</div>
+              <div class="upload-text">點擊或拖曳上傳圖片</div>
+              <div class="upload-hint">支援 JPG、PNG、GIF，最多 10 張</div>
               <div class="image-preview-grid" id="imagePreviewGrid"></div>
               <div style="display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:10px;">
                 <div class="file-input-wrapper" style="flex:1; min-width:120px;">
-                  <input type="file" id="imageInput" accept="image/*,video/*" multiple />
-                  <button type="button" class="add-more-btn" id="addMoreBtn"><i class="fas fa-plus"></i> 新增檔案</button>
+                  <input type="file" id="imageInput" accept="image/*" multiple />
+                  <button type="button" class="add-more-btn" id="addMoreBtn"><i class="fas fa-plus"></i> 新增圖片</button>
                 </div>
                 <span class="image-count-badge" id="imageCountBadge">已選 0 / 10</span>
               </div>
+            </div>
+          </div>
+
+          <!-- 影片上傳 -->
+          <div class="form-group">
+            <label><i class="fas fa-video"></i> 影片（最多5部，最大 50MB）</label>
+            <div class="image-upload-area" id="videoUploadArea" style="border-color:#2a5b7a;">
+              <div class="upload-icon"><i class="fas fa-film" style="color:#2a5b7a;"></i></div>
+              <div class="upload-text">點擊或拖曳上傳影片</div>
+              <div class="upload-hint">支援 MP4、MOV、AVI、WEBM，最多 5 部，最大 50MB</div>
+              <div class="image-preview-grid" id="videoPreviewGrid"></div>
+              <div style="display:flex; align-items:center; flex-wrap:wrap; gap:10px; margin-top:10px;">
+                <div class="file-input-wrapper" style="flex:1; min-width:120px;">
+                  <input type="file" id="videoInput" accept="video/*" multiple />
+                  <button type="button" class="add-more-btn" id="addVideoBtn"><i class="fas fa-plus"></i> 新增影片</button>
+                </div>
+                <span class="image-count-badge" id="videoCountBadge">已選 0 / 5</span>
+              </div>
               <div style="margin-top:8px;font-size:0.75rem;color:#8a9db0;">
-                <i class="fas fa-info-circle"></i> 影片建議小於 50MB，支援 MP4、MOV、AVI、WEBM
+                <i class="fas fa-info-circle"></i> 影片最大 50MB，超過請使用下方的「影片連結」欄位
               </div>
             </div>
           </div>
+
+          <!-- 影片連結 -->
+          <div class="form-group">
+            <label><i class="fas fa-link"></i> 影片連結（超過 50MB 請上傳雲端貼網址）</label>
+            <input type="url" id="videoLink" placeholder="請貼上 YouTube、Google Drive 或其他雲端影片連結" />
+            <div style="font-size:0.75rem;color:#8a9db0;margin-top:4px;">
+              <i class="fas fa-info-circle"></i> 支援 YouTube、Google Drive、Dropbox 等雲端連結
+            </div>
+          </div>
+
           <div class="form-group">
             <label><i class="fas fa-handshake"></i> 希望如何處理</label>
             <input type="text" id="expectedResolution" placeholder="請說明您希望如何處理此投訴" />
@@ -844,7 +879,10 @@
 
     let ADMIN_ACCOUNTS = DEFAULT_ADMINS;
     const MAX_IMAGES = 10;
-    const MAX_SUPPLEMENT_FILES = 5;
+    const MAX_VIDEOS = 5;
+    const MAX_VIDEO_SIZE = 50 * 1024 * 1024; // 50MB
+    const MAX_IMAGE_SIZE = 20 * 1024 * 1024; // 20MB
+    const MAX_IMGBB_SIZE = 32 * 1024 * 1024; // ImgBB 限制 32MB
     const IMGBB_API_KEY = "e36eefa56ac3084d8b981ee390bcba27";
     const STATUS_LIST = ['待處理', '調查中', '已處理', '不予受理', '需要補充資料', '已轉交相關人員'];
     const ROLE_NAMES = { owner: '所有權', moderator: '版主', vice: '副版主', editor: '小編' };
@@ -860,7 +898,8 @@
     let currentAdminUsername = sessionStorage.getItem('currentAdminUsername') || '';
     let complaints = [];
     let unsubscribeSnapshot = null;
-    let selectedFiles = [];
+    let selectedImages = [];
+    let selectedVideos = [];
     let isPasswordLoaded = false;
     let verifiedUser = null;
     let forcedLogoutUnsubscribe = null;
@@ -1750,222 +1789,30 @@
     }
 
     // ============================================================
-    // 12. 檔案上傳（圖片 + 影片）
+    // 12. 檔案上傳（圖片 + 影片）- 使用 ImgBB + Base64 備用
     // ============================================================
-
-    function isVideoFile(file) {
-      return file.type.startsWith('video/');
-    }
-
-    function isImageFile(file) {
-      return file.type.startsWith('image/');
-    }
-
-    function getFileTypeLabel(file) {
-      if (isVideoFile(file)) {
-        const ext = file.name.split('.').pop().toLowerCase();
-        const typeMap = { 'mp4': 'MP4', 'mov': 'MOV', 'avi': 'AVI', 'webm': 'WEBM', 'mkv': 'MKV', 'flv': 'FLV', 'wmv': 'WMV' };
-        return typeMap[ext] || '影片';
-      }
-      return '圖片';
-    }
-
-    function getVideoThumbnail(file) {
-      return new Promise((resolve) => {
-        const video = document.createElement('video');
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        video.preload = 'metadata';
-        video.muted = true;
-        video.playsInline = true;
-        const url = URL.createObjectURL(file);
-        video.src = url;
-        video.onloadeddata = function() {
-          video.currentTime = Math.min(0.5, video.duration / 2);
-        };
-        video.onseeked = function() {
-          canvas.width = 120;
-          canvas.height = 90;
-          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          const thumbnail = canvas.toDataURL('image/jpeg', 0.7);
-          URL.revokeObjectURL(url);
-          resolve(thumbnail);
-        };
-        video.onerror = function() {
-          URL.revokeObjectURL(url);
-          resolve(null);
-        };
-        setTimeout(() => {
-          if (video.src) { URL.revokeObjectURL(url); }
-          resolve(null);
-        }, 5000);
-      });
-    }
-
-    function getVideoDuration(file) {
-      return new Promise((resolve) => {
-        const video = document.createElement('video');
-        video.preload = 'metadata';
-        video.muted = true;
-        video.playsInline = true;
-        const url = URL.createObjectURL(file);
-        video.src = url;
-        video.onloadedmetadata = function() {
-          const duration = video.duration;
-          URL.revokeObjectURL(url);
-          resolve(duration);
-        };
-        video.onerror = function() {
-          URL.revokeObjectURL(url);
-          resolve(0);
-        };
-        setTimeout(() => {
-          if (video.src) { URL.revokeObjectURL(url); }
-          resolve(0);
-        }, 3000);
-      });
-    }
-
-    function formatDuration(seconds) {
-      if (!seconds || seconds < 0) return '00:00';
-      const mins = Math.floor(seconds / 60);
-      const secs = Math.floor(seconds % 60);
-      return String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
-    }
-
-    async function updateImagePreview() {
-      const grid = document.getElementById('imagePreviewGrid');
-      const badge = document.getElementById('imageCountBadge');
-      const addBtn = document.getElementById('addMoreBtn');
-      grid.innerHTML = '';
-      
-      for (let index = 0; index < selectedFiles.length; index++) {
-        const file = selectedFiles[index];
-        const div = document.createElement('div');
-        div.className = 'image-preview-item';
-        
-        const isVideo = isVideoFile(file);
-        if (isVideo) { div.classList.add('video-preview'); }
-        
-        const typeBadge = document.createElement('span');
-        typeBadge.className = 'file-type-badge';
-        typeBadge.textContent = getFileTypeLabel(file);
-        div.appendChild(typeBadge);
-        
-        if (isVideo) {
-          const thumbnail = await getVideoThumbnail(file);
-          const duration = await getVideoDuration(file);
-          const img = document.createElement('img');
-          if (thumbnail) {
-            img.src = thumbnail;
-            img.alt = '影片縮圖';
-            img.className = 'video-thumbnail';
-          } else {
-            img.style.display = 'none';
-            const loadingDiv = document.createElement('div');
-            loadingDiv.className = 'video-thumbnail-loading';
-            loadingDiv.innerHTML = '<i class="fas fa-film" style="font-size:2rem;opacity:0.6;"></i>';
-            div.appendChild(loadingDiv);
-          }
-          div.appendChild(img);
-          const playIcon = document.createElement('div');
-          playIcon.className = 'video-play-icon';
-          playIcon.innerHTML = '<i class="fas fa-play-circle"></i>';
-          div.appendChild(playIcon);
-          if (duration > 0) {
-            const durationEl = document.createElement('span');
-            durationEl.className = 'video-duration';
-            durationEl.textContent = formatDuration(duration);
-            div.appendChild(durationEl);
-          }
-        } else {
-          const img = document.createElement('img');
-          const reader = new FileReader();
-          reader.onload = (e) => { img.src = e.target.result; };
-          reader.readAsDataURL(file);
-          div.appendChild(img);
-        }
-        
-        const removeBtn = document.createElement('button');
-        removeBtn.className = 'remove-btn';
-        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
-        removeBtn.onclick = (e) => {
-          e.stopPropagation();
-          selectedFiles.splice(index, 1);
-          updateImagePreview();
-        };
-        div.appendChild(removeBtn);
-        
-        const idxLabel = document.createElement('span');
-        idxLabel.className = 'file-index';
-        idxLabel.textContent = index + 1;
-        div.appendChild(idxLabel);
-        
-        grid.appendChild(div);
-      }
-      
-      badge.textContent = `已選 ${selectedFiles.length} / ${MAX_IMAGES}`;
-      addBtn.disabled = selectedFiles.length >= MAX_IMAGES;
-    }
-
-    function handleFileSelect(files) {
-      const remaining = MAX_IMAGES - selectedFiles.length;
-      const toAdd = Math.min(files.length, remaining);
-      const maxVideoSize = 50 * 1024 * 1024;
-      let hasLargeFile = false;
-      for (let i = 0; i < toAdd; i++) {
-        const file = files[i];
-        if (isVideoFile(file) && file.size > maxVideoSize) {
-          showToast(`⚠️ 影片「${file.name}」超過 50MB，建議壓縮後上傳`, true);
-          hasLargeFile = true;
-          continue;
-        }
-        selectedFiles.push(file);
-      }
-      if (hasLargeFile) {
-        showToast('⚠️ 部分影片超過 50MB 已被跳過，請壓縮後再上傳', true);
-      }
-      updateImagePreview();
-      if (files.length > toAdd) {
-        showToast(`已超過上限，僅新增 ${toAdd} 個檔案`, true);
-      }
-    }
 
     async function uploadToImgBB(file) {
       const formData = new FormData();
       formData.append('image', file);
+      
       try {
-        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+          method: 'POST',
+          body: formData
+        });
         const data = await response.json();
-        return data.success ? data.data.url : null;
+        if (data.success) {
+          console.log(`✅ ImgBB 上傳成功: ${file.name}`);
+          return data.data.url;
+        } else {
+          console.error('ImgBB 上傳失敗:', data);
+          return null;
+        }
       } catch (error) {
         console.error('ImgBB 上傳錯誤:', error);
         return null;
       }
-    }
-
-    async function uploadMultipleImages(files) {
-      if (!files || files.length === 0) return [];
-      const urls = [];
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const isVideo = isVideoFile(file);
-        try {
-          let url = await uploadToImgBB(file);
-          if (url) {
-            urls.push(url);
-          } else if (isVideo && file.size < 10 * 1024 * 1024) {
-            const base64 = await fileToBase64(file);
-            urls.push(base64);
-          } else {
-            showToast(`⚠️ 檔案「${file.name}」上傳失敗`, true);
-          }
-        } catch (error) {
-          console.error('上傳失敗:', error);
-          showToast(`⚠️ 檔案「${file.name}」上傳失敗`, true);
-        }
-      }
-      return urls;
     }
 
     function fileToBase64(file) {
@@ -1977,8 +1824,239 @@
       });
     }
 
+    async function uploadImages(files) {
+      if (!files || files.length === 0) return [];
+      const urls = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        if (file.size > MAX_IMAGE_SIZE) {
+          showToast(`⚠️ 圖片「${file.name}」超過 20MB，已跳過`, true);
+          continue;
+        }
+        
+        let url = await uploadToImgBB(file);
+        
+        if (!url && file.size < 5 * 1024 * 1024) {
+          url = await fileToBase64(file);
+        }
+        
+        if (url) {
+          urls.push(url);
+        } else {
+          showToast(`⚠️ 圖片「${file.name}」上傳失敗`, true);
+        }
+      }
+      
+      return urls;
+    }
+
+    async function uploadVideos(files) {
+      if (!files || files.length === 0) return [];
+      const urls = [];
+      
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        
+        if (file.size > MAX_VIDEO_SIZE) {
+          showToast(`⚠️ 影片「${file.name}」超過 50MB，請使用影片連結`, true);
+          continue;
+        }
+        
+        let url = null;
+        if (file.size <= MAX_IMGBB_SIZE) {
+          url = await uploadToImgBB(file);
+        }
+        
+        if (!url && file.size < MAX_VIDEO_SIZE) {
+          showToast(`📤 正在處理影片「${file.name}」...`, false);
+          url = await fileToBase64(file);
+        }
+        
+        if (url) {
+          urls.push(url);
+          console.log(`✅ 影片上傳成功: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+        } else {
+          showToast(`⚠️ 影片「${file.name}」上傳失敗，請使用影片連結`, true);
+        }
+      }
+      
+      return urls;
+    }
+
+    async function uploadAllFiles(images, videos) {
+      const results = {
+        imageUrls: [],
+        videoUrls: [],
+        allUrls: []
+      };
+      
+      if (images && images.length > 0) {
+        results.imageUrls = await uploadImages(images);
+      }
+      
+      if (videos && videos.length > 0) {
+        results.videoUrls = await uploadVideos(videos);
+      }
+      
+      results.allUrls = [...results.imageUrls, ...results.videoUrls];
+      
+      return results;
+    }
+
     // ============================================================
-    // 13. 補充資料功能
+    // 13. 圖片管理
+    // ============================================================
+
+    function updateImagePreview() {
+      const grid = document.getElementById('imagePreviewGrid');
+      const badge = document.getElementById('imageCountBadge');
+      const addBtn = document.getElementById('addMoreBtn');
+      grid.innerHTML = '';
+      
+      selectedImages.forEach((file, index) => {
+        const div = document.createElement('div');
+        div.className = 'image-preview-item';
+        const img = document.createElement('img');
+        const reader = new FileReader();
+        reader.onload = (e) => { img.src = e.target.result; };
+        reader.readAsDataURL(file);
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.onclick = (e) => {
+          e.stopPropagation();
+          selectedImages.splice(index, 1);
+          updateImagePreview();
+        };
+        const idxLabel = document.createElement('span');
+        idxLabel.className = 'file-index';
+        idxLabel.textContent = index + 1;
+        div.appendChild(img);
+        div.appendChild(removeBtn);
+        div.appendChild(idxLabel);
+        grid.appendChild(div);
+      });
+      
+      badge.textContent = `已選 ${selectedImages.length} / ${MAX_IMAGES}`;
+      addBtn.disabled = selectedImages.length >= MAX_IMAGES;
+    }
+
+    function handleImageSelect(files) {
+      const remaining = MAX_IMAGES - selectedImages.length;
+      const toAdd = Math.min(files.length, remaining);
+      for (let i = 0; i < toAdd; i++) {
+        selectedImages.push(files[i]);
+      }
+      updateImagePreview();
+      if (files.length > toAdd) {
+        showToast(`圖片已超過上限，僅新增 ${toAdd} 張`, true);
+      }
+    }
+
+    // ============================================================
+    // 14. 影片管理
+    // ============================================================
+
+    function updateVideoPreview() {
+      const grid = document.getElementById('videoPreviewGrid');
+      const badge = document.getElementById('videoCountBadge');
+      const addBtn = document.getElementById('addVideoBtn');
+      grid.innerHTML = '';
+      
+      selectedVideos.forEach((file, index) => {
+        const div = document.createElement('div');
+        div.className = 'image-preview-item video-preview';
+        
+        const video = document.createElement('video');
+        video.src = URL.createObjectURL(file);
+        video.muted = true;
+        video.preload = 'metadata';
+        const img = document.createElement('img');
+        img.className = 'video-thumbnail';
+        video.onloadeddata = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = 80;
+          canvas.height = 80;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          img.src = canvas.toDataURL('image/jpeg');
+        };
+        div.appendChild(img);
+        
+        const playIcon = document.createElement('div');
+        playIcon.className = 'video-play-icon';
+        playIcon.innerHTML = '<i class="fas fa-play-circle"></i>';
+        div.appendChild(playIcon);
+        
+        video.onloadedmetadata = function() {
+          const duration = video.duration;
+          if (duration > 0) {
+            const durationEl = document.createElement('span');
+            durationEl.className = 'video-duration';
+            const mins = Math.floor(duration / 60);
+            const secs = Math.floor(duration % 60);
+            durationEl.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+            div.appendChild(durationEl);
+          }
+        };
+        
+        const typeBadge = document.createElement('span');
+        typeBadge.className = 'file-type-badge';
+        const ext = file.name.split('.').pop().toLowerCase();
+        const typeMap = { 'mp4': 'MP4', 'mov': 'MOV', 'avi': 'AVI', 'webm': 'WEBM', 'mkv': 'MKV', 'flv': 'FLV', 'wmv': 'WMV' };
+        typeBadge.textContent = typeMap[ext] || '影片';
+        div.appendChild(typeBadge);
+        
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.onclick = (e) => {
+          e.stopPropagation();
+          selectedVideos.splice(index, 1);
+          updateVideoPreview();
+        };
+        div.appendChild(removeBtn);
+        
+        const idxLabel = document.createElement('span');
+        idxLabel.className = 'file-index';
+        idxLabel.textContent = index + 1;
+        div.appendChild(idxLabel);
+        
+        grid.appendChild(div);
+      });
+      
+      badge.textContent = `已選 ${selectedVideos.length} / ${MAX_VIDEOS}`;
+      addBtn.disabled = selectedVideos.length >= MAX_VIDEOS;
+    }
+
+    function handleVideoSelect(files) {
+      const remaining = MAX_VIDEOS - selectedVideos.length;
+      const toAdd = Math.min(files.length, remaining);
+      let hasLargeFile = false;
+      
+      for (let i = 0; i < toAdd; i++) {
+        const file = files[i];
+        if (file.size > MAX_VIDEO_SIZE) {
+          showToast(`⚠️ 影片「${file.name}」超過 50MB，請使用影片連結`, true);
+          hasLargeFile = true;
+          continue;
+        }
+        selectedVideos.push(file);
+      }
+      
+      updateVideoPreview();
+      if (files.length > toAdd) {
+        showToast(`影片已超過上限，僅新增 ${toAdd} 部`, true);
+      }
+      if (hasLargeFile) {
+        showToast('⚠️ 超過 50MB 的影片請使用「影片連結」欄位', true);
+      }
+    }
+
+    // ============================================================
+    // 15. 補充資料功能
     // ============================================================
 
     function openSupplementModal(docId) {
@@ -2058,13 +2136,13 @@
         div.appendChild(idxLabel);
         grid.appendChild(div);
       });
-      badge.textContent = `已選 ${supplementFiles.length} / ${MAX_SUPPLEMENT_FILES}`;
-      addBtn.disabled = supplementFiles.length >= MAX_SUPPLEMENT_FILES;
+      badge.textContent = `已選 ${supplementFiles.length} / 5`;
+      addBtn.disabled = supplementFiles.length >= 5;
     }
 
     document.getElementById('supplementInput').addEventListener('change', function(e) {
       if (this.files && this.files.length > 0) {
-        const remaining = MAX_SUPPLEMENT_FILES - supplementFiles.length;
+        const remaining = 5 - supplementFiles.length;
         const toAdd = Math.min(this.files.length, remaining);
         for (let i = 0; i < toAdd; i++) { supplementFiles.push(this.files[i]); }
         updateSupplementPreview();
@@ -2084,7 +2162,7 @@
       e.preventDefault();
       supplementArea.classList.remove('dragover');
       if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-        const remaining = MAX_SUPPLEMENT_FILES - supplementFiles.length;
+        const remaining = 5 - supplementFiles.length;
         const toAdd = Math.min(e.dataTransfer.files.length, remaining);
         for (let i = 0; i < toAdd; i++) { supplementFiles.push(e.dataTransfer.files[i]); }
         updateSupplementPreview();
@@ -2100,7 +2178,7 @@
       this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送出中...';
       try {
         let fileUrls = [];
-        if (supplementFiles.length > 0) { fileUrls = await uploadMultipleImages(supplementFiles); }
+        if (supplementFiles.length > 0) { fileUrls = await uploadAllFiles(supplementFiles, []).then(r => r.allUrls); }
         const supplement = {
           text: content,
           files: fileUrls,
@@ -2145,7 +2223,7 @@
     }
 
     // ============================================================
-    // 14. Firestore 操作
+    // 16. Firestore 操作
     // ============================================================
 
     function listenComplaints() {
@@ -2160,7 +2238,8 @@
             description: data.description || '', eventTime: data.eventTime || '', postLink: data.postLink || '',
             expectedResolution: data.expectedResolution || '', needReply: data.needReply || '',
             status: data.status || '待處理', date: data.date || '', time: data.time || '',
-            imageUrls: data.imageUrls || [], createdAt: data.createdAt || 0, userId: data.userId || '',
+            imageUrls: data.imageUrls || [], videoLink: data.videoLink || '',
+            createdAt: data.createdAt || 0, userId: data.userId || '',
             userEmail: data.userEmail || '', replies: data.replies || [],
             lastProcessedBy: data.lastProcessedBy || '', lastProcessedAt: data.lastProcessedAt || '',
             hasNewReply: data.hasNewReply || false,
@@ -2175,16 +2254,31 @@
     async function addComplaint(complaint) {
       try {
         await db.collection('complaints').add({
-          id: complaint.id, userName: complaint.userName, igName: complaint.igName || '',
-          category: complaint.category, priority: complaint.priority, title: complaint.title,
-          description: complaint.description, eventTime: complaint.eventTime || '',
-          postLink: complaint.postLink || '', expectedResolution: complaint.expectedResolution || '',
-          needReply: complaint.needReply || '', status: complaint.status || '待處理',
-          date: complaint.date, time: complaint.time, imageUrls: complaint.imageUrls || [],
-          createdAt: Date.now(), userId: currentUser ? currentUser.uid : 'anonymous',
-          userEmail: currentUser ? currentUser.email : '', replies: [],
-          lastProcessedBy: '', lastProcessedAt: '', hasNewReply: false,
-          supplements: [], statusInfo: ''
+          id: complaint.id,
+          userName: complaint.userName,
+          igName: complaint.igName || '',
+          category: complaint.category,
+          priority: complaint.priority,
+          title: complaint.title,
+          description: complaint.description,
+          eventTime: complaint.eventTime || '',
+          postLink: complaint.postLink || '',
+          expectedResolution: complaint.expectedResolution || '',
+          needReply: complaint.needReply || '',
+          status: complaint.status || '待處理',
+          date: complaint.date,
+          time: complaint.time,
+          imageUrls: complaint.imageUrls || [],
+          videoLink: complaint.videoLink || '',
+          createdAt: Date.now(),
+          userId: currentUser ? currentUser.uid : 'anonymous',
+          userEmail: currentUser ? currentUser.email : '',
+          replies: [],
+          lastProcessedBy: '',
+          lastProcessedAt: '',
+          hasNewReply: false,
+          supplements: [],
+          statusInfo: ''
         });
         return true;
       } catch (error) { console.error('儲存失敗:', error); showToast('儲存失敗，請稍後再試', true); return false; }
@@ -2275,7 +2369,7 @@
     }
 
     // ============================================================
-    // 15. Email 通知
+    // 17. Email 通知
     // ============================================================
 
     async function sendNewComplaintEmail(complaint) {
@@ -2302,7 +2396,7 @@
     }
 
     // ============================================================
-    // 16. 渲染
+    // 18. 渲染
     // ============================================================
 
     function render() {
@@ -2323,11 +2417,11 @@
           const status = item.status || '待處理';
           let statusControl = isAdmin ? `<select class="status-select ${status}" data-action="statusChange" data-docid="${item.docId}" data-id="${item.id}">${STATUS_LIST.map(s => `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`).join('')}</select>` : `<span class="status-badge ${status}">${status}</span>`;
           
-          // 刪除按鈕：僅版主和所有權可刪除
+          // 刪除按鈕：版主和所有權可刪除（顯示訊息只說版主）
           let adminButtons = '';
           if (isAdmin) {
             const role = getAdminRole(currentAdminUsername);
-            if (role === 'owner' || role === 'moderator') {
+            if (role === 'moderator' || role === 'owner') {
               adminButtons = `<button class="btn-delete" data-action="delete" data-docid="${item.docId}" data-id="${item.id}"><i class="fas fa-times"></i></button>`;
             }
           }
@@ -2357,6 +2451,18 @@
             });
             if (remaining > 0) imagesHtml += `<div class="more-badge">+${remaining}</div>`;
             imagesHtml += '</div>';
+          }
+          
+          // 影片連結顯示
+          let videoLinkHtml = '';
+          if (item.videoLink && item.videoLink.trim()) {
+            videoLinkHtml = `
+              <div class="video-link-box">
+                <i class="fas fa-video"></i>
+                <a href="${escapeHtml(item.videoLink)}" target="_blank">${escapeHtml(item.videoLink)}</a>
+                <span class="link-label">🔗 雲端影片</span>
+              </div>
+            `;
           }
           
           let newReplyBadge = '';
@@ -2513,6 +2619,7 @@
                 </div>
                 <div style="margin-top:6px;font-size:0.9rem;color:#2b405b;">${escapeHtml(item.description)}</div>
                 ${processedHtml}
+                ${videoLinkHtml}
                 ${imagesHtml}
                 ${supplementHtml}
                 <div class="reply-section">
@@ -2538,7 +2645,7 @@
     }
 
     // ============================================================
-    // 17. 回覆功能
+    // 19. 回覆功能
     // ============================================================
 
     document.addEventListener('change', function(e) {
@@ -2622,7 +2729,10 @@
     async function sendReply(docId, replyText, files) {
       try {
         let fileUrls = [];
-        if (files && files.length > 0) { fileUrls = await uploadMultipleImages(files); }
+        if (files && files.length > 0) {
+          const result = await uploadAllFiles(files, []);
+          fileUrls = result.allUrls;
+        }
         const displayName = getAdminDisplayName(currentAdminUsername);
         const roleName = getAdminRoleName(currentAdminUsername);
         const reply = {
@@ -2696,7 +2806,7 @@
     };
 
     // ============================================================
-    // 18. 編輯回覆
+    // 20. 編輯回覆
     // ============================================================
 
     async function editReply(docId, replyId) {
@@ -2737,7 +2847,7 @@
     }
 
     // ============================================================
-    // 19. 收回回覆
+    // 21. 收回回覆
     // ============================================================
 
     async function deleteReply(docId, replyId) {
@@ -2775,7 +2885,7 @@
     }
 
     // ============================================================
-    // 20. 影片播放器
+    // 22. 影片播放器
     // ============================================================
 
     let videoList = [];
@@ -2847,7 +2957,7 @@
     });
 
     // ============================================================
-    // 21. 圖片燈箱
+    // 23. 圖片燈箱
     // ============================================================
 
     let lightboxImages = [], lightboxIndex = 0;
@@ -2880,7 +2990,7 @@
     });
 
     // ============================================================
-    // 22. UI 更新
+    // 24. UI 更新
     // ============================================================
 
     function updateUI(user) {
@@ -2976,7 +3086,7 @@
     }
 
     // ============================================================
-    // 23. 查看密碼功能
+    // 25. 查看密碼功能
     // ============================================================
 
     const viewPwdBtn = document.getElementById('viewPasswordsBtn');
@@ -3039,7 +3149,7 @@
     viewOverlay.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
 
     // ============================================================
-    // 24. 忘記密碼功能
+    // 26. 忘記密碼功能
     // ============================================================
 
     document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
@@ -3146,7 +3256,7 @@
     });
 
     // ============================================================
-    // 25. 管理驗證資料
+    // 27. 管理驗證資料
     // ============================================================
 
     document.getElementById('manageVerifyDataBtn').addEventListener('click', async function() {
@@ -3237,7 +3347,7 @@
     });
 
     // ============================================================
-    // 26. 登入紀錄按鈕
+    // 28. 登入紀錄按鈕
     // ============================================================
 
     document.getElementById('viewLoginLogsBtn').addEventListener('click', function() {
@@ -3256,7 +3366,7 @@
     });
 
     // ============================================================
-    // 27. 其他事件處理
+    // 29. 其他事件處理
     // ============================================================
 
     async function googleLogin() {
@@ -3375,7 +3485,7 @@
     adminOverlay.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
 
     // ============================================================
-    // 28. 變更密碼功能
+    // 30. 變更密碼功能
     // ============================================================
 
     const cpOverlay = document.getElementById('changePasswordOverlay');
@@ -3471,7 +3581,7 @@
     cpConfirm.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirmBtn.click(); });
 
     // ============================================================
-    // 29. 類別切換
+    // 31. 類別切換
     // ============================================================
 
     document.getElementById('category').addEventListener('change', function() {
@@ -3479,28 +3589,67 @@
     });
 
     // ============================================================
-    // 30. 圖片上傳
+    // 32. 圖片上傳
     // ============================================================
 
     document.getElementById('addMoreBtn').addEventListener('click', () => document.getElementById('imageInput').click());
     document.getElementById('imageInput').addEventListener('change', function(e) {
-      if (this.files && this.files.length > 0) { handleFileSelect(this.files); this.value = ''; }
+      if (this.files && this.files.length > 0) { 
+        handleImageSelect(this.files); 
+        this.value = '';
+      }
     });
-    document.getElementById('imageUploadArea').addEventListener('dragover', (e) => { e.preventDefault(); document.getElementById('imageUploadArea').classList.add('dragover'); });
-    document.getElementById('imageUploadArea').addEventListener('dragleave', () => { document.getElementById('imageUploadArea').classList.remove('dragover'); });
+    document.getElementById('imageUploadArea').addEventListener('dragover', (e) => {
+      e.preventDefault();
+      document.getElementById('imageUploadArea').classList.add('dragover');
+    });
+    document.getElementById('imageUploadArea').addEventListener('dragleave', () => {
+      document.getElementById('imageUploadArea').classList.remove('dragover');
+    });
     document.getElementById('imageUploadArea').addEventListener('drop', (e) => {
       e.preventDefault();
       document.getElementById('imageUploadArea').classList.remove('dragover');
-      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) handleFileSelect(e.dataTransfer.files);
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+        if (files.length > 0) handleImageSelect(files);
+      }
     });
 
     // ============================================================
-    // 31. 提交投訴
+    // 33. 影片上傳
+    // ============================================================
+
+    document.getElementById('addVideoBtn').addEventListener('click', () => document.getElementById('videoInput').click());
+    document.getElementById('videoInput').addEventListener('change', function(e) {
+      if (this.files && this.files.length > 0) { 
+        handleVideoSelect(this.files); 
+        this.value = '';
+      }
+    });
+    document.getElementById('videoUploadArea').addEventListener('dragover', (e) => {
+      e.preventDefault();
+      document.getElementById('videoUploadArea').classList.add('dragover');
+    });
+    document.getElementById('videoUploadArea').addEventListener('dragleave', () => {
+      document.getElementById('videoUploadArea').classList.remove('dragover');
+    });
+    document.getElementById('videoUploadArea').addEventListener('drop', (e) => {
+      e.preventDefault();
+      document.getElementById('videoUploadArea').classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('video/'));
+        if (files.length > 0) handleVideoSelect(files);
+      }
+    });
+
+    // ============================================================
+    // 34. 提交投訴
     // ============================================================
 
     document.getElementById('complaintForm').addEventListener('submit', async function(e) {
       e.preventDefault();
       if (!currentUser) { showToast('請先登入', true); return; }
+      
       const name = document.getElementById('userName').value.trim();
       const igName = document.getElementById('igName').value.trim();
       let category = document.getElementById('category').value;
@@ -3511,43 +3660,73 @@
       const postLink = document.getElementById('postLink').value.trim();
       const expectedResolution = document.getElementById('expectedResolution').value.trim();
       const needReply = document.querySelector('input[name="needReply"]:checked')?.value || '';
+      const videoLink = document.getElementById('videoLink').value.trim();
+      
       if (category === '其他問題(請自訂)') {
         const custom = document.getElementById('customCategory').value.trim();
         if (!custom) { showToast('請輸入自訂類別名稱', true); return; }
         category = custom;
       }
+      
       if (!name || !igName || !category || !priority || !title || !eventTime || !description || !needReply) {
-        showToast('請填寫所有必填欄位（標示 * 的欄位）', true); return;
+        showToast('請填寫所有必填欄位（標示 * 的欄位）', true);
+        return;
       }
+      
       let maxId = 0;
       complaints.forEach(c => { if (c.id > maxId) maxId = c.id; });
       const newId = maxId + 1;
       const submitBtn = document.getElementById('submitBtn');
-      submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送出中...';
       submitBtn.disabled = true;
+      
       try {
-        let imageUrls = [];
-        if (selectedFiles.length > 0) {
-          submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 上傳圖片中...';
-          imageUrls = await uploadMultipleImages(selectedFiles);
-        }
+        // 上傳圖片和影片
+        const uploadResults = await uploadAllFiles(selectedImages, selectedVideos);
+        
         submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 儲存中...';
-        const newComplaint = { id: newId, userName: name, igName: igName, category: category, priority: priority, title: title, description: description, eventTime: eventTime, postLink: postLink || '', expectedResolution: expectedResolution || '', needReply: needReply, status: '待處理', date: getToday(), time: getNowTime(), imageUrls: imageUrls };
+        
+        const newComplaint = {
+          id: newId,
+          userName: name,
+          igName: igName,
+          category: category,
+          priority: priority,
+          title: title,
+          description: description,
+          eventTime: eventTime,
+          postLink: postLink || '',
+          expectedResolution: expectedResolution || '',
+          needReply: needReply,
+          status: '待處理',
+          date: getToday(),
+          time: getNowTime(),
+          imageUrls: uploadResults.allUrls,
+          videoLink: videoLink || ''
+        };
+        
         const success = await addComplaint(newComplaint);
         if (success) {
           sendNewComplaintEmail(newComplaint).catch(err => console.error('Email 發送失敗:', err));
           document.getElementById('complaintForm').reset();
-          selectedFiles = [];
+          selectedImages = [];
+          selectedVideos = [];
           updateImagePreview();
+          updateVideoPreview();
           document.getElementById('customCategoryGroup').style.display = 'none';
+          document.getElementById('videoLink').value = '';
           showToast(`✅ 投訴 #${newId} 已送出，狀態：待處理`);
         }
-      } catch (error) { console.error('提交失敗:', error); showToast('提交失敗，請稍後再試', true); } 
-      finally { submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送出投訴'; submitBtn.disabled = false; }
+      } catch (error) {
+        console.error('提交失敗:', error);
+        showToast('提交失敗，請稍後再試', true);
+      } finally {
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送出投訴';
+        submitBtn.disabled = false;
+      }
     });
 
     // ============================================================
-    // 32. 狀態變更
+    // 35. 狀態變更
     // ============================================================
 
     document.getElementById('complaintList').addEventListener('change', async function(e) {
@@ -3571,7 +3750,7 @@
     });
 
     // ============================================================
-    // 33. 刪除投訴
+    // 36. 刪除投訴
     // ============================================================
 
     document.getElementById('complaintList').addEventListener('click', async function(e) {
@@ -3581,8 +3760,8 @@
       const id = parseInt(target.dataset.id);
       if (!docId || isAdmin !== true) { showToast('請先登入管理模式', true); return; }
       const role = getAdminRole(currentAdminUsername);
-      if (role !== 'owner' && role !== 'moderator') {
-        showToast('只有版主和所有權可以刪除投訴', true);
+      if (role !== 'moderator' && role !== 'owner') {
+        showToast('只有版主可以刪除投訴', true);
         return;
       }
       if (confirm(`確定刪除投訴 #${id} 嗎？`)) {
@@ -3592,20 +3771,20 @@
     });
 
     // ============================================================
-    // 34. 過濾
+    // 37. 過濾
     // ============================================================
 
     document.getElementById('filterStatus').addEventListener('change', render);
 
     // ============================================================
-    // 35. 清空全部
+    // 38. 清空全部
     // ============================================================
 
     document.getElementById('clearAllBtn').addEventListener('click', async function() {
       if (isAdmin !== true) { showToast('請先登入管理模式', true); return; }
       const role = getAdminRole(currentAdminUsername);
-      if (role !== 'owner' && role !== 'moderator') {
-        showToast('只有版主和所有權可以清空所有投訴', true);
+      if (role !== 'moderator' && role !== 'owner') {
+        showToast('只有版主可以清空所有投訴', true);
         return;
       }
       if (complaints.length === 0) { showToast('目前沒有投訴可清空', true); return; }
@@ -3613,7 +3792,7 @@
     });
 
     // ============================================================
-    // 36. Firebase Auth 監聽
+    // 39. Firebase Auth 監聽
     // ============================================================
 
     auth.onAuthStateChanged((user) => {
@@ -3640,7 +3819,7 @@
     });
 
     // ============================================================
-    // 37. 啟動
+    // 40. 啟動
     // ============================================================
 
     async function init() {
@@ -3661,6 +3840,7 @@
       console.log('📋 小編帳號：dader02~dader11 (共10位小編)');
       console.log('🔄 跨瀏覽器密碼同步已啟用 (onSnapshot 監聽)');
       console.log('📱 RWD 響應式設計已啟用 (支援所有裝置)');
+      console.log('📹 影片上傳限制：50MB，超過請使用影片連結');
     }
 
     init();
