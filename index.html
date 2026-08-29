@@ -338,6 +338,94 @@
     .video-link-box a { color: #2a5b7a; word-break: break-all; text-decoration: underline; flex: 1; }
     .video-link-box .link-label { font-size: 0.65rem; color: #8a9db0; white-space: nowrap; }
 
+    /* ===== 驗證碼樣式 ===== */
+    .captcha-container {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .captcha-box {
+      background: linear-gradient(135deg, #2a405b, #1a2c44);
+      color: #fff;
+      font-family: 'Courier New', monospace;
+      font-size: 2rem;
+      font-weight: 700;
+      padding: 0.3rem 1.2rem;
+      border-radius: 12px;
+      letter-spacing: 8px;
+      user-select: none;
+      min-width: 100px;
+      text-align: center;
+      border: 2px solid #4a6a8a;
+      box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
+      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    .captcha-box span {
+      display: inline-block;
+      transform: rotate(var(--rot, 0deg));
+    }
+    .captcha-box span:nth-child(1) { --rot: -5deg; }
+    .captcha-box span:nth-child(2) { --rot: 8deg; }
+    .captcha-box span:nth-child(3) { --rot: -3deg; }
+    .captcha-box span:nth-child(4) { --rot: 6deg; }
+    .captcha-refresh {
+      background: transparent;
+      border: 1px solid #d7dfe9;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: 0.15s;
+      color: #4a6a8a;
+      font-size: 1rem;
+      flex-shrink: 0;
+    }
+    .captcha-refresh:hover {
+      background: #eef3f9;
+      border-color: #4a6a8a;
+      transform: rotate(30deg);
+    }
+    .captcha-refresh:active {
+      transform: rotate(60deg);
+    }
+    .captcha-input {
+      width: 100%;
+      padding: 0.5rem 1rem;
+      border: 1px solid #d7dfe9;
+      border-radius: 12px;
+      font-size: 1.2rem;
+      text-align: center;
+      letter-spacing: 6px;
+      font-family: 'Courier New', monospace;
+      background: #fafcff;
+      transition: 0.15s;
+      outline: none;
+    }
+    .captcha-input:focus {
+      border-color: #b32b2b;
+      box-shadow: 0 0 0 3px rgba(179,43,43,0.08);
+      background: white;
+    }
+    .captcha-input.error {
+      border-color: #dc3545;
+      box-shadow: 0 0 0 3px rgba(220,53,69,0.15);
+    }
+    .captcha-input.success {
+      border-color: #28a745;
+      box-shadow: 0 0 0 3px rgba(40,167,69,0.15);
+    }
+    @media (max-width: 768px) {
+      .captcha-box { font-size: 1.5rem; padding: 0.2rem 0.8rem; min-width: 80px; letter-spacing: 6px; }
+      .captcha-refresh { width: 34px; height: 34px; font-size: 0.85rem; }
+      .captcha-input { font-size: 1rem; padding: 0.4rem 0.8rem; letter-spacing: 4px; }
+    }
+
     @media (max-width: 768px) {
       .container { padding: 0.8rem; }
       h1 { font-size: 1.3rem; }
@@ -618,7 +706,7 @@
     </div>
   </div>
 
-  <!-- ===== 管理員登入彈窗 ===== -->
+  <!-- ===== 管理員登入彈窗（含驗證碼） ===== -->
   <div class="login-overlay" id="adminLoginOverlay">
     <div class="login-box">
       <h3><i class="fas fa-user-shield" style="color:#c52a2a;"></i> 管理員登入</h3>
@@ -626,6 +714,16 @@
       <div class="error-msg" id="adminErrorMsg">❌ 帳號或密碼錯誤</div>
       <input type="text" id="adminUsername" placeholder="管理員帳號" />
       <input type="password" id="adminPassword" placeholder="管理員密碼" />
+      
+      <!-- ✅ 驗證碼 -->
+      <div class="captcha-container">
+        <div class="captcha-box" id="adminCaptchaText"></div>
+        <button type="button" class="captcha-refresh" id="adminCaptchaRefresh" title="重新產生驗證碼">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+      </div>
+      <input type="text" class="captcha-input" id="adminCaptchaInput" placeholder="請輸入4位數字驗證碼" maxlength="4" autocomplete="off" inputmode="numeric" />
+      
       <button class="btn-primary" id="adminLoginConfirmBtn"><i class="fas fa-sign-in-alt"></i> 登入</button>
       <div class="forgot-link">
         <a href="#" id="forgotPasswordLink"><i class="fas fa-key"></i> 忘記密碼？</a>
@@ -675,7 +773,7 @@
     </div>
   </div>
 
-  <!-- ===== 身份驗證變更密碼彈窗 ===== -->
+  <!-- ===== 身份驗證變更密碼彈窗（含驗證碼） ===== -->
   <div class="verify-change-overlay" id="verifyChangeOverlay">
     <div class="verify-change-box">
       <h3><i class="fas fa-shield-alt" style="color:#2a5b7a;"></i> 身份驗證</h3>
@@ -692,6 +790,16 @@
         <label><i class="fas fa-calendar-alt"></i> 生日 <span class="required">*</span></label>
         <input type="date" id="verifyBirthday" />
       </div>
+      
+      <!-- ✅ 驗證碼 -->
+      <div class="captcha-container">
+        <div class="captcha-box" id="verifyCaptchaText"></div>
+        <button type="button" class="captcha-refresh" id="verifyCaptchaRefresh" title="重新產生驗證碼">
+          <i class="fas fa-sync-alt"></i>
+        </button>
+      </div>
+      <input type="text" class="captcha-input" id="verifyCaptchaInput" placeholder="請輸入4位數字驗證碼" maxlength="4" autocomplete="off" inputmode="numeric" />
+      
       <div class="error-msg" id="verifyErrorMsg">❌ 驗證失敗，請確認資料是否正確</div>
       <div class="success-msg" id="verifySuccessMsg">✅ 驗證成功！請設定新密碼</div>
       <div id="verifyChangePwdArea" style="display:none; margin-top:0.5rem; border-top:1px solid #eef3f9; padding-top:0.8rem;">
@@ -920,6 +1028,81 @@
     let supplementFiles = [];
     let supplementComplaintId = null;
     const replyFiles = {};
+
+    // ============================================================
+    // 驗證碼
+    // ============================================================
+    let adminCaptchaCode = '';
+    let verifyCaptchaCode = '';
+
+    function generateCaptcha() {
+      let code = '';
+      for (let i = 0; i < 4; i++) {
+        code += String(Math.floor(Math.random() * 10));
+      }
+      return code;
+    }
+
+    function renderCaptcha(elementId, code) {
+      const el = document.getElementById(elementId);
+      if (!el) return;
+      el.innerHTML = '';
+      const chars = code.split('');
+      chars.forEach((char, index) => {
+        const span = document.createElement('span');
+        span.textContent = char;
+        const rot = (Math.random() * 16) - 8;
+        span.style.setProperty('--rot', rot + 'deg');
+        el.appendChild(span);
+      });
+    }
+
+    function refreshAdminCaptcha() {
+      adminCaptchaCode = generateCaptcha();
+      renderCaptcha('adminCaptchaText', adminCaptchaCode);
+      const input = document.getElementById('adminCaptchaInput');
+      if (input) {
+        input.value = '';
+        input.className = 'captcha-input';
+        input.placeholder = '請輸入4位數字驗證碼';
+      }
+    }
+
+    function refreshVerifyCaptcha() {
+      verifyCaptchaCode = generateCaptcha();
+      renderCaptcha('verifyCaptchaText', verifyCaptchaCode);
+      const input = document.getElementById('verifyCaptchaInput');
+      if (input) {
+        input.value = '';
+        input.className = 'captcha-input';
+        input.placeholder = '請輸入4位數字驗證碼';
+      }
+    }
+
+    function validateCaptcha(inputCode, correctCode) {
+      return inputCode === correctCode;
+    }
+
+    // 驗證碼輸入限制（只允許數字）
+    document.addEventListener('input', function(e) {
+      if (e.target.id === 'adminCaptchaInput' || e.target.id === 'verifyCaptchaInput') {
+        e.target.value = e.target.value.replace(/\D/g, '');
+      }
+    });
+
+    // 驗證碼輸入時自動清除錯誤狀態
+    document.addEventListener('focus', function(e) {
+      if (e.target.id === 'adminCaptchaInput') {
+        e.target.className = 'captcha-input';
+        const errorMsg = document.getElementById('adminErrorMsg');
+        if (errorMsg) errorMsg.classList.remove('show');
+      }
+      if (e.target.id === 'verifyCaptchaInput') {
+        e.target.className = 'captcha-input';
+        const errorMsg = document.getElementById('verifyErrorMsg');
+        if (errorMsg) errorMsg.classList.remove('show');
+      }
+    });
 
     // Session 管理
     let currentSessionId = sessionStorage.getItem('sessionId');
@@ -2252,7 +2435,7 @@
     }
 
     // ============================================================
-    // 18. 渲染（含新投訴計數）
+    // 18. 渲染
     // ============================================================
 
     function render() {
@@ -2268,9 +2451,7 @@
       
       if (filterStatus !== 'all') { filtered = filtered.filter(c => c.status === filterStatus); }
       
-      // ============================================================
-      // 計算新投訴數量（狀態為「待處理」）
-      // ============================================================
+      // 計算新投訴數量
       let newCount = 0;
       if (isAdmin) {
         newCount = complaints.filter(c => c.status === '待處理').length;
@@ -2300,7 +2481,6 @@
           const status = item.status || '待處理';
           let statusControl = isAdmin ? `<select class="status-select ${status}" data-action="statusChange" data-docid="${item.docId}" data-id="${item.id}">${STATUS_LIST.map(s => `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`).join('')}</select>` : `<span class="status-badge ${status}">${status}</span>`;
           
-          // 刪除按鈕：版主和所有權可刪除（顯示訊息只說版主）
           let adminButtons = '';
           if (isAdmin) {
             const role = getAdminRole(currentAdminUsername);
@@ -2309,7 +2489,6 @@
             }
           }
           
-          // 補充資料按鈕
           let supplementButton = '';
           if (item.status === '需要補充資料' && !isAdmin && currentUser && item.userId === currentUser.uid) {
             const hasSupplement = item.supplements && item.supplements.length > 0 && item.supplements.some(s => !s.isAdmin);
@@ -2318,7 +2497,6 @@
             }
           }
           
-          // 圖片/影片顯示
           let imagesHtml = '';
           if (item.imageUrls && item.imageUrls.length > 0) {
             const showUrls = item.imageUrls.slice(0, 4);
@@ -2336,7 +2514,6 @@
             imagesHtml += '</div>';
           }
           
-          // 影片連結顯示
           let videoLinkHtml = '';
           if (item.videoLink && item.videoLink.trim()) {
             videoLinkHtml = `
@@ -2353,13 +2530,11 @@
             newReplyBadge = `<span class="new-reply-badge">📩 新回覆</span>`;
           }
           
-          // 最後處理人：僅管理員可見
           let processedHtml = '';
           if (isAdmin && item.lastProcessedBy && item.lastProcessedAt) {
             processedHtml = `<div class="processed-info"><i class="fas fa-user-check"></i> 最後處理：${escapeHtml(item.lastProcessedBy)} (${item.lastProcessedAt})</div>`;
           }
           
-          // 補充記錄
           let supplementHtml = '';
           if (item.supplements && item.supplements.length > 0) {
             supplementHtml = '<div style="margin-top:8px;">';
@@ -2388,7 +2563,6 @@
             supplementHtml += '</div>';
           }
           
-          // 回覆列表
           let repliesHtml = '';
           if (item.replies && item.replies.length > 0) {
             repliesHtml = '<div class="reply-list">';
@@ -2462,7 +2636,6 @@
             repliesHtml += '</div>';
           }
           
-          // 回覆輸入框
           let showReplyInput = isAdmin || (currentUser && item.userId === currentUser.uid);
           let replyInputHtml = '';
           if (showReplyInput) {
@@ -3058,6 +3231,7 @@
       document.getElementById('verifyUsername').disabled = false;
       document.getElementById('verifyDisplayName').disabled = false;
       document.getElementById('verifyBirthday').disabled = false;
+      refreshVerifyCaptcha();
     });
     document.getElementById('verifyChangeCloseBtn').addEventListener('click', function() {
       document.getElementById('verifyChangeOverlay').classList.remove('active');
@@ -3068,9 +3242,35 @@
       const username = document.getElementById('verifyUsername').value.trim();
       const displayName = document.getElementById('verifyDisplayName').value.trim();
       const birthday = document.getElementById('verifyBirthday').value;
+      const captchaInput = document.getElementById('verifyCaptchaInput').value.trim();
+      
       const errorMsg = document.getElementById('verifyErrorMsg');
       const successMsg = document.getElementById('verifySuccessMsg');
       const changeArea = document.getElementById('verifyChangePwdArea');
+      const captchaInputEl = document.getElementById('verifyCaptchaInput');
+      
+      if (!captchaInput) {
+        captchaInputEl.className = 'captcha-input error';
+        captchaInputEl.placeholder = '❌ 請輸入驗證碼';
+        errorMsg.textContent = '❌ 請輸入驗證碼';
+        errorMsg.classList.add('show');
+        successMsg.classList.remove('show');
+        changeArea.style.display = 'none';
+        return;
+      }
+      
+      if (!validateCaptcha(captchaInput, verifyCaptchaCode)) {
+        captchaInputEl.className = 'captcha-input error';
+        captchaInputEl.placeholder = '❌ 驗證碼錯誤';
+        captchaInputEl.value = '';
+        errorMsg.textContent = '❌ 驗證碼錯誤，請重新輸入';
+        errorMsg.classList.add('show');
+        successMsg.classList.remove('show');
+        changeArea.style.display = 'none';
+        refreshVerifyCaptcha();
+        return;
+      }
+      
       if (username && displayName && birthday) {
         const admin = await verifyAdminIdentityFirestore(username, displayName, birthday);
         if (admin) {
@@ -3082,6 +3282,7 @@
           document.getElementById('verifyUsername').disabled = true;
           document.getElementById('verifyDisplayName').disabled = true;
           document.getElementById('verifyBirthday').disabled = true;
+          captchaInputEl.className = 'captcha-input success';
         } else {
           verifiedUser = null;
           errorMsg.textContent = '❌ 驗證失敗，請確認帳號、姓名、生日是否正確';
@@ -3091,6 +3292,7 @@
           document.getElementById('verifyUsername').disabled = false;
           document.getElementById('verifyDisplayName').disabled = false;
           document.getElementById('verifyBirthday').disabled = false;
+          refreshVerifyCaptcha();
         }
       } else {
         errorMsg.classList.remove('show');
@@ -3315,6 +3517,7 @@
         adminUsername.value = '';
         adminPassword.value = '';
         adminErrorMsg.classList.remove('show');
+        refreshAdminCaptcha();
         adminUsername.focus();
       }
     });
@@ -3322,6 +3525,19 @@
     adminConfirmBtn.addEventListener('click', async function() {
       const username = adminUsername.value.trim();
       const password = adminPassword.value.trim();
+      const captchaInput = document.getElementById('adminCaptchaInput').value.trim();
+      
+      if (!validateCaptcha(captchaInput, adminCaptchaCode)) {
+        const inputEl = document.getElementById('adminCaptchaInput');
+        inputEl.className = 'captcha-input error';
+        inputEl.placeholder = '❌ 驗證碼錯誤，請重新輸入';
+        inputEl.value = '';
+        adminErrorMsg.textContent = '❌ 驗證碼錯誤，請重新輸入';
+        adminErrorMsg.classList.add('show');
+        refreshAdminCaptcha();
+        return;
+      }
+      
       const found = ADMIN_ACCOUNTS.find(a => a.username === username && a.password === password);
       if (found) {
         isAdmin = true;
@@ -3359,9 +3575,11 @@
         showToast(`👋 ${fullDisplayName} 您好，歡迎使用投訴系統`);
         render();
       } else {
+        adminErrorMsg.textContent = '❌ 帳號或密碼錯誤';
         adminErrorMsg.classList.add('show');
         adminPassword.value = '';
         adminPassword.focus();
+        refreshAdminCaptcha();
       }
     });
     adminUsername.addEventListener('keyup', (e) => { if (e.key === 'Enter') adminConfirmBtn.click(); });
@@ -3683,6 +3901,10 @@
         listenForcedLogout();
       }
       
+      // 初始化驗證碼
+      refreshAdminCaptcha();
+      refreshVerifyCaptcha();
+      
       console.log('✅ 靠北達德投訴系統已啟動');
       console.log('👑 管理員帳號:', DEFAULT_ADMINS.map(a => a.username).join(', '));
       console.log('📊 登入紀錄功能已啟用');
@@ -3692,6 +3914,7 @@
       console.log('📹 影片上傳限制：50MB，超過請使用影片連結');
       console.log('🗑️ 刪除權限：版主+所有權（顯示只說版主）');
       console.log('🔔 新投訴計數功能已啟用');
+      console.log('🔐 驗證碼功能已啟用（4位數字）');
     }
 
     init();
