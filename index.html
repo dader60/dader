@@ -338,12 +338,12 @@
     .video-link-box a { color: #2a5b7a; word-break: break-all; text-decoration: underline; flex: 1; }
     .video-link-box .link-label { font-size: 0.65rem; color: #8a9db0; white-space: nowrap; }
 
-    /* ===== 驗證碼樣式 ===== */
+    /* ===== 驗證碼樣式 (14px) ===== */
     .captcha-container {
       display: flex;
       align-items: center;
-      gap: 12px;
-      margin-bottom: 1rem;
+      gap: 10px;
+      margin-bottom: 0.8rem;
       flex-wrap: wrap;
       justify-content: center;
     }
@@ -351,39 +351,39 @@
       background: linear-gradient(135deg, #2a405b, #1a2c44);
       color: #fff;
       font-family: 'Courier New', monospace;
-      font-size: 2rem;
+      font-size: 14px;
       font-weight: 700;
-      padding: 0.3rem 1.2rem;
-      border-radius: 12px;
-      letter-spacing: 8px;
+      padding: 4px 12px;
+      border-radius: 8px;
+      letter-spacing: 4px;
       user-select: none;
-      min-width: 100px;
+      min-width: 70px;
       text-align: center;
       border: 2px solid #4a6a8a;
-      box-shadow: inset 0 0 20px rgba(0,0,0,0.3);
-      text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+      box-shadow: inset 0 0 12px rgba(0,0,0,0.3);
+      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
     }
     .captcha-box span {
       display: inline-block;
       transform: rotate(var(--rot, 0deg));
     }
-    .captcha-box span:nth-child(1) { --rot: -5deg; }
-    .captcha-box span:nth-child(2) { --rot: 8deg; }
+    .captcha-box span:nth-child(1) { --rot: -4deg; }
+    .captcha-box span:nth-child(2) { --rot: 6deg; }
     .captcha-box span:nth-child(3) { --rot: -3deg; }
-    .captcha-box span:nth-child(4) { --rot: 6deg; }
+    .captcha-box span:nth-child(4) { --rot: 5deg; }
     .captcha-refresh {
       background: transparent;
       border: 1px solid #d7dfe9;
       border-radius: 50%;
-      width: 40px;
-      height: 40px;
+      width: 30px;
+      height: 30px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: 0.15s;
       color: #4a6a8a;
-      font-size: 1rem;
+      font-size: 12px;
       flex-shrink: 0;
     }
     .captcha-refresh:hover {
@@ -396,12 +396,12 @@
     }
     .captcha-input {
       width: 100%;
-      padding: 0.5rem 1rem;
+      padding: 0.3rem 0.7rem;
       border: 1px solid #d7dfe9;
-      border-radius: 12px;
-      font-size: 1.2rem;
+      border-radius: 8px;
+      font-size: 14px;
       text-align: center;
-      letter-spacing: 6px;
+      letter-spacing: 4px;
       font-family: 'Courier New', monospace;
       background: #fafcff;
       transition: 0.15s;
@@ -421,9 +421,9 @@
       box-shadow: 0 0 0 3px rgba(40,167,69,0.15);
     }
     @media (max-width: 768px) {
-      .captcha-box { font-size: 1.5rem; padding: 0.2rem 0.8rem; min-width: 80px; letter-spacing: 6px; }
-      .captcha-refresh { width: 34px; height: 34px; font-size: 0.85rem; }
-      .captcha-input { font-size: 1rem; padding: 0.4rem 0.8rem; letter-spacing: 4px; }
+      .captcha-box { font-size: 14px; padding: 3px 10px; min-width: 60px; letter-spacing: 3px; }
+      .captcha-refresh { width: 26px; height: 26px; font-size: 11px; }
+      .captcha-input { font-size: 14px; padding: 0.25rem 0.5rem; letter-spacing: 3px; }
     }
 
     @media (max-width: 768px) {
@@ -706,7 +706,7 @@
     </div>
   </div>
 
-  <!-- ===== 管理員登入彈窗（含驗證碼） ===== -->
+  <!-- ===== 管理員登入彈窗（含驗證碼 14px） ===== -->
   <div class="login-overlay" id="adminLoginOverlay">
     <div class="login-box">
       <h3><i class="fas fa-user-shield" style="color:#c52a2a;"></i> 管理員登入</h3>
@@ -715,9 +715,8 @@
       <input type="text" id="adminUsername" placeholder="管理員帳號" />
       <input type="password" id="adminPassword" placeholder="管理員密碼" />
       
-      <!-- ✅ 驗證碼 -->
       <div class="captcha-container">
-        <div class="captcha-box" id="adminCaptchaText"></div>
+        <div class="captcha-box" id="adminCaptchaText" title="點擊重新產生驗證碼" style="cursor:pointer;"></div>
         <button type="button" class="captcha-refresh" id="adminCaptchaRefresh" title="重新產生驗證碼">
           <i class="fas fa-sync-alt"></i>
         </button>
@@ -773,7 +772,7 @@
     </div>
   </div>
 
-  <!-- ===== 身份驗證變更密碼彈窗（含驗證碼） ===== -->
+  <!-- ===== 身份驗證變更密碼彈窗（含驗證碼 14px） ===== -->
   <div class="verify-change-overlay" id="verifyChangeOverlay">
     <div class="verify-change-box">
       <h3><i class="fas fa-shield-alt" style="color:#2a5b7a;"></i> 身份驗證</h3>
@@ -791,9 +790,8 @@
         <input type="date" id="verifyBirthday" />
       </div>
       
-      <!-- ✅ 驗證碼 -->
       <div class="captcha-container">
-        <div class="captcha-box" id="verifyCaptchaText"></div>
+        <div class="captcha-box" id="verifyCaptchaText" title="點擊重新產生驗證碼" style="cursor:pointer;"></div>
         <button type="button" class="captcha-refresh" id="verifyCaptchaRefresh" title="重新產生驗證碼">
           <i class="fas fa-sync-alt"></i>
         </button>
@@ -1030,7 +1028,7 @@
     const replyFiles = {};
 
     // ============================================================
-    // 驗證碼
+    // 驗證碼 (14px)
     // ============================================================
     let adminCaptchaCode = '';
     let verifyCaptchaCode = '';
@@ -1065,6 +1063,7 @@
         input.value = '';
         input.className = 'captcha-input';
         input.placeholder = '請輸入4位數字驗證碼';
+        input.focus();
       }
     }
 
@@ -1076,6 +1075,7 @@
         input.value = '';
         input.className = 'captcha-input';
         input.placeholder = '請輸入4位數字驗證碼';
+        input.focus();
       }
     }
 
@@ -1083,14 +1083,35 @@
       return inputCode === correctCode;
     }
 
-    // 驗證碼輸入限制（只允許數字）
+    function initCaptchaEvents() {
+      const adminRefreshBtn = document.getElementById('adminCaptchaRefresh');
+      if (adminRefreshBtn) {
+        adminRefreshBtn.addEventListener('click', refreshAdminCaptcha);
+      }
+      const adminCaptchaText = document.getElementById('adminCaptchaText');
+      if (adminCaptchaText) {
+        adminCaptchaText.style.cursor = 'pointer';
+        adminCaptchaText.title = '點擊重新產生驗證碼';
+        adminCaptchaText.addEventListener('click', refreshAdminCaptcha);
+      }
+      const verifyRefreshBtn = document.getElementById('verifyCaptchaRefresh');
+      if (verifyRefreshBtn) {
+        verifyRefreshBtn.addEventListener('click', refreshVerifyCaptcha);
+      }
+      const verifyCaptchaText = document.getElementById('verifyCaptchaText');
+      if (verifyCaptchaText) {
+        verifyCaptchaText.style.cursor = 'pointer';
+        verifyCaptchaText.title = '點擊重新產生驗證碼';
+        verifyCaptchaText.addEventListener('click', refreshVerifyCaptcha);
+      }
+    }
+
     document.addEventListener('input', function(e) {
       if (e.target.id === 'adminCaptchaInput' || e.target.id === 'verifyCaptchaInput') {
         e.target.value = e.target.value.replace(/\D/g, '');
       }
     });
 
-    // 驗證碼輸入時自動清除錯誤狀態
     document.addEventListener('focus', function(e) {
       if (e.target.id === 'adminCaptchaInput') {
         e.target.className = 'captcha-input';
@@ -1101,6 +1122,17 @@
         e.target.className = 'captcha-input';
         const errorMsg = document.getElementById('verifyErrorMsg');
         if (errorMsg) errorMsg.classList.remove('show');
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') {
+        if (e.target.id === 'adminCaptchaInput') {
+          document.getElementById('adminLoginConfirmBtn').click();
+        }
+        if (e.target.id === 'verifyCaptchaInput') {
+          checkVerifyFields();
+        }
       }
     });
 
@@ -2451,7 +2483,6 @@
       
       if (filterStatus !== 'all') { filtered = filtered.filter(c => c.status === filterStatus); }
       
-      // 計算新投訴數量
       let newCount = 0;
       if (isAdmin) {
         newCount = complaints.filter(c => c.status === '待處理').length;
@@ -3902,6 +3933,7 @@
       }
       
       // 初始化驗證碼
+      initCaptchaEvents();
       refreshAdminCaptcha();
       refreshVerifyCaptcha();
       
@@ -3914,7 +3946,7 @@
       console.log('📹 影片上傳限制：50MB，超過請使用影片連結');
       console.log('🗑️ 刪除權限：版主+所有權（顯示只說版主）');
       console.log('🔔 新投訴計數功能已啟用');
-      console.log('🔐 驗證碼功能已啟用（4位數字）');
+      console.log('🔐 驗證碼功能已啟用（14px，點擊文字可刷新）');
     }
 
     init();
