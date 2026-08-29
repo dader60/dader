@@ -150,7 +150,6 @@
     .login-overlay.active, .change-password-overlay.active, .forgot-password-overlay.active, .verify-change-overlay.active, .force-change-overlay.active, .manage-verify-overlay.active, .view-passwords-overlay.active, .login-logs-overlay.active, .supplement-overlay.active { display: flex; }
     .login-box, .change-password-box, .verify-change-box, .force-change-box, .view-passwords-box, .manage-verify-box, .supplement-box { background: white; padding: 2.5rem; border-radius: 28px; max-width: 400px; width: 100%; box-shadow: 0 20px 60px rgba(0,0,0,0.2); text-align: center; max-height: 90vh; overflow-y: auto; }
     .login-box h3 { margin-bottom: 1.5rem; color: #0b1e33; }
-    .login-box input { margin-bottom: 1rem; }
     .login-box .btn-primary { width: 100%; margin-top: 0; }
     .login-box .error-msg { color: #c52a2a; font-size: 0.85rem; margin-bottom: 0.8rem; display: none; }
     .login-box .error-msg.show { display: block; }
@@ -182,7 +181,6 @@
     .verify-change-box .error-msg.show { display: block; }
     .verify-change-box .success-msg { color: #28a745; font-size: 0.85rem; margin-bottom: 0.8rem; display: none; text-align: center; }
     .verify-change-box .success-msg.show { display: block; }
-    .verify-change-box .form-group { margin-bottom: 0.8rem; }
     .force-change-box { max-width: 420px; }
     .force-change-box h3 { margin-bottom: 0.5rem; color: #0b1e33; }
     .manage-verify-box { max-width: 480px; }
@@ -427,6 +425,52 @@
       box-shadow: 0 0 0 3px rgba(40,167,69,0.15);
     }
 
+    /* ===== 同一行表單組 (標籤左、輸入框右) ===== */
+    .form-row-inline {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    .form-row-inline label {
+      flex: 0 0 110px;
+      font-weight: 500;
+      font-size: 0.9rem;
+      color: #2a405b;
+      margin-bottom: 0;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      text-align: left;
+    }
+    .form-row-inline label i {
+      width: 18px;
+      color: #6c7e94;
+    }
+    .form-row-inline label .required {
+      color: #c52a2a;
+      margin-left: 2px;
+    }
+    .form-row-inline input,
+    .form-row-inline select {
+      flex: 1;
+      min-width: 160px;
+      padding: 0.6rem 0.9rem;
+      border: 1px solid #d7dfe9;
+      border-radius: 16px;
+      font-size: 0.95rem;
+      background: #fafcff;
+      transition: 0.15s;
+      outline: none;
+    }
+    .form-row-inline input:focus,
+    .form-row-inline select:focus {
+      border-color: #b32b2b;
+      box-shadow: 0 0 0 3px rgba(179,43,43,0.08);
+      background: white;
+    }
+
     @media (max-width: 768px) {
       .captcha-inline {
         flex-wrap: wrap;
@@ -490,6 +534,22 @@
       .welcome-line { font-size: 0.7rem; }
       .complaint-list { max-height: 400px; }
       .subhead .badge-count { font-size: 0.7rem; padding: 0.2rem 0.6rem; }
+      /* 手機上同一行改為垂直 */
+      .form-row-inline {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 4px;
+      }
+      .form-row-inline label {
+        flex: none;
+        width: 100%;
+        font-size: 0.85rem;
+      }
+      .form-row-inline input,
+      .form-row-inline select {
+        min-width: unset;
+        width: 100%;
+      }
     }
     @media (max-width: 375px) {
       .container { padding: 0.4rem; }
@@ -733,14 +793,24 @@
     </div>
   </div>
 
-  <!-- ===== 管理員登入彈窗（驗證碼同一排） ===== -->
+  <!-- ===== 管理員登入彈窗（標籤與輸入框同一行） ===== -->
   <div class="login-overlay" id="adminLoginOverlay">
     <div class="login-box">
       <h3><i class="fas fa-user-shield" style="color:#c52a2a;"></i> 管理員登入</h3>
       <p style="color:#6b8097;font-size:0.9rem;margin-bottom:1.2rem;">請輸入管理員帳號與密碼</p>
       <div class="error-msg" id="adminErrorMsg">❌ 帳號或密碼錯誤</div>
-      <input type="text" id="adminUsername" placeholder="管理員帳號" />
-      <input type="password" id="adminPassword" placeholder="管理員密碼" />
+      
+      <!-- 管理員帳號：標籤+輸入框同一行 -->
+      <div class="form-row-inline">
+        <label for="adminUsername"><i class="fas fa-user"></i> 帳號 <span class="required">*</span></label>
+        <input type="text" id="adminUsername" placeholder="管理員帳號" />
+      </div>
+      
+      <!-- 管理員密碼：標籤+輸入框同一行 -->
+      <div class="form-row-inline">
+        <label for="adminPassword"><i class="fas fa-lock"></i> 密碼 <span class="required">*</span></label>
+        <input type="password" id="adminPassword" placeholder="管理員密碼" />
+      </div>
       
       <!-- 驗證碼（同一排） -->
       <div class="captcha-inline">
@@ -800,21 +870,27 @@
     </div>
   </div>
 
-  <!-- ===== 身份驗證變更密碼彈窗（驗證碼同一排） ===== -->
+  <!-- ===== 身份驗證變更密碼彈窗（標籤與輸入框同一行） ===== -->
   <div class="verify-change-overlay" id="verifyChangeOverlay">
     <div class="verify-change-box">
       <h3><i class="fas fa-shield-alt" style="color:#2a5b7a;"></i> 身份驗證</h3>
       <p class="sub-title">請輸入您的管理員資料進行驗證</p>
-      <div class="form-group">
-        <label><i class="fas fa-user"></i> 管理員帳號 <span class="required">*</span></label>
+      
+      <!-- 管理員帳號：標籤+輸入框同一行 -->
+      <div class="form-row-inline">
+        <label for="verifyUsername"><i class="fas fa-user"></i> 管理員帳號 <span class="required">*</span></label>
         <input type="text" id="verifyUsername" placeholder="請輸入管理員帳號" />
       </div>
-      <div class="form-group">
-        <label><i class="fas fa-id-card"></i> 姓名 <span class="required">*</span></label>
+      
+      <!-- 姓名：標籤+輸入框同一行 -->
+      <div class="form-row-inline">
+        <label for="verifyDisplayName"><i class="fas fa-id-card"></i> 姓名 <span class="required">*</span></label>
         <input type="text" id="verifyDisplayName" placeholder="請輸入您的姓名" />
       </div>
-      <div class="form-group">
-        <label><i class="fas fa-calendar-alt"></i> 生日 <span class="required">*</span></label>
+      
+      <!-- 生日：標籤+輸入框同一行 -->
+      <div class="form-row-inline">
+        <label for="verifyBirthday"><i class="fas fa-calendar-alt"></i> 生日 <span class="required">*</span></label>
         <input type="date" id="verifyBirthday" />
       </div>
       
@@ -830,12 +906,12 @@
       <div class="error-msg" id="verifyErrorMsg">❌ 驗證失敗，請確認資料是否正確</div>
       <div class="success-msg" id="verifySuccessMsg">✅ 驗證成功！請設定新密碼</div>
       <div id="verifyChangePwdArea" style="display:none; margin-top:0.5rem; border-top:1px solid #eef3f9; padding-top:0.8rem;">
-        <div class="form-group">
-          <label><i class="fas fa-key"></i> 新密碼 <span class="required">*</span></label>
+        <div class="form-row-inline">
+          <label for="verifyNewPassword"><i class="fas fa-key"></i> 新密碼 <span class="required">*</span></label>
           <input type="password" id="verifyNewPassword" placeholder="請輸入新密碼（至少6個字元）" />
         </div>
-        <div class="form-group">
-          <label><i class="fas fa-check-circle"></i> 確認新密碼 <span class="required">*</span></label>
+        <div class="form-row-inline">
+          <label for="verifyConfirmPassword"><i class="fas fa-check-circle"></i> 確認新密碼 <span class="required">*</span></label>
           <input type="password" id="verifyConfirmPassword" placeholder="請再次輸入新密碼" />
         </div>
         <button class="btn-primary" id="verifyChangePwdBtn" style="margin-top:0.5rem;">
