@@ -338,16 +338,14 @@
     .video-link-box a { color: #2a5b7a; word-break: break-all; text-decoration: underline; flex: 1; }
     .video-link-box .link-label { font-size: 0.65rem; color: #8a9db0; white-space: nowrap; }
 
-    /* ===== 驗證碼樣式 (14px) ===== */
-    .captcha-container {
+    /* ===== 驗證碼樣式 (14px, 同一排) ===== */
+    .captcha-inline {
       display: flex;
       align-items: center;
       gap: 10px;
       margin-bottom: 0.8rem;
-      flex-wrap: wrap;
-      justify-content: center;
     }
-    .captcha-box {
+    .captcha-inline .captcha-box {
       background: linear-gradient(135deg, #2a405b, #1a2c44);
       color: #fff;
       font-family: 'Courier New', monospace;
@@ -362,40 +360,47 @@
       border: 2px solid #4a6a8a;
       box-shadow: inset 0 0 12px rgba(0,0,0,0.3);
       text-shadow: 0 1px 3px rgba(0,0,0,0.3);
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+      flex-shrink: 0;
     }
-    .captcha-box span {
+    .captcha-inline .captcha-box span {
       display: inline-block;
       transform: rotate(var(--rot, 0deg));
     }
-    .captcha-box span:nth-child(1) { --rot: -4deg; }
-    .captcha-box span:nth-child(2) { --rot: 6deg; }
-    .captcha-box span:nth-child(3) { --rot: -3deg; }
-    .captcha-box span:nth-child(4) { --rot: 5deg; }
-    .captcha-refresh {
+    .captcha-inline .captcha-box span:nth-child(1) { --rot: -4deg; }
+    .captcha-inline .captcha-box span:nth-child(2) { --rot: 6deg; }
+    .captcha-inline .captcha-box span:nth-child(3) { --rot: -3deg; }
+    .captcha-inline .captcha-box span:nth-child(4) { --rot: 5deg; }
+    .captcha-inline .captcha-refresh {
       background: transparent;
       border: 1px solid #d7dfe9;
       border-radius: 50%;
-      width: 30px;
-      height: 30px;
+      width: 36px;
+      height: 36px;
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: 0.15s;
       color: #4a6a8a;
-      font-size: 12px;
+      font-size: 14px;
       flex-shrink: 0;
     }
-    .captcha-refresh:hover {
+    .captcha-inline .captcha-refresh:hover {
       background: #eef3f9;
       border-color: #4a6a8a;
       transform: rotate(30deg);
     }
-    .captcha-refresh:active {
+    .captcha-inline .captcha-refresh:active {
       transform: rotate(60deg);
     }
-    .captcha-input {
-      width: 100%;
+    .captcha-inline .captcha-input {
+      flex: 1;
+      min-width: 100px;
       padding: 0.3rem 0.7rem;
       border: 1px solid #d7dfe9;
       border-radius: 8px;
@@ -406,27 +411,49 @@
       background: #fafcff;
       transition: 0.15s;
       outline: none;
+      height: 36px;
     }
-    .captcha-input:focus {
+    .captcha-inline .captcha-input:focus {
       border-color: #b32b2b;
       box-shadow: 0 0 0 3px rgba(179,43,43,0.08);
       background: white;
     }
-    .captcha-input.error {
+    .captcha-inline .captcha-input.error {
       border-color: #dc3545;
       box-shadow: 0 0 0 3px rgba(220,53,69,0.15);
     }
-    .captcha-input.success {
+    .captcha-inline .captcha-input.success {
       border-color: #28a745;
       box-shadow: 0 0 0 3px rgba(40,167,69,0.15);
     }
-    @media (max-width: 768px) {
-      .captcha-box { font-size: 14px; padding: 3px 10px; min-width: 60px; letter-spacing: 3px; }
-      .captcha-refresh { width: 26px; height: 26px; font-size: 11px; }
-      .captcha-input { font-size: 14px; padding: 0.25rem 0.5rem; letter-spacing: 3px; }
-    }
 
     @media (max-width: 768px) {
+      .captcha-inline {
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .captcha-inline .captcha-input {
+        flex: 1 1 100%;
+        min-width: 80px;
+      }
+      .captcha-inline .captcha-box {
+        font-size: 14px;
+        padding: 3px 10px;
+        min-width: 60px;
+        height: 32px;
+        letter-spacing: 3px;
+      }
+      .captcha-inline .captcha-refresh {
+        width: 32px;
+        height: 32px;
+        font-size: 12px;
+      }
+      .captcha-inline .captcha-input {
+        height: 32px;
+        font-size: 13px;
+        padding: 0.2rem 0.5rem;
+        letter-spacing: 3px;
+      }
       .container { padding: 0.8rem; }
       h1 { font-size: 1.3rem; }
       .top-nav { flex-direction: column; align-items: stretch; gap: 0.5rem; }
@@ -706,7 +733,7 @@
     </div>
   </div>
 
-  <!-- ===== 管理員登入彈窗（含驗證碼 14px） ===== -->
+  <!-- ===== 管理員登入彈窗（驗證碼同一排） ===== -->
   <div class="login-overlay" id="adminLoginOverlay">
     <div class="login-box">
       <h3><i class="fas fa-user-shield" style="color:#c52a2a;"></i> 管理員登入</h3>
@@ -715,13 +742,14 @@
       <input type="text" id="adminUsername" placeholder="管理員帳號" />
       <input type="password" id="adminPassword" placeholder="管理員密碼" />
       
-      <div class="captcha-container">
+      <!-- 驗證碼（同一排） -->
+      <div class="captcha-inline">
         <div class="captcha-box" id="adminCaptchaText" title="點擊重新產生驗證碼" style="cursor:pointer;"></div>
         <button type="button" class="captcha-refresh" id="adminCaptchaRefresh" title="重新產生驗證碼">
           <i class="fas fa-sync-alt"></i>
         </button>
+        <input type="text" class="captcha-input" id="adminCaptchaInput" placeholder="請輸入驗證碼" maxlength="4" autocomplete="off" inputmode="numeric" />
       </div>
-      <input type="text" class="captcha-input" id="adminCaptchaInput" placeholder="請輸入4位數字驗證碼" maxlength="4" autocomplete="off" inputmode="numeric" />
       
       <button class="btn-primary" id="adminLoginConfirmBtn"><i class="fas fa-sign-in-alt"></i> 登入</button>
       <div class="forgot-link">
@@ -772,7 +800,7 @@
     </div>
   </div>
 
-  <!-- ===== 身份驗證變更密碼彈窗（含驗證碼 14px） ===== -->
+  <!-- ===== 身份驗證變更密碼彈窗（驗證碼同一排） ===== -->
   <div class="verify-change-overlay" id="verifyChangeOverlay">
     <div class="verify-change-box">
       <h3><i class="fas fa-shield-alt" style="color:#2a5b7a;"></i> 身份驗證</h3>
@@ -790,13 +818,14 @@
         <input type="date" id="verifyBirthday" />
       </div>
       
-      <div class="captcha-container">
+      <!-- 驗證碼（同一排） -->
+      <div class="captcha-inline">
         <div class="captcha-box" id="verifyCaptchaText" title="點擊重新產生驗證碼" style="cursor:pointer;"></div>
         <button type="button" class="captcha-refresh" id="verifyCaptchaRefresh" title="重新產生驗證碼">
           <i class="fas fa-sync-alt"></i>
         </button>
+        <input type="text" class="captcha-input" id="verifyCaptchaInput" placeholder="請輸入驗證碼" maxlength="4" autocomplete="off" inputmode="numeric" />
       </div>
-      <input type="text" class="captcha-input" id="verifyCaptchaInput" placeholder="請輸入4位數字驗證碼" maxlength="4" autocomplete="off" inputmode="numeric" />
       
       <div class="error-msg" id="verifyErrorMsg">❌ 驗證失敗，請確認資料是否正確</div>
       <div class="success-msg" id="verifySuccessMsg">✅ 驗證成功！請設定新密碼</div>
@@ -1028,7 +1057,7 @@
     const replyFiles = {};
 
     // ============================================================
-    // 驗證碼 (14px)
+    // 驗證碼 (14px, 同一排)
     // ============================================================
     let adminCaptchaCode = '';
     let verifyCaptchaCode = '';
@@ -1062,7 +1091,7 @@
       if (input) {
         input.value = '';
         input.className = 'captcha-input';
-        input.placeholder = '請輸入4位數字驗證碼';
+        input.placeholder = '請輸入驗證碼';
         input.focus();
       }
     }
@@ -1074,7 +1103,7 @@
       if (input) {
         input.value = '';
         input.className = 'captcha-input';
-        input.placeholder = '請輸入4位數字驗證碼';
+        input.placeholder = '請輸入驗證碼';
         input.focus();
       }
     }
@@ -3932,7 +3961,6 @@
         listenForcedLogout();
       }
       
-      // 初始化驗證碼
       initCaptchaEvents();
       refreshAdminCaptcha();
       refreshVerifyCaptcha();
@@ -3946,7 +3974,7 @@
       console.log('📹 影片上傳限制：50MB，超過請使用影片連結');
       console.log('🗑️ 刪除權限：版主+所有權（顯示只說版主）');
       console.log('🔔 新投訴計數功能已啟用');
-      console.log('🔐 驗證碼功能已啟用（14px，點擊文字可刷新）');
+      console.log('🔐 驗證碼功能已啟用（14px，同一排，點擊文字可刷新）');
     }
 
     init();
