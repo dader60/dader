@@ -2668,13 +2668,16 @@
     }
 
     // ============================================================
-    // 23. @標記選單（點擊後自動消失）
+    // 23. @標記選單（修正版 - 點擊後自動消失）
     // ============================================================
 
     let mentionMenuInstance = null;
 
     function createMentionMenu() {
-      if (mentionMenuInstance) return mentionMenuInstance;
+      if (mentionMenuInstance) {
+        mentionMenuInstance.innerHTML = '';
+        return mentionMenuInstance;
+      }
       const menu = document.createElement('div');
       menu.id = 'mentionMenu';
       document.body.appendChild(menu);
@@ -2703,11 +2706,9 @@
           textarea.style.height = 'auto';
           textarea.style.height = textarea.scrollHeight + 'px';
           
-          // 觸發 input 事件更新選單狀態
           const event = new Event('input', { bubbles: true });
           textarea.dispatchEvent(event);
         }
-        // 立即隱藏選單
         hideMentionMenu();
       });
       
@@ -2724,7 +2725,10 @@
 
     function showMentionMenu(textarea, docId, searchTerm, atIndex) {
       const complaint = complaints.find(c => c.docId === docId);
-      if (!complaint) return;
+      if (!complaint) {
+        hideMentionMenu();
+        return;
+      }
       
       const canMention = isAdmin || (currentUser && complaint.userId === currentUser.uid);
       if (!canMention) {
@@ -2734,39 +2738,63 @@
       
       const menu = createMentionMenu();
       const items = [];
+      const seenNames = new Set();
       
-      // 投訴者
-      const complainantName = complaint.userName || '投訴者';
+      // 1. 加入「投訴者」
       if (!currentUser || complaint.userId !== currentUser.uid) {
-        items.push({ name: '投訴者', display: '投訴者', role: 'complainant' });
+        if (!seenNames.has('投訴者')) {
+          items.push({ name: '投訴者', display: '投訴者', role: 'complainant' });
+          seenNames.add('投訴者');
+        }
       }
       
-      // 管理員（從回覆中提取）
-      const adminNames = new Set();
+      // 2. 從回覆中提取所有管理員
       complaint.replies.forEach(r => {
         if (r.isAdmin && !r.isDeleted) {
           const roleName = r.authorRole || '管理員';
-          let display = r.authorDisplayName || '管理員';
-          if (roleName === '版主') display = '版主';
-          else if (roleName === '所有權') display = '所有權';
-          else if (roleName === '副版主') display = '副版主';
-          else if (roleName === '小編') display = r.authorDisplayName || '小編';
-          if (!adminNames.has(display)) {
-            adminNames.add(display);
+          let display = '';
+          
+          if (roleName === '版主') {
+            display = '版主';
+          } else if (roleName === '所有權') {
+            display = '所有權';
+          } else if (roleName === '副版主') {
+            display = '副版主';
+          } else if (roleName === '小編') {
+            display = r.authorDisplayName || '小編';
+          } else {
+            display = r.authorDisplayName || '管理員';
+          }
+          
+          if (!seenNames.has(display) && display) {
             items.push({ name: display, display: display, role: roleName });
+            seenNames.add(display);
           }
         }
       });
       
-      const filtered = searchTerm ? items.filter(item => 
-        item.display.includes(searchTerm) || item.name.includes(searchTerm)
-      ) : items;
+      // 如果選單是空的，顯示提示
+      if (items.length === 0) {
+        menu.innerHTML = '<div class="mention-item no-result">尚無可標記的對象</div>';
+        menu.style.display = 'block';
+        return;
+      }
       
-      menu.innerHTML = filtered.length > 0 
-        ? filtered.map(item => 
-            `<div class="mention-item" data-name="${item.name}" data-display="${item.display}">@${item.display}</div>`
-          ).join('')
-        : '<div class="mention-item no-result">無符合結果</div>';
+      // 過濾搜尋
+      let filtered = items;
+      if (searchTerm) {
+        filtered = items.filter(item => 
+          item.display.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
+      
+      if (filtered.length === 0) {
+        menu.innerHTML = `<div class="mention-item no-result">無符合結果 (${searchTerm})</div>`;
+      } else {
+        menu.innerHTML = filtered.map(item => 
+          `<div class="mention-item" data-name="${item.name}" data-display="${item.display}">@${item.display}</div>`
+        ).join('');
+      }
       
       // 定位選單
       const rect = textarea.getBoundingClientRect();
@@ -2799,17 +2827,29 @@
       const textBefore = value.substring(0, cursorPos);
       const atIndex = textBefore.lastIndexOf('@');
       
-      if (atIndex !== -1 && (atIndex === 0 || value[atIndex - 1] === ' ' || value[atIndex - 1] === '\n')) {
+      const isValidAt = atIndex !== -1 && 
+        (atIndex === 0 || value[atIndex - 1] === ' ' || value[atIndex - 1] === '\n' || value[atIndex - 1] === '>');
+      
+      if (isValidAt) {
         const searchTerm = textBefore.substring(atIndex + 1);
         const container = textarea.closest('.complaint-item');
         const docId = container?.dataset.docid;
-        if (!docId) { hideMentionMenu(); return; }
+        if (!docId) { 
+          hideMentionMenu(); 
+          return; 
+        }
         
         const complaint = complaints.find(c => c.docId === docId);
-        if (!complaint) { hideMentionMenu(); return; }
+        if (!complaint) { 
+          hideMentionMenu(); 
+          return; 
+        }
         
         const canMention = isAdmin || (currentUser && complaint.userId === currentUser.uid);
-        if (!canMention) { hideMentionMenu(); return; }
+        if (!canMention) { 
+          hideMentionMenu(); 
+          return; 
+        }
         
         showMentionMenu(textarea, docId, searchTerm, atIndex);
       } else {
@@ -2994,7 +3034,6 @@
           
           let repliesHtml = '';
           if (item.replies && item.replies.length > 0) {
-            // 過濾已刪除 + 排序（置頂優先）
             let sortedReplies = [...item.replies].filter(r => !r.isDeleted);
             sortedReplies.sort((a, b) => {
               if (a.isPinned && !b.isPinned) return -1;
@@ -3058,20 +3097,16 @@
                 replyFilesHtml += '</div>';
               }
               
-              // 按鈕組
               let actionButtons = '';
               
-              // 引用（僅投訴者或管理員）
               if (isAdmin || (currentUser && item.userId === currentUser.uid)) {
                 actionButtons += `<button class="reply-quote-btn" onclick="quoteReply('${item.docId}', '${replyId}')"><i class="fas fa-quote-right"></i> 引用</button>`;
               }
               
-              // 編輯歷史（僅管理員）
               if (isAdmin && r.editHistory && r.editHistory.length > 0) {
                 actionButtons += `<button class="reply-history-btn" onclick="showEditHistory('${item.docId}', '${replyId}')"><i class="fas fa-history"></i> 歷史</button>`;
               }
               
-              // 置頂（僅管理員）
               if (isAdmin) {
                 actionButtons += `<button class="reply-pin-btn" onclick="togglePinReply('${item.docId}', '${replyId}')">
                   <i class="fas ${r.isPinned ? 'fa-thumbtack' : 'fa-thumbtack'}" style="${r.isPinned ? 'color:#c52a2a;transform:rotate(45deg);' : 'color:#8a9db0;'}"></i>
@@ -3079,12 +3114,10 @@
                 </button>`;
               }
               
-              // 編輯（本人）
               if (isMe && !r.isDeleted) {
                 actionButtons += `<button class="reply-edit-btn" onclick="editReply('${item.docId}', '${replyId}')"><i class="fas fa-edit"></i> 編輯</button>`;
               }
               
-              // 收回（本人，不限時間）
               if (isMe && !r.isDeleted) {
                 actionButtons += `<button class="reply-delete-btn" onclick="deleteReply('${item.docId}', '${replyId}')"><i class="fas fa-trash-alt"></i> 收回</button>`;
               }
@@ -3273,7 +3306,6 @@
         return;
       }
       
-      // 解析 @ 標記和引用
       let mentions = [];
       const mentionRegex = /@(\S+)/g;
       let match;
@@ -3288,7 +3320,6 @@
         }
       }
       
-      // 檢查是否有引用
       let replyTo = null;
       const quoteMatch = replyText.match(/^> (.+?)：(.+?)\n\n/);
       if (quoteMatch) {
