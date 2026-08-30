@@ -2578,7 +2578,7 @@
     }
 
     // ============================================================
-    // 20. 回覆引用功能
+    // 20. 回覆引用功能（修正版 - 避免多層巢狀）
     // ============================================================
 
     function quoteReply(docId, replyId) {
@@ -2592,13 +2592,57 @@
       const container = document.querySelector(`.complaint-item[data-docid="${docId}"]`);
       const textarea = container?.querySelector('.reply-textarea');
       if (textarea) {
-        const quotedText = `> ${authorName}：${reply.text}\n\n`;
-        if (textarea.value.trim()) {
-          textarea.value = quotedText + textarea.value;
-        } else {
-          textarea.value = quotedText;
+        // 檢查是否已經引用過了（避免多層巢狀）
+        const currentValue = textarea.value;
+        const quotePattern = new RegExp(`^> ${authorName}：${reply.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\n\\n`);
+        
+        // 如果已經有相同的引用，不再重複加入
+        if (quotePattern.test(currentValue)) {
+          showToast('⚠️ 已引用此回覆', true);
+          textarea.focus();
+          return;
         }
+        
+        // 檢查是否已經有引用標記（> 開頭），如果有則先清空再引用
+        const hasQuote = /^> .+：.+/.test(currentValue.trim());
+        let quotedText = `> ${authorName}：${reply.text}\n\n`;
+        
+        if (hasQuote) {
+          // 已經有引用，清除舊的引用內容（保留後續輸入的文字）
+          const lines = currentValue.split('\n');
+          let newValue = '';
+          let foundQuote = false;
+          for (const line of lines) {
+            if (!foundQuote && line.startsWith('>')) {
+              foundQuote = true;
+              continue;
+            }
+            if (foundQuote && line.trim() === '') {
+              continue;
+            }
+            if (foundQuote) {
+              newValue += line + '\n';
+            }
+          }
+          // 如果沒有後續文字，直接設定為引用
+          if (!newValue.trim()) {
+            textarea.value = quotedText;
+          } else {
+            textarea.value = quotedText + newValue.trim();
+          }
+        } else {
+          // 沒有引用，直接在前面加上引用
+          if (currentValue.trim()) {
+            textarea.value = quotedText + currentValue;
+          } else {
+            textarea.value = quotedText;
+          }
+        }
+        
         textarea.focus();
+        // 將游標移到引用之後
+        const cursorPos = textarea.value.indexOf('\n\n') + 2;
+        textarea.setSelectionRange(cursorPos, cursorPos);
         textarea.style.height = 'auto';
         textarea.style.height = textarea.scrollHeight + 'px';
         
@@ -3237,7 +3281,7 @@
     }
 
     // ============================================================
-    // 27. 回覆處理
+    // 27. 回覆處理（含引用解析修正）
     // ============================================================
 
     document.addEventListener('change', function(e) {
@@ -3323,7 +3367,7 @@
       const docId = btn.dataset.docid;
       const container = btn.closest('.complaint-item');
       const textarea = container.querySelector('.reply-textarea');
-      const replyText = textarea.value.trim();
+      let replyText = textarea.value.trim();
       
       if (!replyText && (!replyFiles[docId] || replyFiles[docId].length === 0)) {
         showToast('請輸入回覆內容或上傳檔案', true);
@@ -3337,6 +3381,7 @@
         return;
       }
       
+      // ========== 解析 @ 標記 ==========
       let mentions = [];
       const mentionRegex = /@(\S+)/g;
       let match;
@@ -3351,12 +3396,54 @@
         }
       }
       
+      // ========== 解析引用（只解析最外層的引用） ==========
       let replyTo = null;
-      const quoteMatch = replyText.match(/^> (.+?)：(.+?)\n\n/);
+      // 只匹配第一行的引用格式
+      const lines = replyText.split('\n');
+      const firstLine = lines[0] || '';
+      const quoteMatch = firstLine.match(/^> (.+?)：(.+)$/);
+      
       if (quoteMatch) {
         const quotedAuthor = quoteMatch[1];
         const quotedText = quoteMatch[2];
         replyTo = { author: quotedAuthor, text: quotedText };
+        
+        // 從回覆內容中移除引用區塊（只移除第一行引用 + 後面的空行）
+        let newLines = [];
+        let skipMode = false;
+        let emptyLineSkipped = false;
+        
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          if (i === 0 && line.startsWith('>')) {
+            skipMode = true;
+            continue;
+          }
+          if (skipMode && line.trim() === '' && !emptyLineSkipped) {
+            emptyLineSkipped = true;
+            continue;
+          }
+          if (skipMode && line.trim() === '' && emptyLineSkipped) {
+            newLines.push(line);
+            continue;
+          }
+          if (skipMode && line.trim() !== '') {
+            skipMode = false;
+            newLines.push(line);
+            continue;
+          }
+          if (!skipMode) {
+            newLines.push(line);
+          }
+        }
+        
+        replyText = newLines.join('\n').trim();
+      }
+      
+      // 如果移除引用後沒有內容，但有檔案，則允許送出
+      if (!replyText && (!replyFiles[docId] || replyFiles[docId].length === 0)) {
+        showToast('請輸入回覆內容', true);
+        return;
       }
       
       btn.disabled = true;
@@ -4369,7 +4456,7 @@
       console.log('🔐 驗證碼功能已啟用（14px，同一排，點擊文字可刷新）');
       console.log('✏️ 回覆編輯功能：最多5次，顯示編輯次數（管理員）');
       console.log('📌 回覆置頂功能：管理員可置頂重要回覆');
-      console.log('🔗 回覆引用功能：可引用他人回覆');
+      console.log('🔗 回覆引用功能：可引用他人回覆，避免多層巢狀');
       console.log('@ 標記功能：輸入 @ 出現選單，點擊後自動消失');
       console.log('🕐 回覆顯示秒數');
       console.log('🗑️ 收回回覆：不限時間');
