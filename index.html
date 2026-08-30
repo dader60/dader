@@ -2676,29 +2676,45 @@
     function createMentionMenu() {
       if (mentionMenuInstance) {
         mentionMenuInstance.innerHTML = '';
+        mentionMenuInstance.style.display = 'none';
         return mentionMenuInstance;
       }
+      
       const menu = document.createElement('div');
       menu.id = 'mentionMenu';
       document.body.appendChild(menu);
       mentionMenuInstance = menu;
       
-      menu.addEventListener('click', function(e) {
+      // 使用 mousedown 事件確保在 blur 之前觸發
+      menu.addEventListener('mousedown', function(e) {
+        e.preventDefault();
         const item = e.target.closest('.mention-item');
         if (!item || item.classList.contains('no-result')) {
           hideMentionMenu();
           return;
         }
+        
         const displayName = item.dataset.display;
         const atIndex = parseInt(menu.dataset.atIndex);
         const textareaId = menu.dataset.textareaId;
         const docId = menu.dataset.docId;
-        const textarea = document.getElementById(textareaId) || 
-                         document.querySelector(`.reply-textarea[data-docid="${docId}"]`);
+        
+        // 尋找 textarea
+        let textarea = document.getElementById(textareaId);
+        if (!textarea) {
+          textarea = document.querySelector(`.reply-textarea[data-docid="${docId}"]`);
+        }
+        if (!textarea) {
+          textarea = document.querySelector('.reply-textarea');
+        }
+        
         if (textarea) {
           const value = textarea.value;
           const before = value.substring(0, atIndex);
-          const after = value.substring(atIndex + 1 + (before.split('@').pop() || '').length);
+          // 計算 @ 後面原本的文字長度
+          const afterStart = atIndex + 1 + (before.split('@').pop() || '').length;
+          const after = value.substring(afterStart);
+          
           textarea.value = before + '@' + displayName + ' ' + after;
           textarea.focus();
           const newPos = before.length + displayName.length + 2;
@@ -2709,6 +2725,7 @@
           const event = new Event('input', { bubbles: true });
           textarea.dispatchEvent(event);
         }
+        
         hideMentionMenu();
       });
       
@@ -2720,6 +2737,9 @@
       if (menu) {
         menu.style.display = 'none';
         menu.innerHTML = '';
+        delete menu.dataset.textareaId;
+        delete menu.dataset.atIndex;
+        delete menu.dataset.docId;
       }
     }
 
@@ -2740,7 +2760,7 @@
       const items = [];
       const seenNames = new Set();
       
-      // 1. 加入「投訴者」
+      // 1. 加入「投訴者」（如果非本人）
       if (!currentUser || complaint.userId !== currentUser.uid) {
         if (!seenNames.has('投訴者')) {
           items.push({ name: '投訴者', display: '投訴者', role: 'complainant' });
@@ -2777,24 +2797,29 @@
       if (items.length === 0) {
         menu.innerHTML = '<div class="mention-item no-result">尚無可標記的對象</div>';
         menu.style.display = 'block';
+        const rect = textarea.getBoundingClientRect();
+        menu.style.left = Math.max(10, rect.left) + 'px';
+        menu.style.top = Math.max(10, rect.top + 20) + 'px';
         return;
       }
       
       // 過濾搜尋
       let filtered = items;
-      if (searchTerm) {
+      if (searchTerm && searchTerm.trim()) {
         filtered = items.filter(item => 
           item.display.toLowerCase().includes(searchTerm.toLowerCase())
         );
       }
       
+      // 如果過濾後沒有結果，顯示全部
       if (filtered.length === 0) {
-        menu.innerHTML = `<div class="mention-item no-result">無符合結果 (${searchTerm})</div>`;
-      } else {
-        menu.innerHTML = filtered.map(item => 
-          `<div class="mention-item" data-name="${item.name}" data-display="${item.display}">@${item.display}</div>`
-        ).join('');
+        filtered = items;
       }
+      
+      // 渲染選單
+      menu.innerHTML = filtered.map(item => 
+        `<div class="mention-item" data-name="${item.name}" data-display="${item.display}">@${item.display}</div>`
+      ).join('');
       
       // 定位選單
       const rect = textarea.getBoundingClientRect();
@@ -2867,9 +2892,15 @@
       }
     });
 
+    // 加強全域點擊監聽 - 點擊其他地方選單消失
     document.addEventListener('click', function(e) {
-      if (!e.target.closest('#mentionMenu') && !e.target.closest('.reply-textarea')) {
-        hideMentionMenu();
+      const menu = document.getElementById('mentionMenu');
+      if (menu && menu.style.display === 'block') {
+        const isClickOnMenu = e.target.closest('#mentionMenu');
+        const isClickOnTextarea = e.target.closest('.reply-textarea');
+        if (!isClickOnMenu && !isClickOnTextarea) {
+          hideMentionMenu();
+        }
       }
     });
 
