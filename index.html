@@ -305,9 +305,12 @@
     .reply-author.admin { color: #4a5568 !important; font-weight: 600 !important; }
     .reply-author.me { background: rgba(197, 42, 42, 0.08); padding: 0 8px; border-radius: 4px; }
     .reply-actions { display: inline-flex; gap: 4px; margin-left: auto; }
-    .reply-edit-btn, .reply-delete-btn { background: transparent; border: none; padding: 0 4px; font-size: 0.7rem; cursor: pointer; color: #8a9db0; transition: 0.15s; }
+    .reply-edit-btn, .reply-delete-btn, .reply-quote-btn, .reply-history-btn, .reply-pin-btn { background: transparent; border: none; padding: 0 4px; font-size: 0.7rem; cursor: pointer; color: #8a9db0; transition: 0.15s; }
     .reply-edit-btn:hover { color: #2a5b7a; }
     .reply-delete-btn:hover { color: #dc3545; }
+    .reply-quote-btn:hover { color: #2a7a5b; }
+    .reply-history-btn:hover { color: #b8860b; }
+    .reply-pin-btn:hover { color: #c52a2a; }
     .reply-files { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
     .reply-files img, .reply-files .video-thumb { border-radius: 8px; border: 1px solid #e6ecf5; cursor: pointer; transition: 0.15s; }
     .reply-files img:hover, .reply-files .video-thumb:hover { transform: scale(1.05); box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
@@ -336,392 +339,63 @@
     .video-link-box a { color: #2a5b7a; word-break: break-all; text-decoration: underline; flex: 1; }
     .video-link-box .link-label { font-size: 0.65rem; color: #8a9db0; white-space: nowrap; }
 
-    /* ===== 驗證碼樣式 (14px, 同一排) ===== */
-    .captcha-inline {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 0.8rem;
-    }
-    .captcha-inline .captcha-box {
-      background: linear-gradient(135deg, #2a405b, #1a2c44);
-      color: #fff;
-      font-family: 'Courier New', monospace;
-      font-size: 14px;
-      font-weight: 700;
-      padding: 4px 12px;
-      border-radius: 8px;
-      letter-spacing: 4px;
-      user-select: none;
-      min-width: 70px;
-      text-align: center;
-      border: 2px solid #4a6a8a;
-      box-shadow: inset 0 0 12px rgba(0,0,0,0.3);
-      text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      line-height: 1;
-      flex-shrink: 0;
-    }
-    .captcha-inline .captcha-box span {
-      display: inline-block;
-      transform: rotate(var(--rot, 0deg));
-    }
+    /* ===== 驗證碼樣式 ===== */
+    .captcha-inline { display: flex; align-items: center; gap: 10px; margin-bottom: 0.8rem; }
+    .captcha-inline .captcha-box { background: linear-gradient(135deg, #2a405b, #1a2c44); color: #fff; font-family: 'Courier New', monospace; font-size: 14px; font-weight: 700; padding: 4px 12px; border-radius: 8px; letter-spacing: 4px; user-select: none; min-width: 70px; text-align: center; border: 2px solid #4a6a8a; box-shadow: inset 0 0 12px rgba(0,0,0,0.3); text-shadow: 0 1px 3px rgba(0,0,0,0.3); height: 36px; display: flex; align-items: center; justify-content: center; line-height: 1; flex-shrink: 0; }
+    .captcha-inline .captcha-box span { display: inline-block; transform: rotate(var(--rot, 0deg)); }
     .captcha-inline .captcha-box span:nth-child(1) { --rot: -4deg; }
     .captcha-inline .captcha-box span:nth-child(2) { --rot: 6deg; }
     .captcha-inline .captcha-box span:nth-child(3) { --rot: -3deg; }
     .captcha-inline .captcha-box span:nth-child(4) { --rot: 5deg; }
-    .captcha-inline .captcha-refresh {
-      background: transparent;
-      border: 1px solid #d7dfe9;
-      border-radius: 50%;
-      width: 36px;
-      height: 36px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: 0.15s;
-      color: #4a6a8a;
-      font-size: 14px;
-      flex-shrink: 0;
-    }
-    .captcha-inline .captcha-refresh:hover {
-      background: #eef3f9;
-      border-color: #4a6a8a;
-      transform: rotate(30deg);
-    }
-    .captcha-inline .captcha-refresh:active {
-      transform: rotate(60deg);
-    }
-    .captcha-inline .captcha-input {
-      flex: 1;
-      min-width: 100px;
-      padding: 0.3rem 0.7rem;
-      border: 1px solid #d7dfe9;
-      border-radius: 8px;
-      font-size: 14px;
-      text-align: center;
-      letter-spacing: 4px;
-      font-family: 'Courier New', monospace;
-      background: #fafcff;
-      transition: 0.15s;
-      outline: none;
-      height: 36px;
-    }
-    .captcha-inline .captcha-input:focus {
-      border-color: #b32b2b;
-      box-shadow: 0 0 0 3px rgba(179,43,43,0.08);
-      background: white;
-    }
-    .captcha-inline .captcha-input.error {
-      border-color: #dc3545;
-      box-shadow: 0 0 0 3px rgba(220,53,69,0.15);
-    }
-    .captcha-inline .captcha-input.success {
-      border-color: #28a745;
-      box-shadow: 0 0 0 3px rgba(40,167,69,0.15);
-    }
+    .captcha-inline .captcha-refresh { background: transparent; border: 1px solid #d7dfe9; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.15s; color: #4a6a8a; font-size: 14px; flex-shrink: 0; }
+    .captcha-inline .captcha-refresh:hover { background: #eef3f9; border-color: #4a6a8a; transform: rotate(30deg); }
+    .captcha-inline .captcha-refresh:active { transform: rotate(60deg); }
+    .captcha-inline .captcha-input { flex: 1; min-width: 100px; padding: 0.3rem 0.7rem; border: 1px solid #d7dfe9; border-radius: 8px; font-size: 14px; text-align: center; letter-spacing: 4px; font-family: 'Courier New', monospace; background: #fafcff; transition: 0.15s; outline: none; height: 36px; }
+    .captcha-inline .captcha-input:focus { border-color: #b32b2b; box-shadow: 0 0 0 3px rgba(179,43,43,0.08); background: white; }
+    .captcha-inline .captcha-input.error { border-color: #dc3545; box-shadow: 0 0 0 3px rgba(220,53,69,0.15); }
+    .captcha-inline .captcha-input.success { border-color: #28a745; box-shadow: 0 0 0 3px rgba(40,167,69,0.15); }
 
-    /* ===== 同一行表單組 (標籤左、輸入框右) ===== */
-    .form-row-inline {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-    }
-    .form-row-inline label {
-      flex: 0 0 110px;
-      font-weight: 500;
-      font-size: 0.9rem;
-      color: #2a405b;
-      margin-bottom: 0;
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      text-align: left;
-    }
-    .form-row-inline label i {
-      width: 18px;
-      color: #6c7e94;
-    }
-    .form-row-inline label .required {
-      color: #c52a2a;
-      margin-left: 2px;
-    }
-    .form-row-inline input,
-    .form-row-inline select {
-      flex: 1;
-      min-width: 160px;
-      padding: 0.6rem 0.9rem;
-      border: 1px solid #d7dfe9;
-      border-radius: 16px;
-      font-size: 0.95rem;
-      background: #fafcff;
-      transition: 0.15s;
-      outline: none;
-    }
-    .form-row-inline input:focus,
-    .form-row-inline select:focus {
-      border-color: #b32b2b;
-      box-shadow: 0 0 0 3px rgba(179,43,43,0.08);
-      background: white;
-    }
+    .form-row-inline { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; flex-wrap: wrap; }
+    .form-row-inline label { flex: 0 0 110px; font-weight: 500; font-size: 0.9rem; color: #2a405b; margin-bottom: 0; display: flex; align-items: center; gap: 4px; text-align: left; }
+    .form-row-inline label i { width: 18px; color: #6c7e94; }
+    .form-row-inline label .required { color: #c52a2a; margin-left: 2px; }
+    .form-row-inline input, .form-row-inline select { flex: 1; min-width: 160px; padding: 0.6rem 0.9rem; border: 1px solid #d7dfe9; border-radius: 16px; font-size: 0.95rem; background: #fafcff; transition: 0.15s; outline: none; }
+    .form-row-inline input:focus, .form-row-inline select:focus { border-color: #b32b2b; box-shadow: 0 0 0 3px rgba(179,43,43,0.08); background: white; }
 
-    /* ===== 新增功能樣式：編輯歷史、引用、@標記、置頂 ===== */
-    .edit-badge {
-      font-size: 0.6rem;
-      background: #6c7e94;
-      color: white;
-      padding: 1px 8px;
-      border-radius: 12px;
-      margin-left: 6px;
-      display: inline-block;
-      white-space: nowrap;
-    }
-    .edit-badge.edited {
-      background: #ff6b00;
-    }
-    .edit-badge.user-edited {
-      background: #ffa500;
-      color: #1a1a2e;
-    }
-    .edit-count-badge {
-      font-size: 0.6rem;
-      background: #2a405b;
-      color: white;
-      padding: 1px 8px;
-      border-radius: 12px;
-      margin-left: 4px;
-      display: inline-block;
-      white-space: nowrap;
-    }
-    .edit-count-badge.admin-view {
-      background: #c52a2a;
-    }
-    .reply-time-seconds {
-      font-size: 0.6rem;
-      color: #8a9db0;
-      margin-left: 4px;
-    }
-    .reply-pinned {
-      background: #fff8e1 !important;
-      border-left: 4px solid #ffc107 !important;
-    }
-    .reply-pinned .pinned-badge {
-      background: #ffc107;
-      color: #6d5a00;
-      font-size: 0.55rem;
-      padding: 1px 8px;
-      border-radius: 12px;
-      margin-left: 4px;
-      font-weight: 600;
-    }
-    .reply-actions .reply-history-btn {
-      background: transparent;
-      border: none;
-      padding: 0 4px;
-      font-size: 0.7rem;
-      cursor: pointer;
-      color: #2a5b7a;
-      transition: 0.15s;
-    }
-    .reply-actions .reply-history-btn:hover {
-      color: #1a405a;
-      text-decoration: underline;
-    }
-    .reply-actions .reply-quote-btn {
-      background: transparent;
-      border: none;
-      padding: 0 4px;
-      font-size: 0.7rem;
-      cursor: pointer;
-      color: #7a5b2a;
-      transition: 0.15s;
-    }
-    .reply-actions .reply-quote-btn:hover {
-      color: #5a3b1a;
-      text-decoration: underline;
-    }
-    .reply-actions .reply-pin-btn {
-      background: transparent;
-      border: none;
-      padding: 0 4px;
-      font-size: 0.7rem;
-      cursor: pointer;
-      color: #b8860b;
-      transition: 0.15s;
-    }
-    .reply-actions .reply-pin-btn:hover {
-      color: #8a6a0b;
-      text-decoration: underline;
-    }
-    .reply-actions .reply-unpin-btn {
-      background: transparent;
-      border: none;
-      padding: 0 4px;
-      font-size: 0.7rem;
-      cursor: pointer;
-      color: #6c757d;
-      transition: 0.15s;
-    }
-    .reply-actions .reply-unpin-btn:hover {
-      color: #4a4a4a;
-      text-decoration: underline;
-    }
-    .history-modal {
-      display: none;
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(0,0,0,0.5);
-      z-index: 3000;
-      justify-content: center;
-      align-items: center;
-      padding: 1rem;
-    }
-    .history-modal.active {
-      display: flex;
-    }
-    .history-modal-content {
-      background: white;
-      border-radius: 20px;
-      padding: 2rem;
-      max-width: 600px;
-      width: 100%;
-      max-height: 80vh;
-      overflow-y: auto;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-    }
-    .history-modal-content h3 {
-      margin-bottom: 0.5rem;
-      color: #0b1e33;
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .history-modal-content .sub-title {
-      color: #6b8097;
-      font-size: 0.85rem;
-      margin-bottom: 1rem;
-    }
-    .history-item {
-      padding: 10px 14px;
-      border-bottom: 1px solid #eef3f9;
-      font-size: 0.85rem;
-    }
-    .history-item:hover {
-      background: #f6f9ff;
-    }
-    .history-item .history-time {
-      font-size: 0.7rem;
-      color: #8a9db0;
-    }
-    .history-item .history-old {
-      color: #dc3545;
-      text-decoration: line-through;
-      margin-right: 8px;
-    }
-    .history-item .history-new {
-      color: #28a745;
-    }
-    .history-item .history-arrow {
-      color: #6c7e94;
-      margin: 0 6px;
-    }
-    .history-empty {
-      text-align: center;
-      padding: 2rem;
-      color: #8a9db0;
-    }
-    .history-close-btn {
-      margin-top: 1rem;
-      width: 100%;
-      justify-content: center;
-    }
+    /* ===== 編輯標記 ===== */
+    .edit-badge { font-size: 0.6rem; margin-left: 6px; padding: 0 8px; border-radius: 10px; }
+    .admin-edit { color: #2a5b7a; background: #e3edf7; }
+    .user-edit { color: #8a9db0; background: #f0f2f5; }
 
-    /* @ 標記下拉選單 */
-    .mention-dropdown {
-      display: none;
-      position: absolute;
-      background: white;
-      border: 1px solid #d7dfe9;
-      border-radius: 12px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-      max-height: 150px;
-      overflow-y: auto;
-      z-index: 500;
-      min-width: 150px;
-    }
-    .mention-dropdown.active {
-      display: block;
-    }
-    .mention-dropdown .mention-item {
-      padding: 6px 12px;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.85rem;
-      transition: 0.1s;
-    }
-    .mention-dropdown .mention-item:hover {
-      background: #f0f4fa;
-    }
-    .mention-dropdown .mention-item .mention-avatar {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: #c52a2a;
-      color: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 0.6rem;
-      font-weight: 600;
-      flex-shrink: 0;
-    }
-    .mention-dropdown .mention-item .mention-name {
-      font-weight: 500;
-      color: #1a2c44;
-    }
-    .mention-dropdown .mention-item .mention-role {
-      font-size: 0.6rem;
-      color: #8a9db0;
-    }
+    /* ===== 置頂標記 ===== */
+    .pinned-badge { background: #c52a2a; color: white; font-size: 0.55rem; padding: 1px 8px; border-radius: 10px; margin-left: 4px; }
+
+    /* ===== 引用區塊 ===== */
+    .reply-quote-block { background: #f0f4fa; border-left: 3px solid #2a5b7a; padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; color: #4a6a8a; margin-bottom: 4px; }
+    .reply-quote-block .quote-author { font-weight: 600; color: #2a405b; }
+
+    /* ===== 編輯歷史彈窗 ===== */
+    .edit-history-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 999; justify-content: center; align-items: center; padding: 1rem; }
+    .edit-history-overlay.active { display: flex; }
+    .edit-history-box { background: white; padding: 2rem; border-radius: 24px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.2); }
+    .edit-history-box h3 { margin-bottom: 1rem; color: #0b1e33; text-align: center; }
+    .edit-history-item { padding: 8px 12px; border-bottom: 1px solid #eef3f9; font-size: 0.8rem; }
+    .edit-history-item .history-time { color: #8a9db0; font-size: 0.7rem; }
+    .edit-history-item .history-text { color: #2a405b; margin-top: 2px; }
+
+    /* ===== @選單 ===== */
+    #mentionMenu { position: fixed; background: white; border: 1px solid #d7dfe9; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); max-height: 150px; overflow-y: auto; z-index: 999; min-width: 120px; display: none; padding: 4px 0; }
+    #mentionMenu .mention-item { padding: 6px 14px; cursor: pointer; font-size: 0.85rem; color: #2a405b; }
+    #mentionMenu .mention-item:hover { background: #eef3f9; }
+    #mentionMenu .mention-item.no-result { color: #8a9db0; cursor: default; }
+    #mentionMenu .mention-item.no-result:hover { background: transparent; }
 
     @media (max-width: 768px) {
-      .captcha-inline {
-        flex-wrap: wrap;
-        gap: 8px;
-      }
-      .captcha-inline .captcha-input {
-        flex: 1 1 100%;
-        min-width: 80px;
-      }
-      .captcha-inline .captcha-box {
-        font-size: 14px;
-        padding: 3px 10px;
-        min-width: 60px;
-        height: 32px;
-        letter-spacing: 3px;
-      }
-      .captcha-inline .captcha-refresh {
-        width: 32px;
-        height: 32px;
-        font-size: 12px;
-      }
-      .captcha-inline .captcha-input {
-        height: 32px;
-        font-size: 13px;
-        padding: 0.2rem 0.5rem;
-        letter-spacing: 3px;
-      }
+      .captcha-inline { flex-wrap: wrap; gap: 8px; }
+      .captcha-inline .captcha-input { flex: 1 1 100%; min-width: 80px; }
+      .captcha-inline .captcha-box { font-size: 14px; padding: 3px 10px; min-width: 60px; height: 32px; letter-spacing: 3px; }
+      .captcha-inline .captcha-refresh { width: 32px; height: 32px; font-size: 12px; }
+      .captcha-inline .captcha-input { height: 32px; font-size: 13px; padding: 0.2rem 0.5rem; letter-spacing: 3px; }
       .container { padding: 0.8rem; }
       h1 { font-size: 1.3rem; }
       .top-nav { flex-direction: column; align-items: stretch; gap: 0.5rem; }
@@ -758,29 +432,9 @@
       .welcome-line { font-size: 0.7rem; }
       .complaint-list { max-height: 400px; }
       .subhead .badge-count { font-size: 0.7rem; padding: 0.2rem 0.6rem; }
-      .form-row-inline {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 4px;
-      }
-      .form-row-inline label {
-        flex: none;
-        width: 100%;
-        font-size: 0.85rem;
-      }
-      .form-row-inline input,
-      .form-row-inline select {
-        min-width: unset;
-        width: 100%;
-      }
-      .history-modal-content {
-        padding: 1rem;
-        max-width: 98%;
-      }
-      .history-item {
-        font-size: 0.75rem;
-        padding: 8px 10px;
-      }
+      .form-row-inline { flex-direction: column; align-items: stretch; gap: 4px; }
+      .form-row-inline label { flex: none; width: 100%; font-size: 0.85rem; }
+      .form-row-inline input, .form-row-inline select { min-width: unset; width: 100%; }
     }
     @media (max-width: 375px) {
       .container { padding: 0.4rem; }
@@ -1024,23 +678,20 @@
     </div>
   </div>
 
-  <!-- ===== 管理員登入彈窗（標籤與輸入框同一行） ===== -->
+  <!-- ===== 管理員登入彈窗 ===== -->
   <div class="login-overlay" id="adminLoginOverlay">
     <div class="login-box">
       <h3><i class="fas fa-user-shield" style="color:#c52a2a;"></i> 管理員登入</h3>
       <p style="color:#6b8097;font-size:0.9rem;margin-bottom:1.2rem;">請輸入管理員帳號與密碼</p>
       <div class="error-msg" id="adminErrorMsg">❌ 帳號或密碼錯誤</div>
-      
       <div class="form-row-inline">
         <label for="adminUsername"><i class="fas fa-user"></i> 帳號 <span class="required">*</span></label>
         <input type="text" id="adminUsername" placeholder="管理員帳號" />
       </div>
-      
       <div class="form-row-inline">
         <label for="adminPassword"><i class="fas fa-lock"></i> 密碼 <span class="required">*</span></label>
         <input type="password" id="adminPassword" placeholder="管理員密碼" />
       </div>
-      
       <div class="captcha-inline">
         <div class="captcha-box" id="adminCaptchaText" title="點擊重新產生驗證碼" style="cursor:pointer;"></div>
         <button type="button" class="captcha-refresh" id="adminCaptchaRefresh" title="重新產生驗證碼">
@@ -1048,7 +699,6 @@
         </button>
         <input type="text" class="captcha-input" id="adminCaptchaInput" placeholder="請輸入驗證碼" maxlength="4" autocomplete="off" inputmode="numeric" />
       </div>
-      
       <button class="btn-primary" id="adminLoginConfirmBtn"><i class="fas fa-sign-in-alt"></i> 登入</button>
       <div class="forgot-link">
         <a href="#" id="forgotPasswordLink"><i class="fas fa-key"></i> 忘記密碼？</a>
@@ -1098,27 +748,23 @@
     </div>
   </div>
 
-  <!-- ===== 身份驗證變更密碼彈窗（標籤與輸入框同一行） ===== -->
+  <!-- ===== 身份驗證變更密碼彈窗 ===== -->
   <div class="verify-change-overlay" id="verifyChangeOverlay">
     <div class="verify-change-box">
       <h3><i class="fas fa-shield-alt" style="color:#2a5b7a;"></i> 身份驗證</h3>
       <p class="sub-title">請輸入您的管理員資料進行驗證</p>
-      
       <div class="form-row-inline">
         <label for="verifyUsername"><i class="fas fa-user"></i> 管理員帳號 <span class="required">*</span></label>
         <input type="text" id="verifyUsername" placeholder="請輸入管理員帳號" />
       </div>
-      
       <div class="form-row-inline">
         <label for="verifyDisplayName"><i class="fas fa-id-card"></i> 姓名 <span class="required">*</span></label>
         <input type="text" id="verifyDisplayName" placeholder="請輸入您的姓名" />
       </div>
-      
       <div class="form-row-inline">
         <label for="verifyBirthday"><i class="fas fa-calendar-alt"></i> 生日 <span class="required">*</span></label>
         <input type="date" id="verifyBirthday" />
       </div>
-      
       <div class="captcha-inline">
         <div class="captcha-box" id="verifyCaptchaText" title="點擊重新產生驗證碼" style="cursor:pointer;"></div>
         <button type="button" class="captcha-refresh" id="verifyCaptchaRefresh" title="重新產生驗證碼">
@@ -1126,7 +772,6 @@
         </button>
         <input type="text" class="captcha-input" id="verifyCaptchaInput" placeholder="請輸入驗證碼" maxlength="4" autocomplete="off" inputmode="numeric" />
       </div>
-      
       <div class="error-msg" id="verifyErrorMsg">❌ 驗證失敗，請確認資料是否正確</div>
       <div class="success-msg" id="verifySuccessMsg">✅ 驗證成功！請設定新密碼</div>
       <div id="verifyChangePwdArea" style="display:none; margin-top:0.5rem; border-top:1px solid #eef3f9; padding-top:0.8rem;">
@@ -1262,6 +907,18 @@
     </div>
   </div>
 
+  <!-- ===== 編輯歷史彈窗 ===== -->
+  <div class="edit-history-overlay" id="editHistoryOverlay">
+    <div class="edit-history-box">
+      <h3><i class="fas fa-history"></i> 編輯歷史</h3>
+      <div id="editHistoryContent"></div>
+      <button class="btn-secondary" onclick="document.getElementById('editHistoryOverlay').classList.remove('active')" style="width:100%; justify-content:center; margin-top:1rem;">關閉</button>
+    </div>
+  </div>
+
+  <!-- ===== @選單 ===== -->
+  <div id="mentionMenu"></div>
+
   <!-- ===== 圖片燈箱 ===== -->
   <div class="lightbox" id="lightbox">
     <button class="nav-btn prev" id="lightboxPrev"><i class="fas fa-chevron-left"></i></button>
@@ -1281,18 +938,6 @@
       <div class="video-counter" id="videoCounter">1 / 1</div>
       <button class="video-nav-btn prev" id="videoPrev" onclick="navigateVideo(-1)"><i class="fas fa-chevron-left"></i></button>
       <button class="video-nav-btn next" id="videoNext" onclick="navigateVideo(1)"><i class="fas fa-chevron-right"></i></button>
-    </div>
-  </div>
-
-  <!-- ===== 編輯歷史彈窗 ===== -->
-  <div class="history-modal" id="historyModal">
-    <div class="history-modal-content">
-      <h3><i class="fas fa-history" style="color:#2a5b7a;"></i> 回覆編輯歷史</h3>
-      <p class="sub-title" id="historySubtitle">查看此回覆的所有編輯紀錄</p>
-      <div id="historyList">
-        <div class="history-empty"><i class="fas fa-inbox"></i><p>尚無編輯紀錄</p></div>
-      </div>
-      <button class="btn-secondary history-close-btn" id="historyCloseBtn">關閉</button>
     </div>
   </div>
 
@@ -1345,6 +990,7 @@
     const IMGBB_API_KEY = "e36eefa56ac3084d8b981ee390bcba27";
     const STATUS_LIST = ['待處理', '調查中', '已處理', '不予受理', '需要補充資料', '已轉交相關人員'];
     const ROLE_NAMES = { owner: '所有權', moderator: '版主', vice: '副版主', editor: '小編' };
+    const MAX_EDIT_COUNT = 5;
 
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
@@ -1489,7 +1135,6 @@
       sessionStorage.setItem('tabId', currentTabId);
     }
 
-    // Broadcast Channel
     let broadcastChannel = null;
     try { broadcastChannel = new BroadcastChannel('admin_force_logout'); } catch (e) {}
     if (broadcastChannel) {
@@ -1532,8 +1177,9 @@
 
     function escapeHtml(text) { if (!text) return ''; const div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
     function getToday() { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0'); }
-    function getNowTime() { const d = new Date(); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0'); }
+    function getNowTime() { const d = new Date(); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0') + ':' + String(d.getSeconds()).padStart(2,'0'); }
     function getInitials(name) { if (!name) return '👤'; const parts = name.trim().split(' '); if (parts.length >= 2) return parts[0][0] + parts[1][0]; return name.substring(0,2).toUpperCase(); }
+    function formatDateTimeWithSeconds(date, time) { if (!date) return ''; if (time && time.split(':').length === 2) { time = time + ':00'; } return `${date} ${time || '00:00:00'}`; }
     
     function showToast(msg, isError = false) {
       const toast = document.getElementById('toast');
@@ -1551,32 +1197,25 @@
     function getAdminRoleName(username) { const admin = ADMIN_ACCOUNTS.find(a => a.username === username); return admin ? admin.roleName : '管理員'; }
     function getAdminPassword(username) { const admin = ADMIN_ACCOUNTS.find(a => a.username === username); return admin ? admin.password : null; }
 
-    // 取得回覆顯示名稱（不顯示帳號）
-    function getDisplayNameForReply(r, complaint) {
-      if (r.isAdmin) {
-        const roleName = r.authorRole || '管理員';
-        const displayNameRaw = r.authorDisplayName || '管理員';
-        if (roleName === '版主') return '版主';
-        else if (roleName === '所有權') return '所有權';
-        else if (roleName === '副版主') return '副版主';
-        else if (roleName === '小編') return displayNameRaw;
-        else return displayNameRaw;
+    function getEditBadge(reply, isAdminView) {
+      if (!reply.isEdited) return '';
+      const count = reply.editCount || 0;
+      if (isAdminView) {
+        return `<span class="edit-badge admin-edit">已編輯 ${count} 次</span>`;
       } else {
-        return '投訴者';
+        return `<span class="edit-badge user-edit">已編輯</span>`;
       }
     }
 
-    function getDisplayClassForReply(r) {
-      if (r.isAdmin) {
-        const roleName = r.authorRole || '管理員';
-        if (roleName === '版主') return 'moderator';
-        else if (roleName === '所有權') return 'owner';
-        else if (roleName === '副版主') return 'vice';
-        else if (roleName === '小編') return 'editor';
-        else return 'admin';
-      } else {
-        return 'complainant';
-      }
+    function getDisplayNameForReply(reply) {
+      if (!reply.isAdmin) return '投訴者';
+      const roleName = reply.authorRole || '管理員';
+      const displayName = reply.authorDisplayName || '管理員';
+      if (roleName === '版主') return '版主';
+      if (roleName === '所有權') return '所有權';
+      if (roleName === '副版主') return '副版主';
+      if (roleName === '小編') return displayName;
+      return displayName;
     }
 
     // ============================================================
@@ -1674,17 +1313,2955 @@
     }
 
     // ============================================================
-    // 5-40. 其餘功能函數（與您原有檔案相同，包含編輯歷史、引用、@標記、置頂等）
-    // 由於字數限制，此處省略完整函數，但已確保所有功能正常運作
+    // 5. 登入紀錄
     // ============================================================
 
-    // 請注意：此檔案包含完整的編輯歷史、引用、@標記、置頂功能
-    // 所有功能已整合完畢，可直接使用
+    async function recordLogin(user, isAdminLogin = false, adminUsername = null) {
+      try {
+        let logData = {
+          userId: user ? user.uid : adminUsername,
+          userType: isAdminLogin ? 'admin' : 'google',
+          displayName: '',
+          email: '',
+          loginTime: Date.now(),
+          date: getToday(),
+          time: getNowTime()
+        };
+        if (isAdminLogin && adminUsername) {
+          const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === adminUsername);
+          logData.displayName = adminInfo ? adminInfo.displayName : adminUsername;
+          logData.email = adminUsername;
+        } else if (user) {
+          logData.displayName = user.displayName || user.email || '使用者';
+          logData.email = user.email || '';
+        }
+        await db.collection('loginLogs').add(logData);
+        const snapshot = await db.collection('loginLogs').orderBy('loginTime', 'desc').get();
+        if (snapshot.size > 200) {
+          const batch = db.batch();
+          let count = 0;
+          snapshot.forEach(doc => { count++; if (count > 200) batch.delete(doc.ref); });
+          await batch.commit();
+        }
+      } catch (error) { console.error('❌ 儲存登入紀錄失敗:', error); }
+    }
 
-    console.log('✅ 靠北達德投訴系統已啟動（完整版）');
-    console.log('📋 功能清單：編輯歷史、引用、@標記、置頂、秒數、收回不限時間');
+    // ============================================================
+    // 6. 載入登入紀錄
+    // ============================================================
 
-    // 初始化
+    async function loadLoginLogs() {
+      const listEl = document.getElementById('loginLogsList');
+      listEl.innerHTML = '<div style="text-align:center; padding:2rem; color:#8a9db0;"><i class="fas fa-spinner fa-spin"></i> 載入中...</div>';
+      
+      try {
+        const role = getAdminRole(currentAdminUsername);
+        const onlineStatus = await getAdminOnlineStatus();
+        onlineStatusCache = onlineStatus;
+        
+        const snapshot = await db.collection('loginLogs')
+          .orderBy('loginTime', 'desc')
+          .limit(200)
+          .get();
+        
+        if (snapshot.empty) {
+          listEl.innerHTML = `<div class="login-log-empty"><i class="fas fa-inbox"></i><p>尚無登入紀錄</p><span class="text-muted">登入後將會記錄在這裡</span></div>`;
+          return;
+        }
+        
+        let loginData = [];
+        snapshot.forEach(doc => {
+          const data = doc.data();
+          if (data.userType !== 'admin') return;
+          if (role === 'owner' || role === 'moderator') {
+            loginData.push({ id: doc.id, ...data });
+          } else if (role === 'vice' || role === 'editor') {
+            if (data.userId === currentAdminUsername) {
+              loginData.push({ id: doc.id, ...data });
+            }
+          }
+        });
+        
+        const seen = new Set();
+        loginData = loginData.filter(data => {
+          if (seen.has(data.userId)) return false;
+          seen.add(data.userId);
+          return true;
+        });
+        
+        loginData.sort((a, b) => b.loginTime - a.loginTime);
+        loginData = loginData.slice(0, 50);
+        
+        if (loginData.length === 0) {
+          listEl.innerHTML = `<div class="login-log-empty"><i class="fas fa-inbox"></i><p>${(role === 'owner' || role === 'moderator') ? '尚無管理員登入紀錄' : '尚無您的登入紀錄'}</p><span class="text-muted">登入後將會記錄在這裡</span></div>`;
+          return;
+        }
+        
+        let html = '';
+        loginData.forEach((data) => {
+          const isAdminUser = data.userType === 'admin';
+          const avatarClass = isAdminUser ? 'admin' : 'google';
+          const avatarText = isAdminUser ? '👑' : '👤';
+          const typeBadge = isAdminUser ? '管理員' : '一般使用者';
+          const displayName = data.displayName || '未知使用者';
+          const isCurrentUser = data.userId === currentAdminUsername;
+          
+          const statusInfo = onlineStatus[data.userId] || { isOnline: false, sessionId: null, tabId: null };
+          const isOnline = statusInfo.isOnline;
+          const isSameSession = statusInfo.sessionId === currentSessionId;
+          const isSameTab = statusInfo.tabId === currentTabId;
+          
+          let canForceLogoutTarget = false;
+          let isSelfLogout = false;
+          let isOtherTab = false;
+          let buttonText = '🔒 強制登出';
+          let buttonClass = 'btn-force-logout';
+          let buttonDisabled = false;
+          let buttonTitle = '';
+          let showOnlineBadge = false;
+          
+          if (isCurrentUser) {
+            showOnlineBadge = true;
+            if (isSameTab) {
+              canForceLogoutTarget = false;
+              buttonText = '🚫 當前分頁';
+              buttonDisabled = true;
+              buttonTitle = '當前分頁不能強制登出自己';
+            } else if (isSameSession) {
+              canForceLogoutTarget = true;
+              isSelfLogout = true;
+              isOtherTab = true;
+              buttonText = '🔒 強制登出';
+              buttonClass = 'btn-force-logout btn-force-self';
+              buttonTitle = '強制登出同瀏覽器的其他分頁';
+            } else {
+              canForceLogoutTarget = true;
+              isSelfLogout = true;
+              buttonText = '🔒 強制登出';
+              buttonClass = 'btn-force-logout btn-force-self';
+              buttonTitle = '強制登出其他瀏覽器上的自己';
+            }
+          } else {
+            const targetRole = getAdminRole(data.userId);
+            if (role === 'owner') {
+              canForceLogoutTarget = true;
+              showOnlineBadge = true;
+              buttonText = '🔒 強制登出';
+            } else if (role === 'moderator') {
+              if (targetRole === 'vice' || targetRole === 'editor') {
+                canForceLogoutTarget = true;
+                showOnlineBadge = true;
+                buttonText = '🔒 強制登出';
+              } else {
+                canForceLogoutTarget = false;
+                showOnlineBadge = false;
+              }
+            } else {
+              canForceLogoutTarget = false;
+              showOnlineBadge = false;
+            }
+          }
+          
+          let onlineBadge = '';
+          if (showOnlineBadge) {
+            if (isCurrentUser) {
+              if (isSameTab) {
+                onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線（此裝置）</span>';
+              } else {
+                onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線</span>';
+              }
+            } else {
+              if (isOnline) {
+                onlineBadge = '<span class="online-badge" style="background:#28a745;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🟢 在線</span>';
+              } else {
+                onlineBadge = '<span class="online-badge" style="background:#6c757d;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">⚪ 離線</span>';
+              }
+            }
+          }
+          
+          const showActions = canForceLogoutTarget || isCurrentUser;
+          const showCanLogoutBadge = isSameSession && !isSameTab && isCurrentUser;
+          
+          html += `
+            <div class="login-log-item" style="${isCurrentUser ? 'border-left: 3px solid #28a745;' : ''}">
+              <div class="user-info">
+                <div class="avatar ${avatarClass}">${avatarText}</div>
+                <div>
+                  <div>
+                    <span class="name">${escapeHtml(displayName)}</span>
+                    <span class="type-badge ${avatarClass}">${typeBadge}</span>
+                    ${onlineBadge}
+                    ${isCurrentUser ? '<span class="online-badge" style="background:#dc3545;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">🔑 可管理</span>' : ''}
+                    ${showCanLogoutBadge ? '<span class="online-badge" style="background:#ff6b35;color:white;padding:1px 8px;border-radius:12px;font-size:0.6rem;margin-left:4px;">📌 可登出</span>' : ''}
+                  </div>
+                </div>
+              </div>
+              ${showActions ? `
+              <div class="actions">
+                <div class="login-time"><i class="far fa-clock"></i> ${data.date || ''} ${data.time || ''}</div>
+                ${canForceLogoutTarget ? `<button class="${buttonClass}" data-username="${escapeHtml(data.userId)}" data-is-self="${isSelfLogout}" data-is-other-tab="${isOtherTab}" ${buttonDisabled ? 'disabled' : ''} title="${buttonTitle}"><i class="fas fa-power-off"></i> ${buttonText}</button>` : ''}
+              </div>
+              ` : ''}
+            </div>
+          `;
+        });
+        
+        const count = loginData.length;
+        let roleInfo = '';
+        if (role === 'owner') {
+          roleInfo = '👑 所有權：可查看所有管理員，可強制登出所有管理員';
+        } else if (role === 'moderator') {
+          roleInfo = '📋 版主：可查看所有管理員，可強制登出副版主 + 小編';
+        } else if (role === 'vice') {
+          roleInfo = '📌 副版主：僅可查看自己，可強制登出自己（帳號被冒用時）';
+        } else if (role === 'editor') {
+          roleInfo = '✏️ 小編：僅可查看自己，可強制登出自己（帳號被冒用時）';
+        }
+        
+        html = `<div class="log-header"><span><i class="fas fa-users"></i> 共 ${count} 筆紀錄</span><span><i class="fas fa-info-circle"></i> ${roleInfo}</span></div>` + html;
+        listEl.innerHTML = html;
+        
+        document.querySelectorAll('.btn-force-logout').forEach(btn => {
+          btn.removeEventListener('click', handleForceLogout);
+          btn.addEventListener('click', handleForceLogout);
+        });
+        
+      } catch (error) {
+        console.error('❌ 載入登入紀錄失敗:', error);
+        listEl.innerHTML = `<div class="login-log-empty"><i class="fas fa-exclamation-triangle" style="color:#c52a2a;"></i><p>載入失敗，請稍後再試</p></div>`;
+      }
+    }
+
+    // ============================================================
+    // 7. 強制登出處理
+    // ============================================================
+
+    async function handleForceLogout(e) {
+      const btn = e.currentTarget;
+      const username = btn.dataset.username;
+      const isSelf = btn.dataset.isSelf === 'true';
+      const isOtherTab = btn.dataset.isOtherTab === 'true';
+      
+      const statusInfo = onlineStatusCache[username] || {};
+      const isSameTab = statusInfo.tabId === currentTabId;
+      const isSameSession = statusInfo.sessionId === currentSessionId;
+      
+      if (isSelf && isSameTab) {
+        showToast('❌ 當前分頁不能強制登出自己', true);
+        return;
+      }
+      
+      let confirmMessage = '';
+      if (isSelf && isOtherTab) {
+        confirmMessage = `⚠️ 您確定要強制登出同瀏覽器的其他分頁嗎？\n\n帳號：${username}\n\n這將登出您在其他分頁的管理員權限！\n\n💡 提示：如果您懷疑帳號被冒用，建議立即變更密碼。`;
+      } else if (isSelf) {
+        const role = getAdminRole(username);
+        const roleName = role ? (ROLE_NAMES[role] || '管理員') : '管理員';
+        confirmMessage = `⚠️ 您確定要強制登出自己（${username}）嗎？\n\n角色：${roleName}\n\n這將登出您在其他瀏覽器的管理員權限！\n\n請確認您的帳號是否遭到冒用！`;
+      } else {
+        const targetRole = getAdminRole(username);
+        const roleName = targetRole ? (ROLE_NAMES[targetRole] || '管理員') : '管理員';
+        const onlineStatus = onlineStatusCache[username] || {};
+        const isOnline = onlineStatus.isOnline ? '🟢 在線' : '⚪ 離線';
+        confirmMessage = `確定要強制登出「${username}」（${roleName}）嗎？\n\n狀態：${isOnline}\n\n該管理員將立即被登出系統！`;
+      }
+      
+      if (!confirm(confirmMessage)) return;
+      
+      btn.disabled = true;
+      btn.textContent = '處理中...';
+      
+      try {
+        const snapshot = await db.collection('loginLogs')
+          .where('userId', '==', username)
+          .where('userType', '==', 'admin')
+          .get();
+        const batch = db.batch();
+        snapshot.forEach(doc => { batch.delete(doc.ref); });
+        await batch.commit();
+        await db.collection('adminSessions').doc(username).delete();
+        await db.collection('forceLogoutSignals').doc(username).set({
+          timestamp: Date.now(),
+          forcedBy: currentAdminUsername,
+          isSelfLogout: isSelf,
+          sessionId: currentSessionId,
+          tabId: currentTabId,
+          isOtherTab: isOtherTab
+        });
+        
+        if (isSelf && isOtherTab && broadcastChannel) {
+          broadcastChannel.postMessage({
+            type: 'force_logout',
+            username: username,
+            forcedBy: currentAdminUsername,
+            tabId: currentTabId,
+            timestamp: Date.now()
+          });
+        }
+        
+        if (isAdmin && currentAdminUsername === username) {
+          if (!isOtherTab || !isSameSession) {
+            isAdmin = false;
+            sessionStorage.setItem('isAdmin', 'false');
+            sessionStorage.removeItem('currentAdminUsername');
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            adminLoginBtn.textContent = '管理';
+            adminLoginBtn.className = 'btn-admin-login';
+            document.getElementById('viewLoginLogsBtn').classList.remove('show');
+            document.getElementById('changePasswordBtn').classList.remove('show');
+            document.getElementById('viewPasswordsBtn').classList.remove('show');
+            document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+            updateUI(currentUser);
+            render();
+            if (isSelf) {
+              showToast(`🔒 您已在其他瀏覽器強制登出自己，請重新登入`, true);
+            } else {
+              showToast(`🔒 您已被管理員強制登出`, true);
+            }
+          }
+        }
+        
+        if (isSelf && isOtherTab) {
+          showToast(`✅ 已強制登出同瀏覽器的其他分頁（${username}）`);
+        } else if (isSelf) {
+          showToast(`✅ 已強制登出其他瀏覽器的自己（${username}）`);
+        } else {
+          showToast(`✅ 已強制登出「${username}」`);
+        }
+        
+        delete onlineStatusCache[username];
+        if (broadcastChannel) {
+          broadcastChannel.postMessage({ type: 'refresh_online_status', timestamp: Date.now() });
+        }
+        setTimeout(() => loadLoginLogs(), 500);
+        
+      } catch (error) {
+        console.error('強制登出失敗:', error);
+        showToast('❌ 強制登出失敗，請稍後再試', true);
+      }
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-power-off"></i> 🔒 強制登出';
+    }
+
+    // ============================================================
+    // 8. 監聽強制登出
+    // ============================================================
+
+    function listenForcedLogout() {
+      if (forcedLogoutUnsubscribe) {
+        forcedLogoutUnsubscribe();
+        forcedLogoutUnsubscribe = null;
+      }
+      if (!currentAdminUsername) return;
+      forcedLogoutUnsubscribe = db.collection('forceLogoutSignals')
+        .doc(currentAdminUsername)
+        .onSnapshot((doc) => {
+          if (!isAdmin || !currentAdminUsername) return;
+          if (!doc.exists) return;
+          const data = doc.data();
+          if (!data) return;
+          if (data.forcedBy === currentAdminUsername && data.tabId === currentTabId) return;
+          const timeDiff = Date.now() - data.timestamp;
+          if (timeDiff < 15000) {
+            isAdmin = false;
+            sessionStorage.setItem('isAdmin', 'false');
+            sessionStorage.removeItem('currentAdminUsername');
+            const adminLoginBtn = document.getElementById('adminLoginBtn');
+            adminLoginBtn.textContent = '管理';
+            adminLoginBtn.className = 'btn-admin-login';
+            document.getElementById('viewLoginLogsBtn').classList.remove('show');
+            document.getElementById('changePasswordBtn').classList.remove('show');
+            document.getElementById('viewPasswordsBtn').classList.remove('show');
+            document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+            db.collection('adminSessions').doc(currentAdminUsername).delete().catch(() => {});
+            updateUI(currentUser);
+            render();
+            document.getElementById('loginLogsOverlay').classList.remove('active');
+            db.collection('forceLogoutSignals').doc(currentAdminUsername).delete().catch(() => {});
+            if (data.isSelfLogout) {
+              if (data.sessionId === currentSessionId && data.tabId !== currentTabId) {
+                showToast(`🔒 您已在同瀏覽器的其他分頁強制登出自己`, true);
+              } else {
+                showToast(`🔒 您已在其他瀏覽器強制登出自己，請重新登入`, true);
+              }
+            } else {
+              showToast(`🔒 您已被管理員強制登出`, true);
+            }
+          }
+        }, (error) => { console.error('監聽強制登出失敗:', error); });
+    }
+
+    // ============================================================
+    // 9. 心跳機制
+    // ============================================================
+
+    function startHeartbeat() {
+      setInterval(async () => {
+        if (isAdmin && currentAdminUsername) {
+          await updateAdminHeartbeat(currentAdminUsername);
+        }
+      }, 15000);
+      window.addEventListener('beforeunload', async () => {
+        if (isAdmin && currentAdminUsername) {
+          try {
+            await db.collection('adminSessions').doc(currentAdminUsername).update({
+              isOnline: false,
+              lastActive: Date.now()
+            });
+          } catch (e) {}
+        }
+      });
+      document.addEventListener('visibilitychange', async () => {
+        if (document.visibilityState === 'visible' && isAdmin && currentAdminUsername) {
+          await updateAdminHeartbeat(currentAdminUsername);
+        } else if (document.visibilityState === 'hidden' && isAdmin && currentAdminUsername) {
+          try {
+            await db.collection('adminSessions').doc(currentAdminUsername).update({
+              isOnline: false,
+              lastActive: Date.now()
+            });
+          } catch (e) {}
+        }
+      });
+    }
+
+    function startOnlineStatusListener() {
+      if (onlineStatusListener) {
+        onlineStatusListener();
+        onlineStatusListener = null;
+      }
+      onlineStatusListener = listenAdminSessions((status) => {
+        onlineStatusCache = status;
+      });
+    }
+
+    // ============================================================
+    // 10. Firestore 密碼管理
+    // ============================================================
+
+    async function loadAdminsFromFirestore() {
+      try {
+        const docRef = db.collection('config').doc('adminPasswords');
+        const doc = await docRef.get();
+        if (doc.exists) {
+          const pwdMap = doc.data();
+          console.log('📥 從 Firestore 載入密碼:', Object.keys(pwdMap));
+          let updatedCount = 0;
+          DEFAULT_ADMINS.forEach(admin => {
+            if (pwdMap[admin.username] && pwdMap[admin.username] !== admin.password) {
+              console.log(`🔄 更新密碼: ${admin.username} -> ${pwdMap[admin.username]}`);
+              admin.password = pwdMap[admin.username];
+              updatedCount++;
+            }
+          });
+          if (updatedCount > 0) {
+            console.log(`✅ 已更新 ${updatedCount} 個帳號的密碼`);
+          } else {
+            console.log('✅ 密碼已是最新，無需更新');
+          }
+        } else {
+          console.log('📤 Firestore 中無密碼資料，上傳預設密碼...');
+          await saveAdminsToFirestore();
+        }
+        ADMIN_ACCOUNTS = DEFAULT_ADMINS;
+        isPasswordLoaded = true;
+        updateAllPasswordDisplays();
+        return DEFAULT_ADMINS;
+      } catch (error) {
+        console.error('❌ 載入密碼失敗:', error);
+        ADMIN_ACCOUNTS = DEFAULT_ADMINS;
+        isPasswordLoaded = true;
+        return DEFAULT_ADMINS;
+      }
+    }
+
+    async function saveAdminsToFirestore() {
+      try {
+        const pwdMap = {};
+        DEFAULT_ADMINS.forEach(admin => {
+          pwdMap[admin.username] = admin.password;
+        });
+        await db.collection('config').doc('adminPasswords').set(pwdMap);
+        console.log('✅ 密碼已儲存到 Firestore，共', Object.keys(pwdMap).length, '個帳號');
+        return true;
+      } catch (error) {
+        console.error('❌ 儲存密碼失敗:', error);
+        return false;
+      }
+    }
+
+    async function updateAdminPasswordInFirestore(username, newPassword) {
+      const admin = DEFAULT_ADMINS.find(a => a.username === username);
+      if (!admin) { console.error('❌ 找不到帳號:', username); return false; }
+      if (admin.password === newPassword) {
+        showToast('⚠️ 新密碼與舊密碼相同，無需變更', true);
+        return false;
+      }
+      admin.password = newPassword;
+      const success = await saveAdminsToFirestore();
+      if (success) {
+        console.log(`✅ 密碼已變更: ${username} -> ${newPassword}`);
+        updateAllPasswordDisplays();
+        if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
+          renderPasswordList();
+        }
+        if (isAdmin && currentAdminUsername === username) {
+          forceLogoutAdmin(username);
+        }
+        return true;
+      }
+      return false;
+    }
+
+    function listenAdminPasswords() {
+      if (window.passwordListener) {
+        window.passwordListener();
+        window.passwordListener = null;
+      }
+      window.passwordListener = db.collection('config').doc('adminPasswords')
+        .onSnapshot((doc) => {
+          if (!doc.exists || !isPasswordLoaded) {
+            console.log('⏳ 密碼文件不存在或尚未載入');
+            return;
+          }
+          const pwdMap = doc.data();
+          console.log('📡 收到 Firestore 密碼更新通知');
+          let changed = false;
+          let changedUsername = null;
+          DEFAULT_ADMINS.forEach(admin => {
+            if (pwdMap[admin.username] && pwdMap[admin.username] !== admin.password) {
+              console.log(`🔄 密碼已變更: ${admin.username} -> ${pwdMap[admin.username]}`);
+              admin.password = pwdMap[admin.username];
+              changed = true;
+              changedUsername = admin.username;
+            }
+          });
+          if (changed) {
+            updateAllPasswordDisplays();
+            if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
+              renderPasswordList();
+            }
+            if (isAdmin && currentAdminUsername === changedUsername) {
+              showToast(`🔒 您的密碼已在其他瀏覽器變更，請重新登入`, true);
+              forceLogoutAdmin(changedUsername);
+            } else {
+              showToast(`📢 管理員「${changedUsername}」的密碼已在其他瀏覽器變更`, false);
+            }
+          }
+        }, (error) => { console.error('❌ 監聽密碼變更失敗:', error); });
+    }
+
+    function updateAllPasswordDisplays() {
+      document.querySelectorAll('.pwd-display').forEach(el => {
+        const uname = el.id.replace('pwd_', '');
+        const found = DEFAULT_ADMINS.find(a => a.username === uname);
+        if (found) { el.textContent = found.password; }
+      });
+    }
+
+    function forceLogoutAdmin(username) {
+      if (isAdmin && currentAdminUsername === username) {
+        isAdmin = false;
+        sessionStorage.setItem('isAdmin', 'false');
+        sessionStorage.removeItem('currentAdminUsername');
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+        adminLoginBtn.textContent = '管理';
+        adminLoginBtn.className = 'btn-admin-login';
+        const roleDisplay = document.getElementById('userRoleDisplay');
+        if (roleDisplay) {
+          if (currentUser) { roleDisplay.textContent = '一般使用者'; roleDisplay.className = 'user-role'; } 
+          else { roleDisplay.textContent = ''; roleDisplay.className = 'user-role'; }
+        }
+        document.getElementById('changePasswordBtn').classList.remove('show');
+        document.getElementById('viewPasswordsBtn').classList.remove('show');
+        document.getElementById('viewLoginLogsBtn').classList.remove('show');
+        document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+        db.collection('adminSessions').doc(username).delete().catch(() => {});
+        updateUI(currentUser);
+        render();
+        showToast(`🔒 您已被強制登出（密碼已變更），請重新登入`, true);
+        return true;
+      }
+      return false;
+    }
+
+    // ============================================================
+    // 11. 驗證資料管理
+    // ============================================================
+
+    async function loadVerifyData() {
+      try {
+        const snapshot = await db.collection('adminVerify').orderBy('username').get();
+        const data = [];
+        snapshot.forEach(doc => { data.push({ id: doc.id, ...doc.data() }); });
+        return data;
+      } catch (error) { console.error('❌ 載入驗證資料失敗:', error); return []; }
+    }
+
+    async function saveVerifyData(username, displayName, birthday) {
+      try {
+        const existing = await db.collection('adminVerify').where('username', '==', username).get();
+        if (!existing.empty) {
+          const doc = existing.docs[0];
+          await doc.ref.update({ displayName, birthday });
+          return { success: true, action: 'update' };
+        } else {
+          await db.collection('adminVerify').add({ username, displayName, birthday });
+          return { success: true, action: 'add' };
+        }
+      } catch (error) {
+        console.error('❌ 儲存驗證資料失敗:', error);
+        return { success: false, error: error.message };
+      }
+    }
+
+    async function deleteVerifyData(username) {
+      try {
+        const existing = await db.collection('adminVerify').where('username', '==', username).get();
+        if (!existing.empty) {
+          const doc = existing.docs[0];
+          await doc.ref.delete();
+          return { success: true };
+        }
+        return { success: false, error: '找不到該帳號的驗證資料' };
+      } catch (error) {
+        console.error('❌ 刪除驗證資料失敗:', error);
+        return { success: false, error: error.message };
+      }
+    }
+
+    async function verifyAdminIdentityFirestore(username, displayName, birthday) {
+      try {
+        const snapshot = await db.collection('adminVerify')
+          .where('username', '==', username)
+          .where('displayName', '==', displayName)
+          .where('birthday', '==', birthday)
+          .get();
+        if (!snapshot.empty) { return snapshot.docs[0].data(); }
+        return null;
+      } catch (error) { console.error('❌ 驗證失敗:', error); return null; }
+    }
+
+    // ============================================================
+    // 12. 檔案上傳
+    // ============================================================
+
+    async function uploadToImgBB(file) {
+      const formData = new FormData();
+      formData.append('image', file);
+      try {
+        const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, { method: 'POST', body: formData });
+        const data = await response.json();
+        return data.success ? data.data.url : null;
+      } catch (error) { console.error('ImgBB 上傳錯誤:', error); return null; }
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = () => reject(new Error('讀取檔案失敗'));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function uploadImages(files) {
+      if (!files || files.length === 0) return [];
+      const urls = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > MAX_IMAGE_SIZE) {
+          showToast(`⚠️ 圖片「${file.name}」超過 20MB，已跳過`, true);
+          continue;
+        }
+        let url = await uploadToImgBB(file);
+        if (!url && file.size < 5 * 1024 * 1024) {
+          url = await fileToBase64(file);
+        }
+        if (url) { urls.push(url); } else { showToast(`⚠️ 圖片「${file.name}」上傳失敗`, true); }
+      }
+      return urls;
+    }
+
+    async function uploadVideos(files) {
+      if (!files || files.length === 0) return [];
+      const urls = [];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        if (file.size > MAX_VIDEO_SIZE) {
+          showToast(`⚠️ 影片「${file.name}」超過 50MB，請使用影片連結`, true);
+          continue;
+        }
+        let url = null;
+        if (file.size <= MAX_IMGBB_SIZE) { url = await uploadToImgBB(file); }
+        if (!url && file.size < MAX_VIDEO_SIZE) {
+          showToast(`📤 正在處理影片「${file.name}」...`, false);
+          url = await fileToBase64(file);
+        }
+        if (url) {
+          urls.push(url);
+          console.log(`✅ 影片上傳成功: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
+        } else {
+          showToast(`⚠️ 影片「${file.name}」上傳失敗，請使用影片連結`, true);
+        }
+      }
+      return urls;
+    }
+
+    async function uploadAllFiles(images, videos) {
+      const results = { imageUrls: [], videoUrls: [], allUrls: [] };
+      if (images && images.length > 0) { results.imageUrls = await uploadImages(images); }
+      if (videos && videos.length > 0) { results.videoUrls = await uploadVideos(videos); }
+      results.allUrls = [...results.imageUrls, ...results.videoUrls];
+      return results;
+    }
+
+    // ============================================================
+    // 13. 圖片管理
+    // ============================================================
+
+    function updateImagePreview() {
+      const grid = document.getElementById('imagePreviewGrid');
+      const badge = document.getElementById('imageCountBadge');
+      const addBtn = document.getElementById('addMoreBtn');
+      grid.innerHTML = '';
+      selectedImages.forEach((file, index) => {
+        const div = document.createElement('div');
+        div.className = 'image-preview-item';
+        const img = document.createElement('img');
+        const reader = new FileReader();
+        reader.onload = (e) => { img.src = e.target.result; };
+        reader.readAsDataURL(file);
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.onclick = (e) => {
+          e.stopPropagation();
+          selectedImages.splice(index, 1);
+          updateImagePreview();
+        };
+        const idxLabel = document.createElement('span');
+        idxLabel.className = 'file-index';
+        idxLabel.textContent = index + 1;
+        div.appendChild(img);
+        div.appendChild(removeBtn);
+        div.appendChild(idxLabel);
+        grid.appendChild(div);
+      });
+      badge.textContent = `已選 ${selectedImages.length} / ${MAX_IMAGES}`;
+      addBtn.disabled = selectedImages.length >= MAX_IMAGES;
+    }
+
+    function handleImageSelect(files) {
+      const remaining = MAX_IMAGES - selectedImages.length;
+      const toAdd = Math.min(files.length, remaining);
+      for (let i = 0; i < toAdd; i++) { selectedImages.push(files[i]); }
+      updateImagePreview();
+      if (files.length > toAdd) { showToast(`圖片已超過上限，僅新增 ${toAdd} 張`, true); }
+    }
+
+    // ============================================================
+    // 14. 影片管理
+    // ============================================================
+
+    function updateVideoPreview() {
+      const grid = document.getElementById('videoPreviewGrid');
+      const badge = document.getElementById('videoCountBadge');
+      const addBtn = document.getElementById('addVideoBtn');
+      grid.innerHTML = '';
+      selectedVideos.forEach((file, index) => {
+        const div = document.createElement('div');
+        div.className = 'image-preview-item video-preview';
+        const video = document.createElement('video');
+        video.src = URL.createObjectURL(file);
+        video.muted = true;
+        video.preload = 'metadata';
+        const img = document.createElement('img');
+        img.className = 'video-thumbnail';
+        video.onloadeddata = function() {
+          const canvas = document.createElement('canvas');
+          canvas.width = 80;
+          canvas.height = 80;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          img.src = canvas.toDataURL('image/jpeg');
+        };
+        div.appendChild(img);
+        const playIcon = document.createElement('div');
+        playIcon.className = 'video-play-icon';
+        playIcon.innerHTML = '<i class="fas fa-play-circle"></i>';
+        div.appendChild(playIcon);
+        video.onloadedmetadata = function() {
+          const duration = video.duration;
+          if (duration > 0) {
+            const durationEl = document.createElement('span');
+            durationEl.className = 'video-duration';
+            const mins = Math.floor(duration / 60);
+            const secs = Math.floor(duration % 60);
+            durationEl.textContent = String(mins).padStart(2, '0') + ':' + String(secs).padStart(2, '0');
+            div.appendChild(durationEl);
+          }
+        };
+        const typeBadge = document.createElement('span');
+        typeBadge.className = 'file-type-badge';
+        const ext = file.name.split('.').pop().toLowerCase();
+        const typeMap = { 'mp4': 'MP4', 'mov': 'MOV', 'avi': 'AVI', 'webm': 'WEBM', 'mkv': 'MKV', 'flv': 'FLV', 'wmv': 'WMV' };
+        typeBadge.textContent = typeMap[ext] || '影片';
+        div.appendChild(typeBadge);
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.onclick = (e) => {
+          e.stopPropagation();
+          selectedVideos.splice(index, 1);
+          updateVideoPreview();
+        };
+        div.appendChild(removeBtn);
+        const idxLabel = document.createElement('span');
+        idxLabel.className = 'file-index';
+        idxLabel.textContent = index + 1;
+        div.appendChild(idxLabel);
+        grid.appendChild(div);
+      });
+      badge.textContent = `已選 ${selectedVideos.length} / ${MAX_VIDEOS}`;
+      addBtn.disabled = selectedVideos.length >= MAX_VIDEOS;
+    }
+
+    function handleVideoSelect(files) {
+      const remaining = MAX_VIDEOS - selectedVideos.length;
+      const toAdd = Math.min(files.length, remaining);
+      let hasLargeFile = false;
+      for (let i = 0; i < toAdd; i++) {
+        const file = files[i];
+        if (file.size > MAX_VIDEO_SIZE) {
+          showToast(`⚠️ 影片「${file.name}」超過 50MB，請使用影片連結`, true);
+          hasLargeFile = true;
+          continue;
+        }
+        selectedVideos.push(file);
+      }
+      updateVideoPreview();
+      if (files.length > toAdd) { showToast(`影片已超過上限，僅新增 ${toAdd} 部`, true); }
+      if (hasLargeFile) { showToast('⚠️ 超過 50MB 的影片請使用「影片連結」欄位', true); }
+    }
+
+    // ============================================================
+    // 15. 補充資料
+    // ============================================================
+
+    function openSupplementModal(docId) {
+      const complaint = complaints.find(c => c.docId === docId);
+      if (!complaint) { showToast('找不到該投訴', true); return; }
+      if (complaint.supplements && complaint.supplements.length > 0) {
+        const userSupplement = complaint.supplements.filter(s => !s.isAdmin);
+        if (userSupplement.length > 0) {
+          showToast('您已經補充過資料了，請等待管理員審核', true);
+          return;
+        }
+      }
+      supplementComplaintId = docId;
+      supplementFiles = [];
+      const requirementsEl = document.getElementById('supplementRequirements');
+      requirementsEl.textContent = complaint.statusInfo || '請補充更多詳細資訊';
+      document.getElementById('supplementContent').value = '';
+      document.getElementById('supplementPreviewGrid').innerHTML = '';
+      document.getElementById('supplementCountBadge').textContent = '已選 0 / 5';
+      document.getElementById('supplementOverlay').classList.add('active');
+    }
+
+    function closeSupplementModal() {
+      document.getElementById('supplementOverlay').classList.remove('active');
+      supplementComplaintId = null;
+      supplementFiles = [];
+    }
+
+    function updateSupplementPreview() {
+      const grid = document.getElementById('supplementPreviewGrid');
+      const badge = document.getElementById('supplementCountBadge');
+      const addBtn = document.getElementById('supplementAddBtn');
+      grid.innerHTML = '';
+      supplementFiles.forEach((file, index) => {
+        const div = document.createElement('div');
+        div.className = 'image-preview-item';
+        const isVideo = file.type.startsWith('video/');
+        if (isVideo) {
+          div.classList.add('video-preview');
+          const video = document.createElement('video');
+          video.src = URL.createObjectURL(file);
+          video.muted = true;
+          video.preload = 'metadata';
+          const img = document.createElement('img');
+          video.onloadeddata = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 80;
+            canvas.height = 80;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            img.src = canvas.toDataURL('image/jpeg');
+          };
+          div.appendChild(img);
+          const playIcon = document.createElement('div');
+          playIcon.className = 'video-play-icon';
+          playIcon.innerHTML = '<i class="fas fa-play-circle"></i>';
+          div.appendChild(playIcon);
+        } else {
+          const img = document.createElement('img');
+          const reader = new FileReader();
+          reader.onload = (e) => { img.src = e.target.result; };
+          reader.readAsDataURL(file);
+          div.appendChild(img);
+        }
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.onclick = (e) => {
+          e.stopPropagation();
+          supplementFiles.splice(index, 1);
+          updateSupplementPreview();
+        };
+        div.appendChild(removeBtn);
+        const idxLabel = document.createElement('span');
+        idxLabel.className = 'file-index';
+        idxLabel.textContent = index + 1;
+        div.appendChild(idxLabel);
+        grid.appendChild(div);
+      });
+      badge.textContent = `已選 ${supplementFiles.length} / 5`;
+      addBtn.disabled = supplementFiles.length >= 5;
+    }
+
+    document.getElementById('supplementInput').addEventListener('change', function(e) {
+      if (this.files && this.files.length > 0) {
+        const remaining = 5 - supplementFiles.length;
+        const toAdd = Math.min(this.files.length, remaining);
+        for (let i = 0; i < toAdd; i++) { supplementFiles.push(this.files[i]); }
+        updateSupplementPreview();
+        if (this.files.length > toAdd) { showToast(`已超過上限，僅新增 ${toAdd} 個檔案`, true); }
+        this.value = '';
+      }
+    });
+
+    document.getElementById('supplementAddBtn').addEventListener('click', () => {
+      document.getElementById('supplementInput').click();
+    });
+
+    const supplementArea = document.getElementById('supplementUploadArea');
+    supplementArea.addEventListener('dragover', (e) => { e.preventDefault(); supplementArea.classList.add('dragover'); });
+    supplementArea.addEventListener('dragleave', () => { supplementArea.classList.remove('dragover'); });
+    supplementArea.addEventListener('drop', (e) => {
+      e.preventDefault();
+      supplementArea.classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const remaining = 5 - supplementFiles.length;
+        const toAdd = Math.min(e.dataTransfer.files.length, remaining);
+        for (let i = 0; i < toAdd; i++) { supplementFiles.push(e.dataTransfer.files[i]); }
+        updateSupplementPreview();
+        if (e.dataTransfer.files.length > toAdd) { showToast(`已超過上限，僅新增 ${toAdd} 個檔案`, true); }
+      }
+    });
+
+    document.getElementById('submitSupplementBtn').addEventListener('click', async function() {
+      const content = document.getElementById('supplementContent').value.trim();
+      if (!content) { showToast('請輸入補充內容', true); return; }
+      if (!supplementComplaintId) { showToast('請選擇要補充的投訴', true); return; }
+      this.disabled = true;
+      this.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 送出中...';
+      try {
+        let fileUrls = [];
+        if (supplementFiles.length > 0) { 
+          const result = await uploadAllFiles(supplementFiles, []);
+          fileUrls = result.allUrls;
+        }
+        const supplement = {
+          text: content,
+          files: fileUrls,
+          date: getToday(),
+          time: getNowTime(),
+          isAdmin: false,
+          author: currentUser ? currentUser.displayName || '使用者' : '使用者'
+        };
+        await db.collection('complaints').doc(supplementComplaintId).update({
+          supplements: firebase.firestore.FieldValue.arrayUnion(supplement),
+          status: '待處理',
+          hasNewSupplement: true
+        });
+        const complaint = complaints.find(c => c.docId === supplementComplaintId);
+        if (complaint) { await sendSupplementEmail(complaint, content, fileUrls); }
+        showToast('✅ 補充資料已送出，管理員將重新審核');
+        closeSupplementModal();
+      } catch (error) {
+        console.error('補充資料失敗:', error);
+        showToast('❌ 補充資料失敗，請稍後再試', true);
+      }
+      this.disabled = false;
+      this.innerHTML = '<i class="fas fa-paper-plane"></i> 送出補充';
+    });
+
+    document.getElementById('cancelSupplementBtn').addEventListener('click', closeSupplementModal);
+    document.getElementById('supplementOverlay').addEventListener('click', function(e) {
+      if (e.target === this) closeSupplementModal();
+    });
+
+    async function sendSupplementEmail(complaint, content, files) {
+      try {
+        const message = `投訴人：${complaint.userName}\n標題：${complaint.title}\n補充內容：${content}\n補充檔案：${files.length > 0 ? files.join(', ') : '無'}\n補充時間：${getToday()} ${getNowTime()}`;
+        await emailjs.send(emailjsConfig.serviceID, emailjsConfig.templateID, {
+          to_email: "dader60dader@gmail.com",
+          subject: `【補充資料】${complaint.title}`,
+          message: message,
+          name: complaint.userName,
+          time: getToday() + ' ' + getNowTime()
+        });
+      } catch (error) { console.error('❌ 補充通知發送失敗:', error); }
+    }
+
+    // ============================================================
+    // 16. Firestore 操作
+    // ============================================================
+
+    function listenComplaints() {
+      if (unsubscribeSnapshot) unsubscribeSnapshot();
+      unsubscribeSnapshot = db.collection('complaints').orderBy('createdAt', 'desc').onSnapshot((snapshot) => {
+        complaints = [];
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          complaints.push({
+            id: data.id, docId: doc.id, userName: data.userName || '', igName: data.igName || '',
+            category: data.category || '', priority: data.priority || '', title: data.title || '',
+            description: data.description || '', eventTime: data.eventTime || '', postLink: data.postLink || '',
+            expectedResolution: data.expectedResolution || '', needReply: data.needReply || '',
+            status: data.status || '待處理', date: data.date || '', time: data.time || '',
+            imageUrls: data.imageUrls || [], videoLink: data.videoLink || '',
+            createdAt: data.createdAt || 0, userId: data.userId || '',
+            userEmail: data.userEmail || '', replies: data.replies || [],
+            lastProcessedBy: data.lastProcessedBy || '', lastProcessedAt: data.lastProcessedAt || '',
+            hasNewReply: data.hasNewReply || false,
+            supplements: data.supplements || [],
+            statusInfo: data.statusInfo || ''
+          });
+        });
+        render();
+      }, (error) => { console.error('Firestore 監聽錯誤:', error); showToast('連線資料庫失敗，請檢查網路', true); });
+    }
+
+    async function addComplaint(complaint) {
+      try {
+        await db.collection('complaints').add({
+          id: complaint.id, userName: complaint.userName, igName: complaint.igName || '',
+          category: complaint.category, priority: complaint.priority, title: complaint.title,
+          description: complaint.description, eventTime: complaint.eventTime || '',
+          postLink: complaint.postLink || '', expectedResolution: complaint.expectedResolution || '',
+          needReply: complaint.needReply || '', status: complaint.status || '待處理',
+          date: complaint.date, time: complaint.time, imageUrls: complaint.imageUrls || [],
+          videoLink: complaint.videoLink || '',
+          createdAt: Date.now(), userId: currentUser ? currentUser.uid : 'anonymous',
+          userEmail: currentUser ? currentUser.email : '', replies: [],
+          lastProcessedBy: '', lastProcessedAt: '', hasNewReply: false,
+          supplements: [], statusInfo: ''
+        });
+        return true;
+      } catch (error) { console.error('儲存失敗:', error); showToast('儲存失敗，請稍後再試', true); return false; }
+    }
+
+    async function updateStatus(docId, newStatus, supplementInfo = '') {
+      try {
+        const displayName = getAdminDisplayName(currentAdminUsername);
+        const roleName = getAdminRoleName(currentAdminUsername);
+        const updateData = {
+          status: newStatus,
+          lastProcessedBy: `${roleName} ${displayName}`,
+          lastProcessedAt: getToday() + ' ' + getNowTime()
+        };
+        if (newStatus === '需要補充資料' && supplementInfo) {
+          updateData.statusInfo = supplementInfo;
+        }
+        await db.collection('complaints').doc(docId).update(updateData);
+        if (newStatus === '需要補充資料') {
+          const complaint = complaints.find(c => c.docId === docId);
+          if (complaint && complaint.userEmail) {
+            await sendSupplementRequestEmail(complaint, supplementInfo);
+          }
+        }
+        return true;
+      } catch (error) { console.error('更新失敗:', error); showToast('更新失敗', true); return false; }
+    }
+
+    async function sendSupplementRequestEmail(complaint, supplementInfo) {
+      try {
+        const adminName = getAdminDisplayName(currentAdminUsername);
+        const roleName = getAdminRoleName(currentAdminUsername);
+        const message = `您好，${complaint.userName}，\n\n您於 ${complaint.date} ${complaint.time} 提交的投訴「${complaint.title}」需要補充資料。\n\n${supplementInfo || '請登入系統查看詳細要求並補充相關資料。'}\n\n【要求補充人員】${roleName} ${adminName}\n【要求時間】${getToday()} ${getNowTime()}\n\n請登入系統進行補充。\n此為系統自動發送，請勿直接回覆。`;
+        await emailjs.send(emailjsConfig.serviceID, emailjsConfig.templateID, {
+          to_email: complaint.userEmail,
+          subject: `【需要補充資料】${complaint.title}`,
+          message: message,
+          name: complaint.userName,
+          time: getToday() + ' ' + getNowTime()
+        });
+      } catch (error) { console.error('❌ 補充要求通知發送失敗:', error); }
+    }
+
+    // ============================================================
+    // 17. 回覆功能（含新欄位）
+    // ============================================================
+
+    async function addReply(docId, replyText, isAdminReply = false, files = [], replyTo = null, mentions = []) {
+      try {
+        const displayName = getAdminDisplayName(currentAdminUsername);
+        const roleName = getAdminRoleName(currentAdminUsername);
+        const reply = {
+          id: 'reply_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+          text: replyText,
+          files: files,
+          isAdmin: isAdminReply,
+          author: `${roleName} ${displayName}`,
+          authorRole: roleName,
+          authorDisplayName: displayName,
+          time: getNowTime(),
+          date: getToday(),
+          createdAt: Date.now(),
+          isDeleted: false,
+          editHistory: [],
+          editCount: 0,
+          isEdited: false,
+          isPinned: false,
+          replyTo: replyTo,
+          mentions: mentions || []
+        };
+        await db.collection('complaints').doc(docId).update({
+          replies: firebase.firestore.FieldValue.arrayUnion(reply),
+          hasNewReply: true
+        });
+        return true;
+      } catch (error) { console.error('回覆失敗:', error); showToast('回覆失敗，請稍後再試', true); return false; }
+    }
+
+    async function sendReply(docId, replyText, files, replyTo = null, mentions = []) {
+      try {
+        let fileUrls = [];
+        if (files && files.length > 0) {
+          const result = await uploadAllFiles(files, []);
+          fileUrls = result.allUrls;
+        }
+        const displayName = getAdminDisplayName(currentAdminUsername);
+        const roleName = getAdminRoleName(currentAdminUsername);
+        const reply = {
+          id: 'reply_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6),
+          text: replyText,
+          files: fileUrls,
+          isAdmin: isAdmin === true,
+          author: `${roleName} ${displayName}`,
+          authorRole: roleName,
+          authorDisplayName: displayName,
+          time: getNowTime(),
+          date: getToday(),
+          createdAt: Date.now(),
+          isDeleted: false,
+          editHistory: [],
+          editCount: 0,
+          isEdited: false,
+          isPinned: false,
+          replyTo: replyTo,
+          mentions: mentions || []
+        };
+        await db.collection('complaints').doc(docId).update({
+          replies: firebase.firestore.FieldValue.arrayUnion(reply),
+          hasNewReply: true
+        });
+        return true;
+      } catch (error) { console.error('回覆失敗:', error); showToast('回覆失敗，請稍後再試', true); return false; }
+    }
+
+    // ============================================================
+    // 18. 編輯回覆（含次數限制、編輯歷史）
+    // ============================================================
+
+    async function editReply(docId, replyId) {
+      const complaint = complaints.find(c => c.docId === docId);
+      if (!complaint) { showToast('找不到該投訴', true); return; }
+      const replyIndex = complaint.replies.findIndex(r => r.id === replyId);
+      if (replyIndex === -1) { showToast('找不到該回覆', true); return; }
+      const reply = complaint.replies[replyIndex];
+      
+      if (isAdmin) {
+        if (!reply.isAdmin || reply.authorDisplayName !== getAdminDisplayName(currentAdminUsername)) {
+          showToast('您沒有權限編輯此回覆', true);
+          return;
+        }
+      } else {
+        if (reply.isAdmin || complaint.userId !== currentUser?.uid) {
+          showToast('您沒有權限編輯此回覆', true);
+          return;
+        }
+      }
+      
+      if (reply.isDeleted) { showToast('已收回的回覆無法編輯', true); return; }
+      if (reply.editCount >= MAX_EDIT_COUNT) { 
+        showToast(`⚠️ 此回覆已達最大編輯次數（${MAX_EDIT_COUNT}次）`, true); 
+        return; 
+      }
+      
+      const newText = prompt('編輯回覆內容：', reply.text);
+      if (newText === null) return;
+      if (!newText.trim()) { showToast('回覆內容不能為空', true); return; }
+      
+      try {
+        const updatedReplies = [...complaint.replies];
+        const currentReply = updatedReplies[replyIndex];
+        
+        const historyEntry = {
+          text: currentReply.text,
+          time: getNowTime(),
+          date: getToday()
+        };
+        
+        updatedReplies[replyIndex] = {
+          ...currentReply,
+          text: newText.trim(),
+          editHistory: [...(currentReply.editHistory || []), historyEntry],
+          editCount: (currentReply.editCount || 0) + 1,
+          isEdited: true
+        };
+        
+        await db.collection('complaints').doc(docId).update({ replies: updatedReplies });
+        showToast('✅ 回覆已編輯');
+      } catch (error) {
+        console.error('編輯失敗:', error);
+        showToast('❌ 編輯失敗，請稍後再試', true);
+      }
+    }
+
+    // ============================================================
+    // 19. 收回回覆（不限時間）
+    // ============================================================
+
+    async function deleteReply(docId, replyId) {
+      const complaint = complaints.find(c => c.docId === docId);
+      if (!complaint) { showToast('找不到該投訴', true); return; }
+      const replyIndex = complaint.replies.findIndex(r => r.id === replyId);
+      if (replyIndex === -1) { showToast('找不到該回覆', true); return; }
+      const reply = complaint.replies[replyIndex];
+      
+      if (isAdmin) {
+        if (!reply.isAdmin || reply.authorDisplayName !== getAdminDisplayName(currentAdminUsername)) {
+          showToast('您沒有權限收回此回覆', true);
+          return;
+        }
+      } else {
+        if (reply.isAdmin || complaint.userId !== currentUser?.uid) {
+          showToast('您沒有權限收回此回覆', true);
+          return;
+        }
+      }
+      
+      if (reply.isDeleted) { showToast('此回覆已被收回', true); return; }
+      
+      if (!confirm('確定要收回這則回覆嗎？\n\n收回後內容將被隱藏，不會顯示。')) return;
+      
+      try {
+        const updatedReplies = [...complaint.replies];
+        updatedReplies[replyIndex] = {
+          ...updatedReplies[replyIndex],
+          isDeleted: true,
+          text: null,
+          files: [],
+          editHistory: [],
+          isEdited: false,
+          editCount: 0
+        };
+        await db.collection('complaints').doc(docId).update({ replies: updatedReplies });
+        showToast('✅ 回覆已收回');
+      } catch (error) {
+        console.error('收回失敗:', error);
+        showToast('❌ 收回失敗，請稍後再試', true);
+      }
+    }
+
+    // ============================================================
+    // 20. 回覆引用功能
+    // ============================================================
+
+    function quoteReply(docId, replyId) {
+      const complaint = complaints.find(c => c.docId === docId);
+      if (!complaint) return;
+      const reply = complaint.replies.find(r => r.id === replyId);
+      if (!reply || reply.isDeleted) return;
+      
+      const authorName = getDisplayNameForReply(reply);
+      
+      const container = document.querySelector(`.complaint-item[data-docid="${docId}"]`);
+      const textarea = container?.querySelector('.reply-textarea');
+      if (textarea) {
+        const quotedText = `> ${authorName}：${reply.text}\n\n`;
+        if (textarea.value.trim()) {
+          textarea.value = quotedText + textarea.value;
+        } else {
+          textarea.value = quotedText;
+        }
+        textarea.focus();
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
+        
+        // 觸發 @ 選單檢測
+        const event = new Event('input', { bubbles: true });
+        textarea.dispatchEvent(event);
+      }
+    }
+
+    // ============================================================
+    // 21. 回覆置頂功能
+    // ============================================================
+
+    async function togglePinReply(docId, replyId) {
+      if (!isAdmin) { showToast('請先登入管理模式', true); return; }
+      const complaint = complaints.find(c => c.docId === docId);
+      if (!complaint) return;
+      const replyIndex = complaint.replies.findIndex(r => r.id === replyId);
+      if (replyIndex === -1) return;
+      
+      const updatedReplies = [...complaint.replies];
+      const currentReply = updatedReplies[replyIndex];
+      const newPinned = !currentReply.isPinned;
+      
+      if (newPinned) {
+        updatedReplies.forEach((r, idx) => {
+          if (idx !== replyIndex) updatedReplies[idx] = { ...updatedReplies[idx], isPinned: false };
+        });
+      }
+      
+      updatedReplies[replyIndex] = { ...currentReply, isPinned: newPinned };
+      
+      try {
+        await db.collection('complaints').doc(docId).update({ replies: updatedReplies });
+        showToast(newPinned ? '✅ 回覆已置頂' : '✅ 已取消置頂');
+      } catch (error) {
+        console.error('置頂操作失敗:', error);
+        showToast('❌ 操作失敗，請稍後再試', true);
+      }
+    }
+
+    // ============================================================
+    // 22. 查看編輯歷史（管理員專用）
+    // ============================================================
+
+    function showEditHistory(docId, replyId) {
+      const complaint = complaints.find(c => c.docId === docId);
+      if (!complaint) return;
+      const reply = complaint.replies.find(r => r.id === replyId);
+      if (!reply || !reply.editHistory || reply.editHistory.length === 0) {
+        showToast('此回覆尚無編輯歷史', true);
+        return;
+      }
+      
+      let html = '';
+      reply.editHistory.forEach((entry, idx) => {
+        const timeStr = formatDateTimeWithSeconds(entry.date, entry.time);
+        html += `
+          <div class="edit-history-item">
+            <div class="history-time">#${idx + 1} ${timeStr}</div>
+            <div class="history-text">${escapeHtml(entry.text)}</div>
+          </div>
+        `;
+      });
+      
+      document.getElementById('editHistoryContent').innerHTML = html;
+      document.getElementById('editHistoryOverlay').classList.add('active');
+    }
+
+    // ============================================================
+    // 23. @標記選單
+    // ============================================================
+
+    let mentionMenuInstance = null;
+
+    function createMentionMenu() {
+      if (mentionMenuInstance) return mentionMenuInstance;
+      const menu = document.createElement('div');
+      menu.id = 'mentionMenu';
+      document.body.appendChild(menu);
+      mentionMenuInstance = menu;
+      
+      menu.addEventListener('click', function(e) {
+        const item = e.target.closest('.mention-item');
+        if (!item || item.classList.contains('no-result')) return;
+        const displayName = item.dataset.display;
+        const atIndex = parseInt(menu.dataset.atIndex);
+        const textareaId = menu.dataset.textareaId;
+        const docId = menu.dataset.docId;
+        const textarea = document.getElementById(textareaId) || 
+                         document.querySelector(`.reply-textarea[data-docid="${docId}"]`);
+        if (textarea) {
+          const value = textarea.value;
+          const before = value.substring(0, atIndex);
+          const after = value.substring(atIndex + 1 + (before.split('@').pop() || '').length);
+          textarea.value = before + '@' + displayName + ' ' + after;
+          textarea.focus();
+          const newPos = before.length + displayName.length + 2;
+          textarea.setSelectionRange(newPos, newPos);
+          textarea.style.height = 'auto';
+          textarea.style.height = textarea.scrollHeight + 'px';
+        }
+        hideMentionMenu();
+      });
+      
+      return menu;
+    }
+
+    function hideMentionMenu() {
+      const menu = document.getElementById('mentionMenu');
+      if (menu) menu.style.display = 'none';
+    }
+
+    function showMentionMenu(textarea, docId, searchTerm, atIndex) {
+      const complaint = complaints.find(c => c.docId === docId);
+      if (!complaint) return;
+      
+      const canMention = isAdmin || (currentUser && complaint.userId === currentUser.uid);
+      if (!canMention) {
+        hideMentionMenu();
+        return;
+      }
+      
+      const menu = createMentionMenu();
+      const items = [];
+      
+      // 投訴者
+      const complainantName = complaint.userName || '投訴者';
+      if (!currentUser || complaint.userId !== currentUser.uid) {
+        items.push({ name: '投訴者', display: '投訴者', role: 'complainant' });
+      }
+      
+      // 管理員（從回覆中提取）
+      const adminNames = new Set();
+      complaint.replies.forEach(r => {
+        if (r.isAdmin && !r.isDeleted) {
+          const roleName = r.authorRole || '管理員';
+          let display = r.authorDisplayName || '管理員';
+          if (roleName === '版主') display = '版主';
+          else if (roleName === '所有權') display = '所有權';
+          else if (roleName === '副版主') display = '副版主';
+          else if (roleName === '小編') display = r.authorDisplayName || '小編';
+          if (!adminNames.has(display)) {
+            adminNames.add(display);
+            items.push({ name: display, display: display, role: roleName });
+          }
+        }
+      });
+      
+      const filtered = searchTerm ? items.filter(item => 
+        item.display.includes(searchTerm) || item.name.includes(searchTerm)
+      ) : items;
+      
+      menu.innerHTML = filtered.length > 0 
+        ? filtered.map(item => 
+            `<div class="mention-item" data-name="${item.name}" data-display="${item.display}">@${item.display}</div>`
+          ).join('')
+        : '<div class="mention-item no-result">無符合結果</div>';
+      
+      const rect = textarea.getBoundingClientRect();
+      const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || 20;
+      const textBefore = textarea.value.substring(0, atIndex);
+      const lines = textBefore.split('\n').length;
+      const scrollTop = textarea.scrollTop || 0;
+      const lineOffset = (lines - 1) * lineHeight;
+      
+      menu.style.left = Math.max(10, rect.left) + 'px';
+      menu.style.top = Math.max(10, rect.top + Math.min(lineOffset, 120)) + 'px';
+      menu.style.display = 'block';
+      
+      const textareaId = textarea.id || 'replyTextarea_' + Date.now();
+      if (!textarea.id) textarea.id = textareaId;
+      menu.dataset.textareaId = textareaId;
+      menu.dataset.atIndex = atIndex;
+      menu.dataset.docId = docId;
+    }
+
+    function handleMentionInput(textarea) {
+      const value = textarea.value;
+      const cursorPos = textarea.selectionStart;
+      const textBefore = value.substring(0, cursorPos);
+      const atIndex = textBefore.lastIndexOf('@');
+      
+      if (atIndex !== -1 && (atIndex === 0 || value[atIndex - 1] === ' ' || value[atIndex - 1] === '\n')) {
+        const searchTerm = textBefore.substring(atIndex + 1);
+        const container = textarea.closest('.complaint-item');
+        const docId = container?.dataset.docid;
+        if (!docId) { hideMentionMenu(); return; }
+        
+        const complaint = complaints.find(c => c.docId === docId);
+        if (!complaint) { hideMentionMenu(); return; }
+        
+        const canMention = isAdmin || (currentUser && complaint.userId === currentUser.uid);
+        if (!canMention) { hideMentionMenu(); return; }
+        
+        showMentionMenu(textarea, docId, searchTerm, atIndex);
+      } else {
+        hideMentionMenu();
+      }
+    }
+
+    // ============================================================
+    // 24. 回覆輸入監聽
+    // ============================================================
+
+    document.addEventListener('input', function(e) {
+      if (e.target.classList.contains('reply-textarea')) {
+        handleMentionInput(e.target);
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('#mentionMenu') && !e.target.closest('.reply-textarea')) {
+        hideMentionMenu();
+      }
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') hideMentionMenu();
+    });
+
+    // ============================================================
+    // 25. Email 通知
+    // ============================================================
+
+    async function sendNewComplaintEmail(complaint) {
+      try {
+        const message = `姓名：${complaint.userName}\nIG：${complaint.igName || '未提供'}\n類別：${complaint.category}\n嚴重程度：${complaint.priority}\n標題：${complaint.title}\n內容：${complaint.description}\n事件時間：${complaint.eventTime || '未提供'}\n提交時間：${complaint.date} ${complaint.time || ''}\n狀態：${complaint.status || '待處理'}`;
+        await emailjs.send(emailjsConfig.serviceID, emailjsConfig.templateID, {
+          to_email: "dader60dader@gmail.com", subject: `【新投訴】${complaint.title}`,
+          message: message, name: complaint.userName, time: `${complaint.date} ${complaint.time || ''}`
+        });
+      } catch (error) { console.error('❌ Email 發送失敗:', error); }
+    }
+
+    async function sendReplyToComplainant(complaint, replyText) {
+      try {
+        if (!complaint.userEmail) return;
+        const adminName = getAdminDisplayName(currentAdminUsername);
+        const roleName = getAdminRoleName(currentAdminUsername);
+        const message = `您好，${complaint.userName}，\n\n您於 ${complaint.date} ${complaint.time} 提交的投訴「${complaint.title}」已經有管理員回覆：\n\n──────────────────────────\n${replyText}\n──────────────────────────\n\n【回覆人員】${roleName} ${adminName}\n【回覆時間】${getToday()} ${getNowTime()}\n\n請登入系統查看完整內容。\n此為系統自動發送，請勿直接回覆。`;
+        await emailjs.send(emailjsConfig.serviceID, emailjsConfig.templateID, {
+          to_email: complaint.userEmail, subject: `【投訴回覆】${complaint.title}`,
+          message: message, name: complaint.userName, time: getToday() + ' ' + getNowTime()
+        });
+      } catch (error) { console.error('❌ 回覆通知發送失敗:', error); }
+    }
+
+    // ============================================================
+    // 26. 渲染（含所有新功能）
+    // ============================================================
+
+    function render() {
+      const listEl = document.getElementById('complaintList');
+      const filterStatus = document.getElementById('filterStatus').value;
+      const totalSpan = document.getElementById('totalCount');
+      const newSpan = document.getElementById('newCount');
+      
+      let filtered = [];
+      if (isAdmin === true) { filtered = [...complaints]; } 
+      else if (currentUser) { filtered = complaints.filter(c => c.userId === currentUser.uid); } 
+      else { filtered = []; }
+      
+      if (filterStatus !== 'all') { filtered = filtered.filter(c => c.status === filterStatus); }
+      
+      let newCount = 0;
+      if (isAdmin) {
+        newCount = complaints.filter(c => c.status === '待處理').length;
+      } else if (currentUser) {
+        newCount = complaints.filter(c => c.userId === currentUser.uid && c.status === '待處理').length;
+      }
+      
+      if (newSpan) {
+        newSpan.textContent = newCount;
+        if (newCount > 0) {
+          newSpan.style.color = '#ff6b00';
+          newSpan.style.fontWeight = 'bold';
+          newSpan.classList.add('has-new');
+        } else {
+          newSpan.style.color = '';
+          newSpan.style.fontWeight = '';
+          newSpan.classList.remove('has-new');
+        }
+      }
+      
+      if (filtered.length === 0) {
+        let emptyMessage = isAdmin ? '目前沒有投訴紀錄' : (currentUser ? '您還沒有提交過投訴' : '請登入查看您的投訴紀錄');
+        listEl.innerHTML = `<div class="empty-state"><i class="fas fa-inbox"></i><p style="margin-top:6px;">${emptyMessage}</p><span class="text-muted">${isAdmin ? '新增一筆投訴吧' : (currentUser ? '提交您的第一筆投訴' : '登入後即可提交投訴')}</span></div>`;
+      } else {
+        let html = '';
+        filtered.forEach(item => {
+          const status = item.status || '待處理';
+          let statusControl = isAdmin ? `<select class="status-select ${status}" data-action="statusChange" data-docid="${item.docId}" data-id="${item.id}">${STATUS_LIST.map(s => `<option value="${s}" ${s === status ? 'selected' : ''}>${s}</option>`).join('')}</select>` : `<span class="status-badge ${status}">${status}</span>`;
+          
+          let adminButtons = '';
+          if (isAdmin) {
+            const role = getAdminRole(currentAdminUsername);
+            if (role === 'moderator' || role === 'owner') {
+              adminButtons = `<button class="btn-delete" data-action="delete" data-docid="${item.docId}" data-id="${item.id}"><i class="fas fa-times"></i></button>`;
+            }
+          }
+          
+          let supplementButton = '';
+          if (item.status === '需要補充資料' && !isAdmin && currentUser && item.userId === currentUser.uid) {
+            const hasSupplement = item.supplements && item.supplements.length > 0 && item.supplements.some(s => !s.isAdmin);
+            if (!hasSupplement) {
+              supplementButton = `<button class="btn-supplement" data-docid="${item.docId}" onclick="openSupplementModal('${item.docId}')"><i class="fas fa-pen"></i> 補充資料</button>`;
+            }
+          }
+          
+          let imagesHtml = '';
+          if (item.imageUrls && item.imageUrls.length > 0) {
+            const showUrls = item.imageUrls.slice(0, 4);
+            const remaining = item.imageUrls.length - 4;
+            imagesHtml = '<div class="complaint-images">';
+            showUrls.forEach((url, idx) => {
+              const isVideo = url.startsWith('data:video') || url.match(/\.(mp4|mov|avi|webm|mkv|flv|wmv)/i) || url.includes('video');
+              if (isVideo) {
+                imagesHtml += `<div class="video-thumb-item" onclick="openVideoPlayer('${item.docId}', ${idx})"><i class="fas fa-play-circle" style="font-size:2rem;color:white;opacity:0.9;text-shadow:0 2px 10px rgba(0,0,0,0.5);"></i><span style="position:absolute;bottom:2px;right:4px;background:rgba(0,0,0,0.7);color:white;font-size:0.45rem;padding:1px 4px;border-radius:3px;">影片</span></div>`;
+              } else {
+                imagesHtml += `<img src="${url}" alt="投訴圖片" onclick="openLightbox('${item.docId}', ${idx})" />`;
+              }
+            });
+            if (remaining > 0) imagesHtml += `<div class="more-badge">+${remaining}</div>`;
+            imagesHtml += '</div>';
+          }
+          
+          let videoLinkHtml = '';
+          if (item.videoLink && item.videoLink.trim()) {
+            videoLinkHtml = `
+              <div class="video-link-box">
+                <i class="fas fa-video"></i>
+                <a href="${escapeHtml(item.videoLink)}" target="_blank">${escapeHtml(item.videoLink)}</a>
+                <span class="link-label">🔗 雲端影片</span>
+              </div>
+            `;
+          }
+          
+          let newReplyBadge = '';
+          if (!isAdmin && item.hasNewReply === true && item.replies && item.replies.length > 0) {
+            newReplyBadge = `<span class="new-reply-badge">📩 新回覆</span>`;
+          }
+          
+          let processedHtml = '';
+          if (isAdmin && item.lastProcessedBy && item.lastProcessedAt) {
+            processedHtml = `<div class="processed-info"><i class="fas fa-user-check"></i> 最後處理：${escapeHtml(item.lastProcessedBy)} (${item.lastProcessedAt})</div>`;
+          }
+          
+          let supplementHtml = '';
+          if (item.supplements && item.supplements.length > 0) {
+            supplementHtml = '<div style="margin-top:8px;">';
+            item.supplements.forEach(s => {
+              const isAdminReply = s.isAdmin || false;
+              const author = s.author || (isAdminReply ? '管理員' : item.userName || '使用者');
+              supplementHtml += `
+                <div class="supplement-record">
+                  <span class="supplement-author">${escapeHtml(author)}</span>
+                  <span class="supplement-time">${s.date || ''} ${s.time || ''}</span>
+                  ${isAdminReply ? '<span style="font-size:0.6rem;background:#dc3545;color:white;padding:1px 8px;border-radius:12px;margin-left:6px;">管理員要求</span>' : '<span style="font-size:0.6rem;background:#28a745;color:white;padding:1px 8px;border-radius:12px;margin-left:6px;">投訴者補充</span>'}
+                  <div class="supplement-text">${escapeHtml(s.text)}</div>
+                  ${s.files && s.files.length > 0 ? `
+                    <div class="supplement-files">
+                      ${s.files.map(url => {
+                        const isVideo = url.match(/\.(mp4|mov|avi|webm)/i) || url.includes('video');
+                        return isVideo ? 
+                          `<div class="video-thumb" onclick="window.open('${url}','_blank')" style="width:50px;height:50px;border-radius:8px;background:#1a1a2e;display:flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid #e6ecf5;"><i class="fas fa-play-circle" style="color:white;font-size:1.2rem;"></i></div>` :
+                          `<img src="${url}" alt="補充檔案" onclick="window.open('${url}','_blank')" />`;
+                      }).join('')}
+                    </div>
+                  ` : ''}
+                </div>
+              `;
+            });
+            supplementHtml += '</div>';
+          }
+          
+          let repliesHtml = '';
+          if (item.replies && item.replies.length > 0) {
+            // 過濾已刪除 + 排序（置頂優先）
+            let sortedReplies = [...item.replies].filter(r => !r.isDeleted);
+            sortedReplies.sort((a, b) => {
+              if (a.isPinned && !b.isPinned) return -1;
+              if (!a.isPinned && b.isPinned) return 1;
+              return (b.createdAt || 0) - (a.createdAt || 0);
+            });
+            
+            repliesHtml = '<div class="reply-list">';
+            sortedReplies.forEach((r) => {
+              if (r.isDeleted) return;
+              const replyId = r.id || 'reply_' + Math.random().toString(36).substr(2, 6);
+              
+              const displayName = getDisplayNameForReply(r);
+              let displayClass = '';
+              if (!r.isAdmin) displayClass = 'complainant';
+              else {
+                const roleName = r.authorRole || '管理員';
+                if (roleName === '版主') displayClass = 'moderator';
+                else if (roleName === '所有權') displayClass = 'owner';
+                else if (roleName === '副版主') displayClass = 'vice';
+                else if (roleName === '小編') displayClass = 'editor';
+                else displayClass = 'admin';
+              }
+              
+              let isMe = false;
+              if (currentUser && !r.isAdmin && item.userId === currentUser.uid) isMe = true;
+              if (isAdmin && r.isAdmin) {
+                const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
+                if (adminInfo && r.authorDisplayName === adminInfo.displayName) isMe = true;
+              }
+              
+              const replyClass = r.isAdmin ? 'reply-item reply-admin' : 'reply-item';
+              const meClass = isMe ? ' reply-author me' : '';
+              
+              const timeStr = formatDateTimeWithSeconds(r.date, r.time);
+              const editBadge = getEditBadge(r, isAdmin);
+              const pinnedBadge = r.isPinned ? '<span class="pinned-badge"><i class="fas fa-thumbtack"></i> 置頂</span>' : '';
+              
+              let quoteHtml = '';
+              if (r.replyTo) {
+                const quotedAuthor = r.replyTo.author || '使用者';
+                quoteHtml = `
+                  <div class="reply-quote-block">
+                    <span class="quote-author">${escapeHtml(quotedAuthor)}：</span>
+                    ${escapeHtml(r.replyTo.text)}
+                  </div>
+                `;
+              }
+              
+              let replyFilesHtml = '';
+              if (r.files && r.files.length > 0) {
+                replyFilesHtml = '<div class="reply-files">';
+                r.files.forEach(url => {
+                  const isVideo = url.match(/\.(mp4|mov|avi|webm)/i) || url.includes('video');
+                  if (isVideo) {
+                    replyFilesHtml += `<div class="reply-file video-thumb" onclick="window.open('${url}','_blank')" style="width:60px;height:60px;border-radius:8px;background:#1a1a2e;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid #e6ecf5;margin-right:4px;"><i class="fas fa-play-circle" style="color:white;font-size:1.5rem;"></i></div>`;
+                  } else {
+                    replyFilesHtml += `<img src="${url}" alt="回覆圖片" onclick="window.open('${url}','_blank')" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid #e6ecf5;cursor:pointer;margin-right:4px;" />`;
+                  }
+                });
+                replyFilesHtml += '</div>';
+              }
+              
+              // 按鈕組
+              let actionButtons = '';
+              
+              // 引用（僅投訴者或管理員）
+              if (isAdmin || (currentUser && item.userId === currentUser.uid)) {
+                actionButtons += `<button class="reply-quote-btn" onclick="quoteReply('${item.docId}', '${replyId}')"><i class="fas fa-quote-right"></i> 引用</button>`;
+              }
+              
+              // 編輯歷史（僅管理員）
+              if (isAdmin && r.editHistory && r.editHistory.length > 0) {
+                actionButtons += `<button class="reply-history-btn" onclick="showEditHistory('${item.docId}', '${replyId}')"><i class="fas fa-history"></i> 歷史</button>`;
+              }
+              
+              // 置頂（僅管理員）
+              if (isAdmin) {
+                actionButtons += `<button class="reply-pin-btn" onclick="togglePinReply('${item.docId}', '${replyId}')">
+                  <i class="fas ${r.isPinned ? 'fa-thumbtack' : 'fa-thumbtack'}" style="${r.isPinned ? 'color:#c52a2a;transform:rotate(45deg);' : 'color:#8a9db0;'}"></i>
+                  ${r.isPinned ? '取消置頂' : '置頂'}
+                </button>`;
+              }
+              
+              // 編輯（本人）
+              if (isMe && !r.isDeleted) {
+                actionButtons += `<button class="reply-edit-btn" onclick="editReply('${item.docId}', '${replyId}')"><i class="fas fa-edit"></i> 編輯</button>`;
+              }
+              
+              // 收回（本人，不限時間）
+              if (isMe && !r.isDeleted) {
+                actionButtons += `<button class="reply-delete-btn" onclick="deleteReply('${item.docId}', '${replyId}')"><i class="fas fa-trash-alt"></i> 收回</button>`;
+              }
+              
+              repliesHtml += `
+                <div class="${replyClass}" data-reply-id="${replyId}">
+                  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
+                    <span class="reply-author ${displayClass}${meClass}">${escapeHtml(displayName)}</span>
+                    <span class="reply-time">${timeStr}</span>
+                    ${editBadge}
+                    ${pinnedBadge}
+                    <span style="margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;">${actionButtons}</span>
+                  </div>
+                  ${quoteHtml}
+                  <div class="reply-text">${escapeHtml(r.text)}</div>
+                  ${replyFilesHtml}
+                </div>
+              `;
+            });
+            repliesHtml += '</div>';
+          }
+          
+          let showReplyInput = isAdmin || (currentUser && item.userId === currentUser.uid);
+          let replyInputHtml = '';
+          if (showReplyInput) {
+            replyInputHtml = `
+              <div class="reply-input-area">
+                <div style="flex:1;min-width:150px;display:flex;flex-direction:column;gap:6px;width:100%;">
+                  <textarea class="reply-textarea" placeholder="輸入回覆內容... (輸入 @ 可標記他人)" rows="1"></textarea>
+                  <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                    <button type="button" class="reply-file-btn" data-docid="${item.docId}"><i class="fas fa-image"></i> 圖片</button>
+                    <input type="file" class="reply-file-input" data-docid="${item.docId}" accept="image/*,video/*" multiple style="display:none;" />
+                    <span class="reply-file-count" data-docid="${item.docId}">已選 0 個</span>
+                  </div>
+                  <div class="reply-preview-grid" data-docid="${item.docId}"></div>
+                </div>
+                <button class="btn-reply" data-action="reply" data-docid="${item.docId}" data-id="${item.id}">送出回覆</button>
+              </div>
+            `;
+          }
+          
+          html += `
+            <div class="complaint-item" data-id="${item.id}" data-docid="${item.docId}" onclick="handleItemClick('${item.docId}')">
+              <div class="complaint-content">
+                <div class="complaint-title">
+                  <span>${escapeHtml(item.title)}</span>
+                  ${newReplyBadge}
+                  ${statusControl}
+                  ${isAdmin ? '<span class="admin-badge">管理</span>' : ''}
+                </div>
+                <div class="complaint-meta">
+                  <span><i class="fas fa-user"></i> ${escapeHtml(item.userName)}</span>
+                  ${item.igName ? `<span><i class="fab fa-instagram"></i> ${escapeHtml(item.igName)}</span>` : ''}
+                  ${isAdmin && item.userEmail ? `<span><i class="fas fa-envelope" style="color:#c52a2a;"></i> ${escapeHtml(item.userEmail)}</span>` : ''}
+                  <span><i class="fas fa-tag"></i> ${escapeHtml(item.category)}</span>
+                  <span><i class="fas fa-exclamation-triangle"></i> ${escapeHtml(item.priority)}</span>
+                  <span><i class="far fa-calendar-alt"></i> ${item.date || '未知'} ${item.time || ''}</span>
+                  ${item.needReply ? `<span><i class="fas fa-reply"></i> 需要回覆：${item.needReply}</span>` : ''}
+                  ${item.imageUrls && item.imageUrls.length > 0 ? `<span><i class="fas fa-image"></i> ${item.imageUrls.length}張</span>` : ''}
+                </div>
+                <div style="margin-top:6px;font-size:0.9rem;color:#2b405b;">${escapeHtml(item.description)}</div>
+                ${processedHtml}
+                ${videoLinkHtml}
+                ${imagesHtml}
+                ${supplementHtml}
+                <div class="reply-section">
+                  ${repliesHtml}
+                  ${replyInputHtml}
+                </div>
+              </div>
+              <div class="complaint-actions">
+                ${adminButtons}
+                ${supplementButton}
+              </div>
+            </div>
+          `;
+        });
+        listEl.innerHTML = html;
+      }
+      totalSpan.textContent = complaints.length;
+      
+      document.querySelectorAll('[data-action="reply"]').forEach(btn => {
+        btn.removeEventListener('click', handleReply);
+        btn.addEventListener('click', handleReply);
+      });
+    }
+
+    // ============================================================
+    // 27. 回覆處理
+    // ============================================================
+
+    document.addEventListener('change', function(e) {
+      if (e.target.classList.contains('reply-file-input')) {
+        const docId = e.target.dataset.docid;
+        if (!replyFiles[docId]) replyFiles[docId] = [];
+        const remaining = 5 - replyFiles[docId].length;
+        const toAdd = Math.min(e.target.files.length, remaining);
+        for (let i = 0; i < toAdd; i++) { replyFiles[docId].push(e.target.files[i]); }
+        updateReplyPreview(docId);
+        e.target.value = '';
+        if (e.target.files.length > toAdd) { showToast(`已超過上限，僅新增 ${toAdd} 個檔案`, true); }
+      }
+    });
+
+    document.addEventListener('click', function(e) {
+      if (e.target.closest('.reply-file-btn')) {
+        const btn = e.target.closest('.reply-file-btn');
+        const docId = btn.dataset.docid;
+        const input = document.querySelector(`.reply-file-input[data-docid="${docId}"]`);
+        if (input) input.click();
+      }
+    });
+
+    function updateReplyPreview(docId) {
+      const grid = document.querySelector(`.reply-preview-grid[data-docid="${docId}"]`);
+      const count = document.querySelector(`.reply-file-count[data-docid="${docId}"]`);
+      if (!grid) return;
+      grid.innerHTML = '';
+      const files = replyFiles[docId] || [];
+      files.forEach((file, index) => {
+        const div = document.createElement('div');
+        div.className = 'image-preview-item';
+        div.style.width = '50px';
+        div.style.height = '50px';
+        const isVideo = file.type.startsWith('video/');
+        if (isVideo) {
+          const video = document.createElement('video');
+          video.src = URL.createObjectURL(file);
+          video.muted = true;
+          video.preload = 'metadata';
+          const img = document.createElement('img');
+          video.onloadeddata = function() {
+            const canvas = document.createElement('canvas');
+            canvas.width = 50;
+            canvas.height = 50;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            img.src = canvas.toDataURL('image/jpeg');
+          };
+          div.appendChild(img);
+          const playIcon = document.createElement('div');
+          playIcon.className = 'video-play-icon';
+          playIcon.style.fontSize = '1.2rem';
+          playIcon.innerHTML = '<i class="fas fa-play-circle"></i>';
+          div.appendChild(playIcon);
+        } else {
+          const img = document.createElement('img');
+          const reader = new FileReader();
+          reader.onload = (e) => { img.src = e.target.result; };
+          reader.readAsDataURL(file);
+          div.appendChild(img);
+        }
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-btn';
+        removeBtn.style.width = '16px';
+        removeBtn.style.height = '16px';
+        removeBtn.style.fontSize = '8px';
+        removeBtn.innerHTML = '<i class="fas fa-times"></i>';
+        removeBtn.onclick = (e) => {
+          e.stopPropagation();
+          replyFiles[docId].splice(index, 1);
+          updateReplyPreview(docId);
+        };
+        div.appendChild(removeBtn);
+        grid.appendChild(div);
+      });
+      if (count) count.textContent = `已選 ${files.length} 個`;
+    }
+
+    async function handleReply(e) {
+      const btn = e.currentTarget;
+      const docId = btn.dataset.docid;
+      const container = btn.closest('.complaint-item');
+      const textarea = container.querySelector('.reply-textarea');
+      const replyText = textarea.value.trim();
+      
+      if (!replyText && (!replyFiles[docId] || replyFiles[docId].length === 0)) {
+        showToast('請輸入回覆內容或上傳檔案', true);
+        return;
+      }
+      
+      const complaint = complaints.find(c => c.docId === docId);
+      if (!complaint) { showToast('找不到該投訴', true); return; }
+      if (!isAdmin && (!currentUser || complaint.userId !== currentUser.uid)) {
+        showToast('您沒有權限回覆此投訴', true);
+        return;
+      }
+      
+      // 解析 @ 標記和引用
+      let mentions = [];
+      const mentionRegex = /@(\S+)/g;
+      let match;
+      while ((match = mentionRegex.exec(replyText)) !== null) {
+        const mentionedName = match[1];
+        // 檢查是否為有效標記對象
+        const isValid = 
+          mentionedName === '投訴者' || 
+          ADMIN_ACCOUNTS.some(a => a.displayName === mentionedName) ||
+          ADMIN_ACCOUNTS.some(a => a.username === mentionedName);
+        if (isValid) {
+          mentions.push({ name: mentionedName });
+        }
+      }
+      
+      // 檢查是否有引用
+      let replyTo = null;
+      const quoteMatch = replyText.match(/^> (.+?)：(.+?)\n\n/);
+      if (quoteMatch) {
+        const quotedAuthor = quoteMatch[1];
+        const quotedText = quoteMatch[2];
+        replyTo = { author: quotedAuthor, text: quotedText };
+      }
+      
+      btn.disabled = true;
+      btn.textContent = '送出中...';
+      
+      const files = replyFiles[docId] || [];
+      const success = await sendReply(docId, replyText, files, replyTo, mentions);
+      
+      if (success) {
+        if (isAdmin) {
+          const complaintData = complaints.find(c => c.docId === docId);
+          if (complaintData) await sendReplyToComplainant(complaintData, replyText);
+          showToast('✅ 回覆已送出，投訴者將收到 Email 通知');
+        } else {
+          showToast('✅ 回覆已送出');
+        }
+        textarea.value = '';
+        replyFiles[docId] = [];
+        updateReplyPreview(docId);
+      }
+      
+      btn.textContent = '送出回覆';
+      btn.disabled = false;
+    }
+
+    window.handleItemClick = async function(docId) {
+      if (!isAdmin && currentUser) {
+        const complaint = complaints.find(c => c.docId === docId);
+        if (complaint && complaint.hasNewReply === true) {
+          try { await db.collection('complaints').doc(docId).update({ hasNewReply: false }); } 
+          catch (error) { console.error('標記已讀失敗:', error); }
+        }
+      }
+    };
+
+    // ============================================================
+    // 28. 影片播放器
+    // ============================================================
+
+    let videoList = [];
+    let videoIndex = 0;
+
+    function openVideoPlayer(docId, index) {
+      const complaint = complaints.find(c => c.docId === docId);
+      if (!complaint || !complaint.imageUrls || complaint.imageUrls.length === 0) return;
+      videoList = complaint.imageUrls.filter(url => 
+        url.startsWith('data:video') || url.match(/\.(mp4|mov|avi|webm|mkv|flv|wmv)/i) || url.includes('video')
+      );
+      if (videoList.length === 0) { showToast('找不到影片', true); return; }
+      
+      const allUrls = complaint.imageUrls;
+      let videoIdx = 0, count = 0;
+      for (let i = 0; i < allUrls.length; i++) {
+        const url = allUrls[i];
+        const isVideo = url.startsWith('data:video') || url.match(/\.(mp4|mov|avi|webm|mkv|flv|wmv)/i) || url.includes('video');
+        if (isVideo) { if (i === index) { videoIdx = count; break; } count++; }
+      }
+      
+      videoIndex = videoIdx;
+      showVideo(videoIndex);
+      document.getElementById('videoPlayerOverlay').classList.add('active');
+      document.getElementById('videoPrev').style.display = videoList.length > 1 ? 'block' : 'none';
+      document.getElementById('videoNext').style.display = videoList.length > 1 ? 'block' : 'none';
+    }
+
+    function showVideo(index) {
+      if (index < 0 || index >= videoList.length) return;
+      const url = videoList[index];
+      const videoEl = document.getElementById('videoPlayer');
+      const sourceEl = document.getElementById('videoPlayerSource');
+      let type = 'video/mp4';
+      if (url.match(/\.mov/i)) type = 'video/quicktime';
+      else if (url.match(/\.avi/i)) type = 'video/x-msvideo';
+      else if (url.match(/\.webm/i)) type = 'video/webm';
+      else if (url.match(/\.mkv/i)) type = 'video/x-matroska';
+      else if (url.match(/\.flv/i)) type = 'video/x-flv';
+      else if (url.match(/\.wmv/i)) type = 'video/x-ms-wmv';
+      
+      sourceEl.src = url;
+      sourceEl.type = type;
+      videoEl.load();
+      videoEl.play().catch(() => {});
+      document.getElementById('videoCounter').textContent = `${index + 1} / ${videoList.length}`;
+      videoIndex = index;
+    }
+
+    function navigateVideo(delta) {
+      const newIndex = videoIndex + delta;
+      if (newIndex < 0 || newIndex >= videoList.length) return;
+      showVideo(newIndex);
+    }
+
+    function closeVideoPlayer() {
+      document.getElementById('videoPlayerOverlay').classList.remove('active');
+      const videoEl = document.getElementById('videoPlayer');
+      videoEl.pause();
+      videoEl.currentTime = 0;
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('videoPlayerOverlay').classList.contains('active')) return;
+      if (e.key === 'ArrowLeft') navigateVideo(-1);
+      if (e.key === 'ArrowRight') navigateVideo(1);
+      if (e.key === 'Escape') closeVideoPlayer();
+      if (e.key === ' ') { e.preventDefault(); const video = document.getElementById('videoPlayer'); video.paused ? video.play() : video.pause(); }
+    });
+
+    // ============================================================
+    // 29. 圖片燈箱
+    // ============================================================
+
+    let lightboxImages = [], lightboxIndex = 0;
+    window.openLightbox = function(docId, index) {
+      const complaint = complaints.find(c => c.docId === docId);
+      if (!complaint || !complaint.imageUrls || complaint.imageUrls.length === 0) return;
+      lightboxImages = complaint.imageUrls;
+      lightboxIndex = index || 0;
+      document.getElementById('lightboxImg').src = lightboxImages[lightboxIndex];
+      document.getElementById('lightboxCounter').textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+      document.getElementById('lightboxPrev').style.display = lightboxImages.length > 1 ? 'block' : 'none';
+      document.getElementById('lightboxNext').style.display = lightboxImages.length > 1 ? 'block' : 'none';
+      document.getElementById('lightbox').classList.add('active');
+    };
+    function navigateLightbox(delta) {
+      const newIndex = lightboxIndex + delta;
+      if (newIndex < 0 || newIndex >= lightboxImages.length) return;
+      lightboxIndex = newIndex;
+      document.getElementById('lightboxImg').src = lightboxImages[lightboxIndex];
+      document.getElementById('lightboxCounter').textContent = `${lightboxIndex + 1} / ${lightboxImages.length}`;
+    }
+    document.getElementById('lightboxPrev').addEventListener('click', (e) => { e.stopPropagation(); navigateLightbox(-1); });
+    document.getElementById('lightboxNext').addEventListener('click', (e) => { e.stopPropagation(); navigateLightbox(1); });
+    document.getElementById('lightbox').addEventListener('click', function() { this.classList.remove('active'); });
+    document.addEventListener('keydown', (e) => {
+      if (!document.getElementById('lightbox').classList.contains('active')) return;
+      if (e.key === 'ArrowLeft') navigateLightbox(-1);
+      if (e.key === 'ArrowRight') navigateLightbox(1);
+      if (e.key === 'Escape') document.getElementById('lightbox').classList.remove('active');
+    });
+
+    // ============================================================
+    // 30. UI 更新
+    // ============================================================
+
+    function updateUI(user) {
+      const avatar = document.getElementById('userAvatar');
+      const nameDisplay = document.getElementById('userNameDisplay');
+      const welcomeLine = document.getElementById('welcomeLine');
+      const roleDisplay = document.getElementById('userRoleDisplay');
+      const googleBtn = document.getElementById('googleLoginBtn');
+      const googleBtn2 = document.getElementById('googleLoginBtn2');
+      const logoutBtn = document.getElementById('logoutBtn');
+      const adminLoginBtn = document.getElementById('adminLoginBtn');
+      const changePwdBtn = document.getElementById('changePasswordBtn');
+      const viewPwdBtn = document.getElementById('viewPasswordsBtn');
+      const loginLogsBtn = document.getElementById('viewLoginLogsBtn');
+      const form = document.getElementById('complaintForm');
+      const loginRequired = document.getElementById('loginRequiredMsg');
+      const submitNotice = document.getElementById('submitNotice');
+
+      if (submitNotice) {
+        submitNotice.innerHTML = `<i class="fas fa-shield-alt"></i> 您的投訴將安全儲存於雲端`;
+        submitNotice.style.display = 'block';
+      }
+
+      if (user) {
+        const displayName = user.displayName || user.email || '使用者';
+        avatar.textContent = getInitials(displayName);
+        if (isAdmin === true) {
+          const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
+          if (adminInfo) {
+            const fullDisplayName = adminInfo.displayName;
+            nameDisplay.textContent = `${fullDisplayName}`;
+            welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${fullDisplayName} 您好，歡迎使用投訴系統`;
+            welcomeLine.classList.remove('hidden');
+          }
+          roleDisplay.textContent = '管理員';
+          roleDisplay.className = 'user-role admin-role';
+          changePwdBtn.classList.add('show');
+          const role = getAdminRole(currentAdminUsername) || 'editor';
+          loginLogsBtn.classList.add('show');
+          if (role === 'owner' || role === 'moderator' || role === 'vice') {
+            viewPwdBtn.classList.add('show');
+          } else {
+            viewPwdBtn.classList.remove('show');
+          }
+          const manageBtnContainer = document.getElementById('manageVerifyBtnContainer');
+          if (role === 'owner') {
+            manageBtnContainer.style.display = 'flex';
+          } else {
+            manageBtnContainer.style.display = 'none';
+          }
+        } else {
+          nameDisplay.textContent = `${displayName}`;
+          welcomeLine.innerHTML = `<i class="fas fa-smile" style="color:#c52a2a;"></i> ${displayName} 您好，歡迎使用投訴系統`;
+          welcomeLine.classList.remove('hidden');
+          roleDisplay.textContent = '一般使用者';
+          roleDisplay.className = 'user-role';
+          changePwdBtn.classList.remove('show');
+          viewPwdBtn.classList.remove('show');
+          loginLogsBtn.classList.remove('show');
+          document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+        }
+        googleBtn.style.display = 'none';
+        googleBtn2.style.display = 'none';
+        logoutBtn.classList.add('show');
+        form.style.display = 'block';
+        loginRequired.style.display = 'none';
+        const nameInput = document.getElementById('userName');
+        if (displayName && !nameInput.value) nameInput.value = displayName;
+      } else {
+        avatar.textContent = '👤';
+        nameDisplay.textContent = '';
+        welcomeLine.innerHTML = '';
+        welcomeLine.classList.add('hidden');
+        roleDisplay.textContent = '';
+        roleDisplay.className = 'user-role';
+        loginLogsBtn.classList.remove('show');
+        document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+        googleBtn.style.display = 'inline-flex';
+        googleBtn2.style.display = 'inline-flex';
+        logoutBtn.classList.remove('show');
+        changePwdBtn.classList.remove('show');
+        viewPwdBtn.classList.remove('show');
+        form.style.display = 'none';
+        loginRequired.style.display = 'block';
+        if (isAdmin === true) {
+          isAdmin = false;
+          sessionStorage.setItem('isAdmin', 'false');
+          sessionStorage.removeItem('currentAdminUsername');
+          adminLoginBtn.textContent = '管理';
+          adminLoginBtn.className = 'btn-admin-login';
+        }
+      }
+    }
+
+    // ============================================================
+    // 31. 查看密碼功能
+    // ============================================================
+
+    const viewPwdBtnEl = document.getElementById('viewPasswordsBtn');
+    const viewOverlay = document.getElementById('viewPasswordsOverlay');
+    const passwordListEl = document.getElementById('passwordList');
+    const viewCloseBtn = document.getElementById('viewPasswordsCloseBtn');
+
+    function renderPasswordList() {
+      passwordListEl.innerHTML = '';
+      ADMIN_ACCOUNTS.forEach(a => {
+        const roleName = ROLE_NAMES[a.role] || '管理員';
+        const canView = canViewPassword(currentAdminUsername, a.username);
+        const canChange = canChangePassword(currentAdminUsername, a.username);
+        if (!canView) return;
+        const div = document.createElement('div');
+        div.className = 'pwd-item';
+        const displayName = a.displayName;
+        let actionHtml = '';
+        if (canChange) {
+          actionHtml = `<button class="btn-change-pwd" data-username="${escapeHtml(a.username)}">變更</button>`;
+        } else {
+          actionHtml = `<span class="no-change">🔒 唯讀</span>`;
+        }
+        div.innerHTML = `
+          <div class="pwd-left">
+            <span><strong>${escapeHtml(a.username)}</strong></span>
+            <span class="display-name">${escapeHtml(displayName)}</span>
+            <span class="role-badge ${a.role}">${roleName}</span>
+          </div>
+          <div class="pwd-right">
+            <span class="pwd-display" id="pwd_${a.username}">${escapeHtml(a.password)}</span>
+            ${actionHtml}
+          </div>
+        `;
+        passwordListEl.appendChild(div);
+      });
+      document.querySelectorAll('.btn-change-pwd').forEach(btn => {
+        btn.removeEventListener('click', handleChangePwd);
+        btn.addEventListener('click', handleChangePwd);
+      });
+    }
+
+    async function handleChangePwd(e) {
+      const btn = e.currentTarget;
+      const username = btn.dataset.username;
+      const currentPwdEl = document.getElementById(`pwd_${username}`);
+      const currentPwd = currentPwdEl.textContent;
+      if (!canChangePassword(currentAdminUsername, username)) { showToast('您沒有權限變更此帳號的密碼', true); return; }
+      const newPwd = prompt(`請輸入「${username}」的新密碼（至少6個字元）：`);
+      if (newPwd === null) return;
+      if (newPwd.length < 6) { showToast('密碼至少需要 6 個字元', true); return; }
+      if (newPwd === currentPwd) { showToast('新密碼與舊密碼相同', true); return; }
+      const success = await updateAdminPasswordInFirestore(username, newPwd);
+      if (success) { currentPwdEl.textContent = newPwd; showToast(`✅ 「${username}」密碼已變更為：${newPwd}（所有瀏覽器同步）`); } 
+      else { showToast('❌ 變更失敗，請稍後再試', true); }
+    }
+
+    viewPwdBtnEl.addEventListener('click', function() { renderPasswordList(); viewOverlay.classList.add('active'); });
+    viewCloseBtn.addEventListener('click', function() { viewOverlay.classList.remove('active'); });
+    viewOverlay.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+
+    // ============================================================
+    // 32. 忘記密碼功能
+    // ============================================================
+
+    document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
+      e.preventDefault();
+      document.getElementById('adminLoginOverlay').classList.remove('active');
+      document.getElementById('forgotPasswordOverlay').classList.add('active');
+    });
+    document.getElementById('forgotPasswordCloseBtn').addEventListener('click', function() {
+      document.getElementById('forgotPasswordOverlay').classList.remove('active');
+    });
+    document.getElementById('verifyChangeBtn').addEventListener('click', function() {
+      document.getElementById('forgotPasswordOverlay').classList.remove('active');
+      document.getElementById('verifyChangeOverlay').classList.add('active');
+      document.getElementById('verifyUsername').value = '';
+      document.getElementById('verifyDisplayName').value = '';
+      document.getElementById('verifyBirthday').value = '';
+      document.getElementById('verifyNewPassword').value = '';
+      document.getElementById('verifyConfirmPassword').value = '';
+      document.getElementById('verifyChangePwdArea').style.display = 'none';
+      document.getElementById('verifyErrorMsg').classList.remove('show');
+      document.getElementById('verifySuccessMsg').classList.remove('show');
+      document.getElementById('verifyUsername').disabled = false;
+      document.getElementById('verifyDisplayName').disabled = false;
+      document.getElementById('verifyBirthday').disabled = false;
+      refreshVerifyCaptcha();
+    });
+    document.getElementById('verifyChangeCloseBtn').addEventListener('click', function() {
+      document.getElementById('verifyChangeOverlay').classList.remove('active');
+      document.getElementById('forgotPasswordOverlay').classList.add('active');
+    });
+
+    async function checkVerifyFields() {
+      const username = document.getElementById('verifyUsername').value.trim();
+      const displayName = document.getElementById('verifyDisplayName').value.trim();
+      const birthday = document.getElementById('verifyBirthday').value;
+      const captchaInput = document.getElementById('verifyCaptchaInput').value.trim();
+      
+      const errorMsg = document.getElementById('verifyErrorMsg');
+      const successMsg = document.getElementById('verifySuccessMsg');
+      const changeArea = document.getElementById('verifyChangePwdArea');
+      const captchaInputEl = document.getElementById('verifyCaptchaInput');
+      
+      if (!captchaInput) {
+        captchaInputEl.className = 'captcha-input error';
+        captchaInputEl.placeholder = '❌ 請輸入驗證碼';
+        errorMsg.textContent = '❌ 請輸入驗證碼';
+        errorMsg.classList.add('show');
+        successMsg.classList.remove('show');
+        changeArea.style.display = 'none';
+        return;
+      }
+      
+      if (!validateCaptcha(captchaInput, verifyCaptchaCode)) {
+        captchaInputEl.className = 'captcha-input error';
+        captchaInputEl.placeholder = '❌ 驗證碼錯誤';
+        captchaInputEl.value = '';
+        errorMsg.textContent = '❌ 驗證碼錯誤，請重新輸入';
+        errorMsg.classList.add('show');
+        successMsg.classList.remove('show');
+        changeArea.style.display = 'none';
+        refreshVerifyCaptcha();
+        return;
+      }
+      
+      if (username && displayName && birthday) {
+        const admin = await verifyAdminIdentityFirestore(username, displayName, birthday);
+        if (admin) {
+          verifiedUser = admin;
+          errorMsg.classList.remove('show');
+          successMsg.textContent = `✅ 驗證成功！歡迎 ${admin.displayName}，請設定新密碼`;
+          successMsg.classList.add('show');
+          changeArea.style.display = 'block';
+          document.getElementById('verifyUsername').disabled = true;
+          document.getElementById('verifyDisplayName').disabled = true;
+          document.getElementById('verifyBirthday').disabled = true;
+          captchaInputEl.className = 'captcha-input success';
+        } else {
+          verifiedUser = null;
+          errorMsg.textContent = '❌ 驗證失敗，請確認帳號、姓名、生日是否正確';
+          errorMsg.classList.add('show');
+          successMsg.classList.remove('show');
+          changeArea.style.display = 'none';
+          document.getElementById('verifyUsername').disabled = false;
+          document.getElementById('verifyDisplayName').disabled = false;
+          document.getElementById('verifyBirthday').disabled = false;
+          refreshVerifyCaptcha();
+        }
+      } else {
+        errorMsg.classList.remove('show');
+        successMsg.classList.remove('show');
+        changeArea.style.display = 'none';
+        document.getElementById('verifyUsername').disabled = false;
+        document.getElementById('verifyDisplayName').disabled = false;
+        document.getElementById('verifyBirthday').disabled = false;
+      }
+    }
+
+    document.getElementById('verifyUsername').addEventListener('input', checkVerifyFields);
+    document.getElementById('verifyDisplayName').addEventListener('input', checkVerifyFields);
+    document.getElementById('verifyBirthday').addEventListener('change', checkVerifyFields);
+
+    document.getElementById('verifyChangePwdBtn').addEventListener('click', async function() {
+      if (!verifiedUser) { showToast('請先完成身份驗證', true); return; }
+      const newPwd = document.getElementById('verifyNewPassword').value.trim();
+      const confirmPwd = document.getElementById('verifyConfirmPassword').value.trim();
+      if (!newPwd || !confirmPwd) { showToast('請填寫新密碼和確認密碼', true); return; }
+      if (newPwd.length < 6) { showToast('密碼至少需要 6 個字元', true); return; }
+      if (newPwd !== confirmPwd) { showToast('新密碼與確認密碼不符', true); return; }
+      const success = await updateAdminPasswordInFirestore(verifiedUser.username, newPwd);
+      if (success) {
+        showToast(`✅ 「${verifiedUser.displayName}」密碼已變更成功！`);
+        document.getElementById('verifyChangeOverlay').classList.remove('active');
+        document.getElementById('forgotPasswordOverlay').classList.remove('active');
+        document.getElementById('adminLoginOverlay').classList.add('active');
+      } else {
+        showToast('❌ 密碼變更失敗，請稍後再試', true);
+      }
+    });
+
+    document.getElementById('forceChangeBtn').addEventListener('click', function() {
+      document.getElementById('forgotPasswordOverlay').classList.remove('active');
+      document.getElementById('forceChangeOverlay').classList.add('active');
+    });
+    document.getElementById('forceChangeCloseBtn').addEventListener('click', function() {
+      document.getElementById('forceChangeOverlay').classList.remove('active');
+      document.getElementById('forgotPasswordOverlay').classList.add('active');
+    });
+    document.getElementById('forceChangeOverlay').addEventListener('click', function(e) {
+      if (e.target === this) {
+        this.classList.remove('active');
+        document.getElementById('forgotPasswordOverlay').classList.add('active');
+      }
+    });
+
+    // ============================================================
+    // 33. 管理驗證資料
+    // ============================================================
+
+    document.getElementById('manageVerifyDataBtn').addEventListener('click', async function() {
+      const role = getAdminRole(currentAdminUsername);
+      if (role !== 'owner') { showToast('只有所有權可以管理驗證資料', true); return; }
+      document.getElementById('manageVerifyOverlay').classList.add('active');
+      await refreshVerifyDataList();
+    });
+
+    async function refreshVerifyDataList() {
+      const listEl = document.getElementById('verifyDataList');
+      const selectEl = document.getElementById('verifyAdminSelect');
+      const data = await loadVerifyData();
+      if (data.length === 0) {
+        listEl.innerHTML = '<div style="text-align:center; padding:1rem; color:#8a9db0; font-size:0.85rem;">尚無驗證資料</div>';
+      } else {
+        let html = '';
+        data.forEach(item => {
+          html += `
+            <div class="verify-data-item">
+              <div class="vdata-left">
+                <strong>${escapeHtml(item.username)}</strong>
+                <span>${escapeHtml(item.displayName)}</span>
+                <span class="badge">${escapeHtml(item.birthday)}</span>
+              </div>
+              <div class="vdata-right">
+                <button onclick="editVerifyData('${item.username}')"><i class="fas fa-edit"></i> 編輯</button>
+              </div>
+            </div>
+          `;
+        });
+        listEl.innerHTML = html;
+      }
+      const currentValue = selectEl.value;
+      selectEl.innerHTML = '<option value="">請選擇帳號</option>';
+      ADMIN_ACCOUNTS.forEach(admin => {
+        const option = document.createElement('option');
+        option.value = admin.username;
+        option.textContent = `${admin.username} (${admin.displayName})`;
+        selectEl.appendChild(option);
+      });
+      if (currentValue) selectEl.value = currentValue;
+      document.getElementById('verifyDisplayNameInput').value = '';
+      document.getElementById('verifyBirthdayInput').value = '';
+    }
+
+    window.editVerifyData = async function(username) {
+      const data = await loadVerifyData();
+      const item = data.find(d => d.username === username);
+      if (item) {
+        document.getElementById('verifyAdminSelect').value = item.username;
+        document.getElementById('verifyDisplayNameInput').value = item.displayName;
+        document.getElementById('verifyBirthdayInput').value = item.birthday;
+      }
+    };
+
+    document.getElementById('saveVerifyDataBtn').addEventListener('click', async function() {
+      const username = document.getElementById('verifyAdminSelect').value;
+      const displayName = document.getElementById('verifyDisplayNameInput').value.trim();
+      const birthday = document.getElementById('verifyBirthdayInput').value;
+      if (!username) { showToast('請選擇管理員帳號', true); return; }
+      if (!displayName) { showToast('請輸入姓名', true); return; }
+      if (!birthday) { showToast('請選擇生日', true); return; }
+      const result = await saveVerifyData(username, displayName, birthday);
+      if (result.success) {
+        showToast(`✅ 驗證資料已${result.action === 'update' ? '更新' : '新增'}`);
+        await refreshVerifyDataList();
+      } else {
+        showToast('❌ 儲存失敗：' + result.error, true);
+      }
+    });
+
+    document.getElementById('deleteVerifyDataBtn').addEventListener('click', async function() {
+      const username = document.getElementById('verifyAdminSelect').value;
+      if (!username) { showToast('請選擇要刪除的帳號', true); return; }
+      if (!confirm(`確定要刪除「${username}」的驗證資料嗎？`)) return;
+      const result = await deleteVerifyData(username);
+      if (result.success) {
+        showToast(`✅ 已刪除「${username}」的驗證資料`);
+        await refreshVerifyDataList();
+      } else {
+        showToast('❌ 刪除失敗：' + result.error, true);
+      }
+    });
+
+    document.getElementById('manageVerifyCloseBtn').addEventListener('click', function() {
+      document.getElementById('manageVerifyOverlay').classList.remove('active');
+    });
+
+    // ============================================================
+    // 34. 登入紀錄按鈕
+    // ============================================================
+
+    document.getElementById('viewLoginLogsBtn').addEventListener('click', function() {
+      document.getElementById('loginLogsOverlay').classList.add('active');
+      loadLoginLogs();
+    });
+    document.getElementById('loginLogsCloseBtn').addEventListener('click', function() {
+      document.getElementById('loginLogsOverlay').classList.remove('active');
+    });
+    document.getElementById('refreshLogsBtn').addEventListener('click', function() {
+      loadLoginLogs();
+      showToast('🔄 已重新整理');
+    });
+    document.getElementById('loginLogsOverlay').addEventListener('click', function(e) {
+      if (e.target === this) this.classList.remove('active');
+    });
+
+    // ============================================================
+    // 35. 其他事件處理
+    // ============================================================
+
+    async function googleLogin() {
+      try {
+        const provider = new firebase.auth.GoogleAuthProvider();
+        const result = await auth.signInWithPopup(provider);
+        currentUser = result.user;
+        updateUI(currentUser);
+        const displayName = currentUser.displayName || currentUser.email || '使用者';
+        showToast(`👋 ${displayName} 您好，歡迎使用投訴系統`);
+        await recordLogin(currentUser, false);
+        render();
+      } catch (error) {
+        console.error('Google 登入失敗:', error);
+        showToast(error.code === 'auth/popup-blocked' ? '請允許彈出視窗後再試一次' : '登入失敗，請稍後再試', true);
+      }
+    }
+    document.getElementById('googleLoginBtn').addEventListener('click', googleLogin);
+    document.getElementById('googleLoginBtn2').addEventListener('click', googleLogin);
+
+    document.getElementById('logoutBtn').addEventListener('click', async function() {
+      try {
+        await auth.signOut();
+        currentUser = null;
+        isAdmin = false;
+        sessionStorage.setItem('isAdmin', 'false');
+        sessionStorage.removeItem('currentAdminUsername');
+        updateUI(null);
+        showToast('已登出');
+        render();
+      } catch (error) { console.error('登出失敗:', error); }
+    });
+
+    const adminLoginBtnEl = document.getElementById('adminLoginBtn');
+    const adminOverlay = document.getElementById('adminLoginOverlay');
+    const adminConfirmBtn = document.getElementById('adminLoginConfirmBtn');
+    const adminUsernameEl = document.getElementById('adminUsername');
+    const adminPasswordEl = document.getElementById('adminPassword');
+    const adminErrorMsgEl = document.getElementById('adminErrorMsg');
+
+    adminLoginBtnEl.addEventListener('click', function() {
+      if (isAdmin === true) {
+        isAdmin = false;
+        sessionStorage.setItem('isAdmin', 'false');
+        sessionStorage.removeItem('currentAdminUsername');
+        this.textContent = '管理';
+        this.className = 'btn-admin-login';
+        const roleDisplay = document.getElementById('userRoleDisplay');
+        if (roleDisplay) {
+          if (currentUser) { roleDisplay.textContent = '一般使用者'; roleDisplay.className = 'user-role'; } 
+          else { roleDisplay.textContent = ''; roleDisplay.className = 'user-role'; }
+        }
+        document.getElementById('changePasswordBtn').classList.remove('show');
+        document.getElementById('viewPasswordsBtn').classList.remove('show');
+        document.getElementById('viewLoginLogsBtn').classList.remove('show');
+        document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+        updateUI(currentUser);
+        showToast('已登出管理模式');
+        render();
+      } else {
+        adminOverlay.classList.add('active');
+        adminUsernameEl.value = '';
+        adminPasswordEl.value = '';
+        adminErrorMsgEl.classList.remove('show');
+        refreshAdminCaptcha();
+        adminUsernameEl.focus();
+      }
+    });
+
+    adminConfirmBtn.addEventListener('click', async function() {
+      const username = adminUsernameEl.value.trim();
+      const password = adminPasswordEl.value.trim();
+      const captchaInput = document.getElementById('adminCaptchaInput').value.trim();
+      
+      if (!validateCaptcha(captchaInput, adminCaptchaCode)) {
+        const inputEl = document.getElementById('adminCaptchaInput');
+        inputEl.className = 'captcha-input error';
+        inputEl.placeholder = '❌ 驗證碼錯誤，請重新輸入';
+        inputEl.value = '';
+        adminErrorMsgEl.textContent = '❌ 驗證碼錯誤，請重新輸入';
+        adminErrorMsgEl.classList.add('show');
+        refreshAdminCaptcha();
+        return;
+      }
+      
+      const found = ADMIN_ACCOUNTS.find(a => a.username === username && a.password === password);
+      if (found) {
+        isAdmin = true;
+        currentAdminUsername = username;
+        sessionStorage.setItem('isAdmin', 'true');
+        sessionStorage.setItem('currentAdminUsername', username);
+        adminOverlay.classList.remove('active');
+        adminLoginBtnEl.textContent = '登出管理';
+        adminLoginBtnEl.className = 'btn-admin-login active';
+        const roleDisplay = document.getElementById('userRoleDisplay');
+        if (roleDisplay) { roleDisplay.textContent = '管理員'; roleDisplay.className = 'user-role admin-role'; }
+        document.getElementById('changePasswordBtn').classList.add('show');
+        const viewPwdBtn = document.getElementById('viewPasswordsBtn');
+        if (found.role === 'owner' || found.role === 'moderator' || found.role === 'vice') {
+          viewPwdBtn.classList.add('show');
+        } else { viewPwdBtn.classList.remove('show'); }
+        document.getElementById('viewLoginLogsBtn').classList.add('show');
+        const manageBtnContainer = document.getElementById('manageVerifyBtnContainer');
+        if (found.role === 'owner') {
+          manageBtnContainer.style.display = 'flex';
+        } else {
+          manageBtnContainer.style.display = 'none';
+        }
+        const nameDisplay = document.getElementById('userNameDisplay');
+        const welcomeLine = document.getElementById('welcomeLine');
+        const fullDisplayName = found.displayName;
+        nameDisplay.textContent = `${fullDisplayName}`;
+        welcomeLine.innerHTML = `<i class="fas fa-user-shield" style="color:#c52a2a;"></i> ${fullDisplayName} 您好，歡迎使用投訴系統`;
+        welcomeLine.classList.remove('hidden');
+        await recordLogin(null, true, username);
+        await recordAdminSession(username);
+        startHeartbeat();
+        startOnlineStatusListener();
+        listenForcedLogout();
+        showToast(`👋 ${fullDisplayName} 您好，歡迎使用投訴系統`);
+        render();
+      } else {
+        adminErrorMsgEl.textContent = '❌ 帳號或密碼錯誤';
+        adminErrorMsgEl.classList.add('show');
+        adminPasswordEl.value = '';
+        adminPasswordEl.focus();
+        refreshAdminCaptcha();
+      }
+    });
+    adminUsernameEl.addEventListener('keyup', (e) => { if (e.key === 'Enter') adminConfirmBtn.click(); });
+    adminPasswordEl.addEventListener('keyup', (e) => { if (e.key === 'Enter') adminConfirmBtn.click(); });
+    adminOverlay.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
+
+    // ============================================================
+    // 36. 變更密碼功能
+    // ============================================================
+
+    const cpOverlay = document.getElementById('changePasswordOverlay');
+    const cpCurrent = document.getElementById('cpCurrentPassword');
+    const cpNew = document.getElementById('cpNewPassword');
+    const cpConfirm = document.getElementById('cpConfirmPassword');
+    const cpConfirmBtn = document.getElementById('cpConfirmBtn');
+    const cpCancelBtn = document.getElementById('cpCancelBtn');
+    const cpErrorMsg = document.getElementById('cpErrorMsg');
+    const cpSuccessMsg = document.getElementById('cpSuccessMsg');
+
+    document.getElementById('changePasswordBtn').addEventListener('click', function() {
+      if (isAdmin !== true) { showToast('請先登入管理模式', true); return; }
+      cpOverlay.classList.add('active');
+      cpCurrent.value = '';
+      cpNew.value = '';
+      cpConfirm.value = '';
+      cpErrorMsg.classList.remove('show');
+      cpSuccessMsg.classList.remove('show');
+      cpCurrent.focus();
+    });
+
+    cpCancelBtn.addEventListener('click', function() { cpOverlay.classList.remove('active'); });
+    cpOverlay.addEventListener('click', function(e) { if (e.target === this) cpOverlay.classList.remove('active'); });
+
+    cpConfirmBtn.addEventListener('click', async function() {
+      const current = cpCurrent.value.trim();
+      const newPwd = cpNew.value.trim();
+      const confirmPwd = cpConfirm.value.trim();
+      cpErrorMsg.classList.remove('show');
+      cpSuccessMsg.classList.remove('show');
+      if (!current || !newPwd || !confirmPwd) {
+        cpErrorMsg.textContent = '❌ 請填寫所有欄位';
+        cpErrorMsg.classList.add('show');
+        return;
+      }
+      if (current !== getAdminPassword(currentAdminUsername)) {
+        cpErrorMsg.textContent = '❌ 目前密碼錯誤';
+        cpErrorMsg.classList.add('show');
+        cpCurrent.value = '';
+        cpCurrent.focus();
+        return;
+      }
+      if (newPwd.length < 6) {
+        cpErrorMsg.textContent = '❌ 新密碼至少需要 6 個字元';
+        cpErrorMsg.classList.add('show');
+        cpNew.value = '';
+        cpConfirm.value = '';
+        cpNew.focus();
+        return;
+      }
+      if (newPwd !== confirmPwd) {
+        cpErrorMsg.textContent = '❌ 新密碼與確認密碼不符';
+        cpErrorMsg.classList.add('show');
+        cpConfirm.value = '';
+        cpConfirm.focus();
+        return;
+      }
+      cpConfirmBtn.disabled = true;
+      cpConfirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 變更中...';
+      const success = await updateAdminPasswordInFirestore(currentAdminUsername, newPwd);
+      cpConfirmBtn.disabled = false;
+      cpConfirmBtn.innerHTML = '<i class="fas fa-save"></i> 確認變更';
+      if (success) {
+        cpSuccessMsg.textContent = '✅ 密碼變更成功！所有瀏覽器將同步';
+        cpSuccessMsg.classList.add('show');
+        setTimeout(() => {
+          cpOverlay.classList.remove('active');
+          showToast('✅ 密碼已變更成功（所有瀏覽器同步）');
+        }, 1500);
+      } else {
+        cpErrorMsg.textContent = '❌ 儲存失敗，請稍後再試';
+        cpErrorMsg.classList.add('show');
+      }
+    });
+
+    cpCurrent.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpNew.focus(); });
+    cpNew.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirm.focus(); });
+    cpConfirm.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirmBtn.click(); });
+
+    // ============================================================
+    // 37. 類別切換
+    // ============================================================
+
+    document.getElementById('category').addEventListener('change', function() {
+      document.getElementById('customCategoryGroup').style.display = this.value === '其他問題(請自訂)' ? 'block' : 'none';
+    });
+
+    // ============================================================
+    // 38. 圖片上傳
+    // ============================================================
+
+    document.getElementById('addMoreBtn').addEventListener('click', () => document.getElementById('imageInput').click());
+    document.getElementById('imageInput').addEventListener('change', function(e) {
+      if (this.files && this.files.length > 0) { handleImageSelect(this.files); this.value = ''; }
+    });
+    document.getElementById('imageUploadArea').addEventListener('dragover', (e) => {
+      e.preventDefault();
+      document.getElementById('imageUploadArea').classList.add('dragover');
+    });
+    document.getElementById('imageUploadArea').addEventListener('dragleave', () => {
+      document.getElementById('imageUploadArea').classList.remove('dragover');
+    });
+    document.getElementById('imageUploadArea').addEventListener('drop', (e) => {
+      e.preventDefault();
+      document.getElementById('imageUploadArea').classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+        if (files.length > 0) handleImageSelect(files);
+      }
+    });
+
+    // ============================================================
+    // 39. 影片上傳
+    // ============================================================
+
+    document.getElementById('addVideoBtn').addEventListener('click', () => document.getElementById('videoInput').click());
+    document.getElementById('videoInput').addEventListener('change', function(e) {
+      if (this.files && this.files.length > 0) { handleVideoSelect(this.files); this.value = ''; }
+    });
+    document.getElementById('videoUploadArea').addEventListener('dragover', (e) => {
+      e.preventDefault();
+      document.getElementById('videoUploadArea').classList.add('dragover');
+    });
+    document.getElementById('videoUploadArea').addEventListener('dragleave', () => {
+      document.getElementById('videoUploadArea').classList.remove('dragover');
+    });
+    document.getElementById('videoUploadArea').addEventListener('drop', (e) => {
+      e.preventDefault();
+      document.getElementById('videoUploadArea').classList.remove('dragover');
+      if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+        const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('video/'));
+        if (files.length > 0) handleVideoSelect(files);
+      }
+    });
+
+    // ============================================================
+    // 40. 提交投訴
+    // ============================================================
+
+    document.getElementById('complaintForm').addEventListener('submit', async function(e) {
+      e.preventDefault();
+      if (!currentUser) { showToast('請先登入', true); return; }
+      
+      const name = document.getElementById('userName').value.trim();
+      const igName = document.getElementById('igName').value.trim();
+      let category = document.getElementById('category').value;
+      const priority = document.getElementById('priority').value;
+      const title = document.getElementById('title').value.trim();
+      const description = document.getElementById('description').value.trim();
+      const eventTime = document.getElementById('eventTime').value;
+      const postLink = document.getElementById('postLink').value.trim();
+      const expectedResolution = document.getElementById('expectedResolution').value.trim();
+      const needReply = document.querySelector('input[name="needReply"]:checked')?.value || '';
+      const videoLink = document.getElementById('videoLink').value.trim();
+      
+      if (category === '其他問題(請自訂)') {
+        const custom = document.getElementById('customCategory').value.trim();
+        if (!custom) { showToast('請輸入自訂類別名稱', true); return; }
+        category = custom;
+      }
+      
+      if (!name || !igName || !category || !priority || !title || !eventTime || !description || !needReply) {
+        showToast('請填寫所有必填欄位（標示 * 的欄位）', true);
+        return;
+      }
+      
+      let maxId = 0;
+      complaints.forEach(c => { if (c.id > maxId) maxId = c.id; });
+      const newId = maxId + 1;
+      const submitBtn = document.getElementById('submitBtn');
+      submitBtn.disabled = true;
+      
+      try {
+        const uploadResults = await uploadAllFiles(selectedImages, selectedVideos);
+        submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 儲存中...';
+        const newComplaint = {
+          id: newId, userName: name, igName: igName, category: category, priority: priority,
+          title: title, description: description, eventTime: eventTime, postLink: postLink || '',
+          expectedResolution: expectedResolution || '', needReply: needReply,
+          status: '待處理', date: getToday(), time: getNowTime(),
+          imageUrls: uploadResults.allUrls, videoLink: videoLink || ''
+        };
+        const success = await addComplaint(newComplaint);
+        if (success) {
+          sendNewComplaintEmail(newComplaint).catch(err => console.error('Email 發送失敗:', err));
+          document.getElementById('complaintForm').reset();
+          selectedImages = [];
+          selectedVideos = [];
+          updateImagePreview();
+          updateVideoPreview();
+          document.getElementById('customCategoryGroup').style.display = 'none';
+          document.getElementById('videoLink').value = '';
+          showToast(`✅ 投訴 #${newId} 已送出，狀態：待處理`);
+        }
+      } catch (error) {
+        console.error('提交失敗:', error);
+        showToast('提交失敗，請稍後再試', true);
+      } finally {
+        submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> 送出投訴';
+        submitBtn.disabled = false;
+      }
+    });
+
+    // ============================================================
+    // 41. 狀態變更
+    // ============================================================
+
+    document.getElementById('complaintList').addEventListener('change', async function(e) {
+      const target = e.target.closest('select');
+      if (!target || target.dataset.action !== 'statusChange') return;
+      const docId = target.dataset.docid;
+      const newStatus = target.value;
+      const oldStatus = target.dataset.oldstatus || target.querySelector('option[selected]')?.value || '待處理';
+      if (!docId || isAdmin !== true) { showToast('請先登入管理模式', true); return; }
+      let supplementInfo = '';
+      if (newStatus === '需要補充資料') {
+        supplementInfo = prompt('請輸入需要投訴者補充的具體要求：', '請提供更多相關證據或詳細說明');
+        if (supplementInfo === null) { target.value = oldStatus; return; }
+        if (!supplementInfo.trim()) { showToast('請輸入補充要求', true); target.value = oldStatus; return; }
+      }
+      const success = await updateStatus(docId, newStatus, supplementInfo);
+      if (success) {
+        showToast(`✅ 已更新狀態為：${newStatus}`);
+        if (newStatus === '需要補充資料') { showToast('📧 已發送補充要求通知給投訴者'); }
+      }
+    });
+
+    // ============================================================
+    // 42. 刪除投訴
+    // ============================================================
+
+    document.getElementById('complaintList').addEventListener('click', async function(e) {
+      const target = e.target.closest('button');
+      if (!target || target.dataset.action !== 'delete') return;
+      const docId = target.dataset.docid;
+      const id = parseInt(target.dataset.id);
+      if (!docId || isAdmin !== true) { showToast('請先登入管理模式', true); return; }
+      const role = getAdminRole(currentAdminUsername);
+      if (role !== 'moderator' && role !== 'owner') {
+        showToast('只有版主可以刪除投訴', true);
+        return;
+      }
+      if (confirm(`確定刪除投訴 #${id} 嗎？`)) {
+        const success = await deleteComplaint(docId);
+        if (success) showToast(`已刪除投訴 #${id}`);
+      }
+    });
+
+    // ============================================================
+    // 43. 過濾
+    // ============================================================
+
+    document.getElementById('filterStatus').addEventListener('change', render);
+
+    // ============================================================
+    // 44. 清空全部
+    // ============================================================
+
+    document.getElementById('clearAllBtn').addEventListener('click', async function() {
+      if (isAdmin !== true) { showToast('請先登入管理模式', true); return; }
+      const role = getAdminRole(currentAdminUsername);
+      if (role !== 'moderator' && role !== 'owner') {
+        showToast('只有版主可以清空所有投訴', true);
+        return;
+      }
+      if (complaints.length === 0) { showToast('目前沒有投訴可清空', true); return; }
+      if (confirm('確定要刪除所有投訴紀錄嗎？（無法復原）')) await clearAllComplaints();
+    });
+
+    // ============================================================
+    // 45. Firebase Auth 監聽
+    // ============================================================
+
+    auth.onAuthStateChanged((user) => {
+      if (user !== currentUser) currentUser = user;
+      if (!user) {
+        isAdmin = false;
+        sessionStorage.setItem('isAdmin', 'false');
+        sessionStorage.removeItem('currentAdminUsername');
+        if (forcedLogoutUnsubscribe) {
+          forcedLogoutUnsubscribe();
+          forcedLogoutUnsubscribe = null;
+        }
+      } else {
+        const storedAdmin = sessionStorage.getItem('isAdmin');
+        if (storedAdmin === 'true') {
+          isAdmin = true;
+          const storedUsername = sessionStorage.getItem('currentAdminUsername');
+          if (storedUsername) currentAdminUsername = storedUsername;
+          listenForcedLogout();
+        }
+      }
+      updateUI(user);
+      setTimeout(render, 100);
+    });
+
+    // ============================================================
+    // 46. 啟動
+    // ============================================================
+
     async function init() {
       await loadAdminsFromFirestore();
       listenAdminPasswords();
@@ -1701,7 +4278,23 @@
       refreshAdminCaptcha();
       refreshVerifyCaptcha();
       
-      console.log('✅ 系統初始化完成');
+      console.log('✅ 靠北達德投訴系統已啟動');
+      console.log('👑 管理員帳號:', DEFAULT_ADMINS.map(a => a.username).join(', '));
+      console.log('📊 登入紀錄功能已啟用');
+      console.log('📋 小編帳號：dader02~dader11 (共10位小編)');
+      console.log('🔄 跨瀏覽器密碼同步已啟用 (onSnapshot 監聽)');
+      console.log('📱 RWD 響應式設計已啟用 (支援所有裝置)');
+      console.log('📹 影片上傳限制：50MB，超過請使用影片連結');
+      console.log('🗑️ 刪除權限：版主+所有權（顯示只說版主）');
+      console.log('🔔 新投訴計數功能已啟用');
+      console.log('🔐 驗證碼功能已啟用（14px，同一排，點擊文字可刷新）');
+      console.log('✏️ 回覆編輯功能：最多5次，顯示編輯次數（管理員）');
+      console.log('📌 回覆置頂功能：管理員可置頂重要回覆');
+      console.log('🔗 回覆引用功能：可引用他人回覆');
+      console.log('@ 標記功能：輸入 @ 出現選單');
+      console.log('🕐 回覆顯示秒數');
+      console.log('🗑️ 收回回覆：不限時間');
+      console.log('📜 編輯歷史：管理員可查看所有編輯紀錄');
     }
 
     init();
