@@ -2602,7 +2602,6 @@
         textarea.style.height = 'auto';
         textarea.style.height = textarea.scrollHeight + 'px';
         
-        // 觸發 @ 選單檢測
         const event = new Event('input', { bubbles: true });
         textarea.dispatchEvent(event);
       }
@@ -2669,7 +2668,7 @@
     }
 
     // ============================================================
-    // 23. @標記選單
+    // 23. @標記選單（點擊後自動消失）
     // ============================================================
 
     let mentionMenuInstance = null;
@@ -2683,7 +2682,10 @@
       
       menu.addEventListener('click', function(e) {
         const item = e.target.closest('.mention-item');
-        if (!item || item.classList.contains('no-result')) return;
+        if (!item || item.classList.contains('no-result')) {
+          hideMentionMenu();
+          return;
+        }
         const displayName = item.dataset.display;
         const atIndex = parseInt(menu.dataset.atIndex);
         const textareaId = menu.dataset.textareaId;
@@ -2700,7 +2702,12 @@
           textarea.setSelectionRange(newPos, newPos);
           textarea.style.height = 'auto';
           textarea.style.height = textarea.scrollHeight + 'px';
+          
+          // 觸發 input 事件更新選單狀態
+          const event = new Event('input', { bubbles: true });
+          textarea.dispatchEvent(event);
         }
+        // 立即隱藏選單
         hideMentionMenu();
       });
       
@@ -2709,7 +2716,10 @@
 
     function hideMentionMenu() {
       const menu = document.getElementById('mentionMenu');
-      if (menu) menu.style.display = 'none';
+      if (menu) {
+        menu.style.display = 'none';
+        menu.innerHTML = '';
+      }
     }
 
     function showMentionMenu(textarea, docId, searchTerm, atIndex) {
@@ -2758,15 +2768,22 @@
           ).join('')
         : '<div class="mention-item no-result">無符合結果</div>';
       
+      // 定位選單
       const rect = textarea.getBoundingClientRect();
       const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || 20;
       const textBefore = textarea.value.substring(0, atIndex);
       const lines = textBefore.split('\n').length;
-      const scrollTop = textarea.scrollTop || 0;
-      const lineOffset = (lines - 1) * lineHeight;
       
-      menu.style.left = Math.max(10, rect.left) + 'px';
-      menu.style.top = Math.max(10, rect.top + Math.min(lineOffset, 120)) + 'px';
+      let topPos = rect.top + Math.min((lines - 1) * lineHeight, 120);
+      let leftPos = Math.max(10, rect.left);
+      
+      const menuHeight = Math.min(filtered.length * 32 + 10, 150);
+      if (topPos + menuHeight > window.innerHeight - 20) {
+        topPos = window.innerHeight - menuHeight - 20;
+      }
+      
+      menu.style.left = leftPos + 'px';
+      menu.style.top = Math.max(10, topPos) + 'px';
       menu.style.display = 'block';
       
       const textareaId = textarea.id || 'replyTextarea_' + Date.now();
@@ -3262,7 +3279,6 @@
       let match;
       while ((match = mentionRegex.exec(replyText)) !== null) {
         const mentionedName = match[1];
-        // 檢查是否為有效標記對象
         const isValid = 
           mentionedName === '投訴者' || 
           ADMIN_ACCOUNTS.some(a => a.displayName === mentionedName) ||
@@ -3298,6 +3314,7 @@
         textarea.value = '';
         replyFiles[docId] = [];
         updateReplyPreview(docId);
+        hideMentionMenu();
       }
       
       btn.textContent = '送出回覆';
@@ -4291,7 +4308,7 @@
       console.log('✏️ 回覆編輯功能：最多5次，顯示編輯次數（管理員）');
       console.log('📌 回覆置頂功能：管理員可置頂重要回覆');
       console.log('🔗 回覆引用功能：可引用他人回覆');
-      console.log('@ 標記功能：輸入 @ 出現選單');
+      console.log('@ 標記功能：輸入 @ 出現選單，點擊後自動消失');
       console.log('🕐 回覆顯示秒數');
       console.log('🗑️ 收回回覆：不限時間');
       console.log('📜 編輯歷史：管理員可查看所有編輯紀錄');
