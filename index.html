@@ -2631,11 +2631,12 @@
     }
 
     // ============================================================
-    // 22. @標記選單（完整修復版）
+    // 22. @標記選單（完整修復版 - 點擊後確實消失）
     // ============================================================
 
     let mentionMenuInstance = null;
     let mentionActive = false;
+    let mentionTimeout = null;
 
     function createMentionMenu() {
       if (mentionMenuInstance) {
@@ -2649,9 +2650,8 @@
       document.body.appendChild(menu);
       mentionMenuInstance = menu;
       
-      // 使用 mousedown 事件確保在 blur 之前觸發
-      menu.addEventListener('mousedown', function(e) {
-        e.preventDefault();
+      // 使用 click 事件替代 mousedown，避免焦點干擾
+      menu.addEventListener('click', function(e) {
         const item = e.target.closest('.mention-item');
         if (!item || item.classList.contains('no-result')) {
           hideMentionMenu();
@@ -2663,6 +2663,7 @@
         const textareaId = menu.dataset.textareaId;
         const docId = menu.dataset.docId;
         
+        // 優先使用儲存的 textarea ID 尋找
         let textarea = document.getElementById(textareaId);
         if (!textarea) {
           textarea = document.querySelector(`.reply-textarea[data-docid="${docId}"]`);
@@ -2674,13 +2675,15 @@
         if (textarea) {
           const value = textarea.value;
           const before = value.substring(0, atIndex);
-          // 計算 @ 後面原本的文字長度
-          const afterStart = atIndex + 1 + (before.split('@').pop() || '').length;
+          // 計算 @ 後面原本的文字（使用者輸入的搜尋關鍵字）
+          const searchText = before.split('@').pop() || '';
+          const afterStart = atIndex + 1 + searchText.length;
           const after = value.substring(afterStart);
           
-          textarea.value = before + '@' + displayName + ' ' + after;
+          // 插入 @人名 + 空格
+          textarea.value = before.substring(0, atIndex - searchText.length) + '@' + displayName + ' ' + after;
           textarea.focus();
-          const newPos = before.length + displayName.length + 2;
+          const newPos = before.length - searchText.length + displayName.length + 2;
           textarea.setSelectionRange(newPos, newPos);
           textarea.style.height = 'auto';
           textarea.style.height = textarea.scrollHeight + 'px';
@@ -2689,7 +2692,21 @@
           textarea.dispatchEvent(event);
         }
         
+        // === 關鍵：關閉選單 ===
         hideMentionMenu();
+        // 防止其他事件重新打開選單
+        if (mentionTimeout) {
+          clearTimeout(mentionTimeout);
+          mentionTimeout = null;
+        }
+        mentionTimeout = setTimeout(function() {
+          hideMentionMenu();
+        }, 50);
+      });
+      
+      // 防止 mousedown 搶走焦點
+      menu.addEventListener('mousedown', function(e) {
+        e.preventDefault();
       });
       
       return menu;
@@ -2705,6 +2722,10 @@
         delete menu.dataset.docId;
       }
       mentionActive = false;
+      if (mentionTimeout) {
+        clearTimeout(mentionTimeout);
+        mentionTimeout = null;
+      }
     }
 
     function showMentionMenu(textarea, docId, searchTerm, atIndex) {
@@ -2777,7 +2798,7 @@
         );
       }
       
-      // 如果過濾後沒有結果，顯示全部（讓使用者知道有這些人可以選）
+      // 如果過濾後沒有結果，顯示全部
       if (filtered.length === 0) {
         filtered = items;
       }
@@ -2877,7 +2898,6 @@
       if (e.key === 'Escape') {
         hideMentionMenu();
       }
-      // 按下 Enter 時如果有選單且選中項目，由 mousedown 處理，這裡不做額外處理
     });
 
     // ============================================================
