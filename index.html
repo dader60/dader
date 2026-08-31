@@ -2712,7 +2712,7 @@
     }
 
     // ============================================================
-    // 23. @標記選單（修正版 - 點擊後自動消失）
+    // 23. @標記選單（修正版 - 點擊後選單消失）
     // ============================================================
 
     let mentionMenuInstance = null;
@@ -2734,6 +2734,7 @@
         e.preventDefault();
         const item = e.target.closest('.mention-item');
         if (!item || item.classList.contains('no-result')) {
+          // 點擊無結果項目或空白區域也關閉選單
           hideMentionMenu();
           return;
         }
@@ -2770,6 +2771,7 @@
           textarea.dispatchEvent(event);
         }
         
+        // ===== 關鍵修復：點擊後立即隱藏選單 =====
         hideMentionMenu();
       });
       
@@ -4457,7 +4459,7 @@
       console.log('✏️ 回覆編輯功能：最多5次，顯示編輯次數（管理員）');
       console.log('📌 回覆置頂功能：管理員可置頂重要回覆');
       console.log('🔗 回覆引用功能：可引用他人回覆，避免多層巢狀');
-      console.log('@ 標記功能：輸入 @ 出現選單，點擊後自動消失');
+      console.log('@ 標記功能：輸入 @ 出現選單，點擊後選單會正確消失');
       console.log('🕐 回覆顯示秒數');
       console.log('🗑️ 收回回覆：不限時間');
       console.log('📜 編輯歷史：管理員可查看所有編輯紀錄');
