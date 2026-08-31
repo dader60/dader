@@ -305,10 +305,9 @@
     .reply-author.admin { color: #4a5568 !important; font-weight: 600 !important; }
     .reply-author.me { background: rgba(197, 42, 42, 0.08); padding: 0 8px; border-radius: 4px; }
     .reply-actions { display: inline-flex; gap: 4px; margin-left: auto; }
-    .reply-edit-btn, .reply-delete-btn, .reply-quote-btn, .reply-history-btn, .reply-pin-btn { background: transparent; border: none; padding: 0 4px; font-size: 0.7rem; cursor: pointer; color: #8a9db0; transition: 0.15s; }
+    .reply-edit-btn, .reply-delete-btn, .reply-history-btn, .reply-pin-btn { background: transparent; border: none; padding: 0 4px; font-size: 0.7rem; cursor: pointer; color: #8a9db0; transition: 0.15s; }
     .reply-edit-btn:hover { color: #2a5b7a; }
     .reply-delete-btn:hover { color: #dc3545; }
-    .reply-quote-btn:hover { color: #2a7a5b; }
     .reply-history-btn:hover { color: #b8860b; }
     .reply-pin-btn:hover { color: #c52a2a; }
     .reply-files { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 6px; }
@@ -369,10 +368,6 @@
 
     /* ===== 置頂標記 ===== */
     .pinned-badge { background: #c52a2a; color: white; font-size: 0.55rem; padding: 1px 8px; border-radius: 10px; margin-left: 4px; }
-
-    /* ===== 引用區塊 ===== */
-    .reply-quote-block { background: #f0f4fa; border-left: 3px solid #2a5b7a; padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; color: #4a6a8a; margin-bottom: 4px; }
-    .reply-quote-block .quote-author { font-weight: 600; color: #2a405b; }
 
     /* ===== 編輯歷史彈窗 ===== */
     .edit-history-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 999; justify-content: center; align-items: center; padding: 1rem; }
@@ -2405,7 +2400,7 @@
     // 17. 回覆功能（含新欄位）
     // ============================================================
 
-    async function addReply(docId, replyText, isAdminReply = false, files = [], replyTo = null, mentions = []) {
+    async function addReply(docId, replyText, isAdminReply = false, files = [], mentions = []) {
       try {
         const displayName = getAdminDisplayName(currentAdminUsername);
         const roleName = getAdminRoleName(currentAdminUsername);
@@ -2425,7 +2420,6 @@
           editCount: 0,
           isEdited: false,
           isPinned: false,
-          replyTo: replyTo,
           mentions: mentions || []
         };
         await db.collection('complaints').doc(docId).update({
@@ -2436,7 +2430,7 @@
       } catch (error) { console.error('回覆失敗:', error); showToast('回覆失敗，請稍後再試', true); return false; }
     }
 
-    async function sendReply(docId, replyText, files, replyTo = null, mentions = []) {
+    async function sendReply(docId, replyText, files, mentions = []) {
       try {
         let fileUrls = [];
         if (files && files.length > 0) {
@@ -2461,7 +2455,6 @@
           editCount: 0,
           isEdited: false,
           isPinned: false,
-          replyTo: replyTo,
           mentions: mentions || []
         };
         await db.collection('complaints').doc(docId).update({
@@ -2578,81 +2571,7 @@
     }
 
     // ============================================================
-    // 20. 回覆引用功能（修正版 - 避免多層巢狀）
-    // ============================================================
-
-    function quoteReply(docId, replyId) {
-      const complaint = complaints.find(c => c.docId === docId);
-      if (!complaint) return;
-      const reply = complaint.replies.find(r => r.id === replyId);
-      if (!reply || reply.isDeleted) return;
-      
-      const authorName = getDisplayNameForReply(reply);
-      
-      const container = document.querySelector(`.complaint-item[data-docid="${docId}"]`);
-      const textarea = container?.querySelector('.reply-textarea');
-      if (textarea) {
-        // 檢查是否已經引用過了（避免多層巢狀）
-        const currentValue = textarea.value;
-        const quotePattern = new RegExp(`^> ${authorName}：${reply.text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\n\\n`);
-        
-        // 如果已經有相同的引用，不再重複加入
-        if (quotePattern.test(currentValue)) {
-          showToast('⚠️ 已引用此回覆', true);
-          textarea.focus();
-          return;
-        }
-        
-        // 檢查是否已經有引用標記（> 開頭），如果有則先清空再引用
-        const hasQuote = /^> .+：.+/.test(currentValue.trim());
-        let quotedText = `> ${authorName}：${reply.text}\n\n`;
-        
-        if (hasQuote) {
-          // 已經有引用，清除舊的引用內容（保留後續輸入的文字）
-          const lines = currentValue.split('\n');
-          let newValue = '';
-          let foundQuote = false;
-          for (const line of lines) {
-            if (!foundQuote && line.startsWith('>')) {
-              foundQuote = true;
-              continue;
-            }
-            if (foundQuote && line.trim() === '') {
-              continue;
-            }
-            if (foundQuote) {
-              newValue += line + '\n';
-            }
-          }
-          // 如果沒有後續文字，直接設定為引用
-          if (!newValue.trim()) {
-            textarea.value = quotedText;
-          } else {
-            textarea.value = quotedText + newValue.trim();
-          }
-        } else {
-          // 沒有引用，直接在前面加上引用
-          if (currentValue.trim()) {
-            textarea.value = quotedText + currentValue;
-          } else {
-            textarea.value = quotedText;
-          }
-        }
-        
-        textarea.focus();
-        // 將游標移到引用之後
-        const cursorPos = textarea.value.indexOf('\n\n') + 2;
-        textarea.setSelectionRange(cursorPos, cursorPos);
-        textarea.style.height = 'auto';
-        textarea.style.height = textarea.scrollHeight + 'px';
-        
-        const event = new Event('input', { bubbles: true });
-        textarea.dispatchEvent(event);
-      }
-    }
-
-    // ============================================================
-    // 21. 回覆置頂功能
+    // 20. 回覆置頂功能
     // ============================================================
 
     async function togglePinReply(docId, replyId) {
@@ -2684,7 +2603,7 @@
     }
 
     // ============================================================
-    // 22. 查看編輯歷史（管理員專用）
+    // 21. 查看編輯歷史（管理員專用）
     // ============================================================
 
     function showEditHistory(docId, replyId) {
@@ -2712,7 +2631,7 @@
     }
 
     // ============================================================
-    // 23. @標記選單（修正版 - 點擊後選單消失 + 引用不重複）
+    // 22. @標記選單（修正版 - 點擊後選單消失）
     // ============================================================
 
     let mentionMenuInstance = null;
@@ -2929,7 +2848,7 @@
     }
 
     // ============================================================
-    // 24. 回覆輸入監聽
+    // 23. 回覆輸入監聽
     // ============================================================
 
     document.addEventListener('input', function(e) {
@@ -2955,7 +2874,7 @@
     });
 
     // ============================================================
-    // 25. Email 通知
+    // 24. Email 通知
     // ============================================================
 
     async function sendNewComplaintEmail(complaint) {
@@ -2982,7 +2901,7 @@
     }
 
     // ============================================================
-    // 26. 渲染（含所有新功能 - 修正引用重複顯示問題）
+    // 25. 渲染（移除引用功能）
     // ============================================================
 
     function render() {
@@ -3149,24 +3068,6 @@
               const editBadge = getEditBadge(r, isAdmin);
               const pinnedBadge = r.isPinned ? '<span class="pinned-badge"><i class="fas fa-thumbtack"></i> 置頂</span>' : '';
               
-              // ===== 引用區塊（只顯示引用，不重複顯示文字） =====
-              let quoteHtml = '';
-              let displayText = r.text || '';
-              
-              if (r.replyTo) {
-                const quotedAuthor = r.replyTo.author || '使用者';
-                quoteHtml = `
-                  <div class="reply-quote-block">
-                    <span class="quote-author">${escapeHtml(quotedAuthor)}：</span>
-                    ${escapeHtml(r.replyTo.text)}
-                  </div>
-                `;
-                // 如果回覆文字與引用內容相同，則不顯示重複的文字（避免重複顯示）
-                if (r.text && r.replyTo.text && r.text.trim() === r.replyTo.text.trim()) {
-                  displayText = '';
-                }
-              }
-              
               let replyFilesHtml = '';
               if (r.files && r.files.length > 0) {
                 replyFilesHtml = '<div class="reply-files">';
@@ -3182,10 +3083,6 @@
               }
               
               let actionButtons = '';
-              
-              if (isAdmin || (currentUser && item.userId === currentUser.uid)) {
-                actionButtons += `<button class="reply-quote-btn" onclick="quoteReply('${item.docId}', '${replyId}')"><i class="fas fa-quote-right"></i> 引用</button>`;
-              }
               
               if (isAdmin && r.editHistory && r.editHistory.length > 0) {
                 actionButtons += `<button class="reply-history-btn" onclick="showEditHistory('${item.docId}', '${replyId}')"><i class="fas fa-history"></i> 歷史</button>`;
@@ -3215,8 +3112,7 @@
                     ${pinnedBadge}
                     <span style="margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;">${actionButtons}</span>
                   </div>
-                  ${quoteHtml}
-                  ${displayText ? `<div class="reply-text">${escapeHtml(displayText)}</div>` : ''}
+                  <div class="reply-text">${escapeHtml(r.text)}</div>
                   ${replyFilesHtml}
                 </div>
               `;
@@ -3290,7 +3186,7 @@
     }
 
     // ============================================================
-    // 27. 回覆處理（含引用解析修正）
+    // 26. 回覆處理
     // ============================================================
 
     document.addEventListener('change', function(e) {
@@ -3405,61 +3301,11 @@
         }
       }
       
-      // ========== 解析引用（只解析最外層的引用） ==========
-      let replyTo = null;
-      // 只匹配第一行的引用格式
-      const lines = replyText.split('\n');
-      const firstLine = lines[0] || '';
-      const quoteMatch = firstLine.match(/^> (.+?)：(.+)$/);
-      
-      if (quoteMatch) {
-        const quotedAuthor = quoteMatch[1];
-        const quotedText = quoteMatch[2];
-        replyTo = { author: quotedAuthor, text: quotedText };
-        
-        // 從回覆內容中移除引用區塊（只移除第一行引用 + 後面的空行）
-        let newLines = [];
-        let skipMode = false;
-        let emptyLineSkipped = false;
-        
-        for (let i = 0; i < lines.length; i++) {
-          const line = lines[i];
-          if (i === 0 && line.startsWith('>')) {
-            skipMode = true;
-            continue;
-          }
-          if (skipMode && line.trim() === '' && !emptyLineSkipped) {
-            emptyLineSkipped = true;
-            continue;
-          }
-          if (skipMode && line.trim() === '' && emptyLineSkipped) {
-            newLines.push(line);
-            continue;
-          }
-          if (skipMode && line.trim() !== '') {
-            skipMode = false;
-            newLines.push(line);
-            continue;
-          }
-          if (!skipMode) {
-            newLines.push(line);
-          }
-        }
-        
-        replyText = newLines.join('\n').trim();
-      }
-      
-      // 如果移除引用後沒有內容，但有檔案，則允許送出
-      if (!replyText && (!replyFiles[docId] || replyFiles[docId].length === 0)) {
-        showToast('請輸入回覆內容', true);
-        return;
-      }
-      
       btn.disabled = true;
       btn.textContent = '送出中...';
       
       const files = replyFiles[docId] || [];
-      const success = await sendReply(docId, replyText, files, replyTo, mentions);
+      const success = await sendReply(docId, replyText, files, mentions);
       
       if (success) {
         if (isAdmin) {
@@ -3490,7 +3336,7 @@
     };
 
     // ============================================================
-    // 28. 影片播放器
+    // 27. 影片播放器
     // ============================================================
 
     let videoList = [];
@@ -3562,7 +3408,7 @@
     });
 
     // ============================================================
-    // 29. 圖片燈箱
+    // 28. 圖片燈箱
     // ============================================================
 
     let lightboxImages = [], lightboxIndex = 0;
@@ -3595,7 +3441,7 @@
     });
 
     // ============================================================
-    // 30. UI 更新
+    // 29. UI 更新
     // ============================================================
 
     function updateUI(user) {
@@ -3691,7 +3537,7 @@
     }
 
     // ============================================================
-    // 31. 查看密碼功能
+    // 30. 查看密碼功能
     // ============================================================
 
     const viewPwdBtnEl = document.getElementById('viewPasswordsBtn');
@@ -3754,7 +3600,7 @@
     viewOverlay.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
 
     // ============================================================
-    // 32. 忘記密碼功能
+    // 31. 忘記密碼功能
     // ============================================================
 
     document.getElementById('forgotPasswordLink').addEventListener('click', function(e) {
@@ -3890,7 +3736,7 @@
     });
 
     // ============================================================
-    // 33. 管理驗證資料
+    // 32. 管理驗證資料
     // ============================================================
 
     document.getElementById('manageVerifyDataBtn').addEventListener('click', async function() {
@@ -3981,7 +3827,7 @@
     });
 
     // ============================================================
-    // 34. 登入紀錄按鈕
+    // 33. 登入紀錄按鈕
     // ============================================================
 
     document.getElementById('viewLoginLogsBtn').addEventListener('click', function() {
@@ -4000,7 +3846,7 @@
     });
 
     // ============================================================
-    // 35. 其他事件處理
+    // 34. 其他事件處理
     // ============================================================
 
     async function googleLogin() {
@@ -4135,7 +3981,7 @@
     adminOverlay.addEventListener('click', function(e) { if (e.target === this) this.classList.remove('active'); });
 
     // ============================================================
-    // 36. 變更密碼功能
+    // 35. 變更密碼功能
     // ============================================================
 
     const cpOverlay = document.getElementById('changePasswordOverlay');
@@ -4217,7 +4063,7 @@
     cpConfirm.addEventListener('keyup', (e) => { if (e.key === 'Enter') cpConfirmBtn.click(); });
 
     // ============================================================
-    // 37. 類別切換
+    // 36. 類別切換
     // ============================================================
 
     document.getElementById('category').addEventListener('change', function() {
@@ -4225,7 +4071,7 @@
     });
 
     // ============================================================
-    // 38. 圖片上傳
+    // 37. 圖片上傳
     // ============================================================
 
     document.getElementById('addMoreBtn').addEventListener('click', () => document.getElementById('imageInput').click());
@@ -4249,7 +4095,7 @@
     });
 
     // ============================================================
-    // 39. 影片上傳
+    // 38. 影片上傳
     // ============================================================
 
     document.getElementById('addVideoBtn').addEventListener('click', () => document.getElementById('videoInput').click());
@@ -4273,7 +4119,7 @@
     });
 
     // ============================================================
-    // 40. 提交投訴
+    // 39. 提交投訴
     // ============================================================
 
     document.getElementById('complaintForm').addEventListener('submit', async function(e) {
@@ -4341,7 +4187,7 @@
     });
 
     // ============================================================
-    // 41. 狀態變更
+    // 40. 狀態變更
     // ============================================================
 
     document.getElementById('complaintList').addEventListener('change', async function(e) {
@@ -4365,7 +4211,7 @@
     });
 
     // ============================================================
-    // 42. 刪除投訴
+    // 41. 刪除投訴
     // ============================================================
 
     document.getElementById('complaintList').addEventListener('click', async function(e) {
@@ -4386,13 +4232,13 @@
     });
 
     // ============================================================
-    // 43. 過濾
+    // 42. 過濾
     // ============================================================
 
     document.getElementById('filterStatus').addEventListener('change', render);
 
     // ============================================================
-    // 44. 清空全部
+    // 43. 清空全部
     // ============================================================
 
     document.getElementById('clearAllBtn').addEventListener('click', async function() {
@@ -4407,7 +4253,7 @@
     });
 
     // ============================================================
-    // 45. Firebase Auth 監聽
+    // 44. Firebase Auth 監聽
     // ============================================================
 
     auth.onAuthStateChanged((user) => {
@@ -4434,7 +4280,7 @@
     });
 
     // ============================================================
-    // 46. 啟動
+    // 45. 啟動
     // ============================================================
 
     async function init() {
@@ -4465,7 +4311,6 @@
       console.log('🔐 驗證碼功能已啟用（14px，同一排，點擊文字可刷新）');
       console.log('✏️ 回覆編輯功能：最多5次，顯示編輯次數（管理員）');
       console.log('📌 回覆置頂功能：管理員可置頂重要回覆');
-      console.log('🔗 回覆引用功能：可引用他人回覆，避免多層巢狀');
       console.log('@ 標記功能：輸入 @ 出現選單，點擊後選單會正確消失');
       console.log('🕐 回覆顯示秒數');
       console.log('🗑️ 收回回覆：不限時間');
