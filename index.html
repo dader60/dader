@@ -2712,7 +2712,7 @@
     }
 
     // ============================================================
-    // 23. @標記選單（修正版 - 點擊後選單消失）
+    // 23. @標記選單（修正版 - 點擊後選單消失 + 引用不重複）
     // ============================================================
 
     let mentionMenuInstance = null;
@@ -2982,7 +2982,7 @@
     }
 
     // ============================================================
-    // 26. 渲染（含所有新功能）
+    // 26. 渲染（含所有新功能 - 修正引用重複顯示問題）
     // ============================================================
 
     function render() {
@@ -3149,7 +3149,10 @@
               const editBadge = getEditBadge(r, isAdmin);
               const pinnedBadge = r.isPinned ? '<span class="pinned-badge"><i class="fas fa-thumbtack"></i> 置頂</span>' : '';
               
+              // ===== 引用區塊（只顯示引用，不重複顯示文字） =====
               let quoteHtml = '';
+              let displayText = r.text || '';
+              
               if (r.replyTo) {
                 const quotedAuthor = r.replyTo.author || '使用者';
                 quoteHtml = `
@@ -3158,6 +3161,10 @@
                     ${escapeHtml(r.replyTo.text)}
                   </div>
                 `;
+                // 如果回覆文字與引用內容相同，則不顯示重複的文字（避免重複顯示）
+                if (r.text && r.replyTo.text && r.text.trim() === r.replyTo.text.trim()) {
+                  displayText = '';
+                }
               }
               
               let replyFilesHtml = '';
@@ -3209,7 +3216,7 @@
                     <span style="margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;">${actionButtons}</span>
                   </div>
                   ${quoteHtml}
-                  <div class="reply-text">${escapeHtml(r.text)}</div>
+                  ${displayText ? `<div class="reply-text">${escapeHtml(displayText)}</div>` : ''}
                   ${replyFilesHtml}
                 </div>
               `;
