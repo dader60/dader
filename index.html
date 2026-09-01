@@ -3229,8 +3229,9 @@
           } else {
             viewPwdBtn.classList.remove('show');
           }
+          // 版主與所有權皆可管理驗證資料
           const manageBtnContainer = document.getElementById('manageVerifyBtnContainer');
-          if (role === 'owner') {
+          if (role === 'owner' || role === 'moderator') {
             manageBtnContainer.style.display = 'flex';
           } else {
             manageBtnContainer.style.display = 'none';
@@ -3479,12 +3480,15 @@
     });
 
     // ============================================================
-    // 32. 管理驗證資料
+    // 32. 管理驗證資料 (版主與所有權可管理)
     // ============================================================
 
     document.getElementById('manageVerifyDataBtn').addEventListener('click', async function() {
       const role = getAdminRole(currentAdminUsername);
-      if (role !== 'owner') { showToast('只有所有權可以管理驗證資料', true); return; }
+      if (role !== 'owner' && role !== 'moderator') {
+        showToast('只有所有權與版主可以管理驗證資料', true);
+        return;
+      }
       document.getElementById('manageVerifyOverlay').classList.add('active');
       await refreshVerifyDataList();
     });
@@ -3692,8 +3696,9 @@
           viewPwdBtn.classList.add('show');
         } else { viewPwdBtn.classList.remove('show'); }
         document.getElementById('viewLoginLogsBtn').classList.add('show');
+        // 版主與所有權皆可管理驗證資料
         const manageBtnContainer = document.getElementById('manageVerifyBtnContainer');
-        if (found.role === 'owner') {
+        if (found.role === 'owner' || found.role === 'moderator') {
           manageBtnContainer.style.display = 'flex';
         } else {
           manageBtnContainer.style.display = 'none';
