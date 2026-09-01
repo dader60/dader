@@ -2631,7 +2631,7 @@
     }
 
     // ============================================================
-    // 22. @標記選單（完整修復版 - 點擊後確實消失）
+    // 22. @標記選單（完整修復版 - 可標記多人、選單確實消失）
     // ============================================================
 
     let mentionMenuInstance = null;
@@ -2650,10 +2650,11 @@
       document.body.appendChild(menu);
       mentionMenuInstance = menu;
       
-      // 使用 click 事件替代 mousedown，避免焦點干擾
+      // 使用 click 事件處理選單項目點擊
       menu.addEventListener('click', function(e) {
         const item = e.target.closest('.mention-item');
         if (!item || item.classList.contains('no-result')) {
+          // 點擊無結果項目或空白區：關閉選單
           hideMentionMenu();
           return;
         }
@@ -2663,7 +2664,6 @@
         const textareaId = menu.dataset.textareaId;
         const docId = menu.dataset.docId;
         
-        // 優先使用儲存的 textarea ID 尋找
         let textarea = document.getElementById(textareaId);
         if (!textarea) {
           textarea = document.querySelector(`.reply-textarea[data-docid="${docId}"]`);
@@ -3313,18 +3313,22 @@
         return;
       }
       
-      // ========== 解析 @ 標記 ==========
+      // ========== 解析 @ 標記（支援多人） ==========
       let mentions = [];
       const mentionRegex = /@(\S+)/g;
       let match;
       while ((match = mentionRegex.exec(replyText)) !== null) {
         const mentionedName = match[1];
+        // 檢查是否為有效的標記對象
         const isValid = 
           mentionedName === '投訴者' || 
           ADMIN_ACCOUNTS.some(a => a.displayName === mentionedName) ||
           ADMIN_ACCOUNTS.some(a => a.username === mentionedName);
         if (isValid) {
-          mentions.push({ name: mentionedName });
+          // 避免重複加入同一個標記
+          if (!mentions.some(m => m.name === mentionedName)) {
+            mentions.push({ name: mentionedName });
+          }
         }
       }
       
