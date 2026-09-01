@@ -378,12 +378,8 @@
     .edit-history-item .history-time { color: #8a9db0; font-size: 0.7rem; }
     .edit-history-item .history-text { color: #2a405b; margin-top: 2px; }
 
-    /* ===== @選單 ===== */
-    #mentionMenu { position: fixed; background: white; border: 1px solid #d7dfe9; border-radius: 12px; box-shadow: 0 8px 24px rgba(0,0,0,0.12); max-height: 150px; overflow-y: auto; z-index: 999; min-width: 120px; display: none; padding: 4px 0; }
-    #mentionMenu .mention-item { padding: 6px 14px; cursor: pointer; font-size: 0.85rem; color: #2a405b; }
-    #mentionMenu .mention-item:hover { background: #eef3f9; }
-    #mentionMenu .mention-item.no-result { color: #8a9db0; cursor: default; }
-    #mentionMenu .mention-item.no-result:hover { background: transparent; }
+    /* ===== @選單 (已移除) ===== */
+    /* #mentionMenu 已刪除 */
 
     @media (max-width: 768px) {
       .captcha-inline { flex-wrap: wrap; gap: 8px; }
@@ -911,8 +907,8 @@
     </div>
   </div>
 
-  <!-- ===== @選單 ===== -->
-  <div id="mentionMenu"></div>
+  <!-- ===== @選單 (已移除) ===== -->
+  <!-- <div id="mentionMenu"></div> -->
 
   <!-- ===== 圖片燈箱 ===== -->
   <div class="lightbox" id="lightbox">
@@ -2400,7 +2396,7 @@
     // 17. 回覆功能（含新欄位）
     // ============================================================
 
-    async function addReply(docId, replyText, isAdminReply = false, files = [], mentions = []) {
+    async function addReply(docId, replyText, isAdminReply = false, files = []) {
       try {
         const displayName = getAdminDisplayName(currentAdminUsername);
         const roleName = getAdminRoleName(currentAdminUsername);
@@ -2419,8 +2415,7 @@
           editHistory: [],
           editCount: 0,
           isEdited: false,
-          isPinned: false,
-          mentions: mentions || []
+          isPinned: false
         };
         await db.collection('complaints').doc(docId).update({
           replies: firebase.firestore.FieldValue.arrayUnion(reply),
@@ -2430,7 +2425,7 @@
       } catch (error) { console.error('回覆失敗:', error); showToast('回覆失敗，請稍後再試', true); return false; }
     }
 
-    async function sendReply(docId, replyText, files, mentions = []) {
+    async function sendReply(docId, replyText, files) {
       try {
         let fileUrls = [];
         if (files && files.length > 0) {
@@ -2454,8 +2449,7 @@
           editHistory: [],
           editCount: 0,
           isEdited: false,
-          isPinned: false,
-          mentions: mentions || []
+          isPinned: false
         };
         await db.collection('complaints').doc(docId).update({
           replies: firebase.firestore.FieldValue.arrayUnion(reply),
@@ -2631,274 +2625,12 @@
     }
 
     // ============================================================
-    // 22. @標記選單（完整修復版 - 可標記多人、選單確實消失）
+    // 22. @標記選單 (已移除)
     // ============================================================
 
-    let mentionMenuInstance = null;
-    let mentionActive = false;
-    let mentionTimeout = null;
-
-    function createMentionMenu() {
-      if (mentionMenuInstance) {
-        mentionMenuInstance.innerHTML = '';
-        mentionMenuInstance.style.display = 'none';
-        return mentionMenuInstance;
-      }
-      
-      const menu = document.createElement('div');
-      menu.id = 'mentionMenu';
-      document.body.appendChild(menu);
-      mentionMenuInstance = menu;
-      
-      // 使用 click 事件處理選單項目點擊
-      menu.addEventListener('click', function(e) {
-        const item = e.target.closest('.mention-item');
-        if (!item || item.classList.contains('no-result')) {
-          // 點擊無結果項目或空白區：關閉選單
-          hideMentionMenu();
-          return;
-        }
-        
-        const displayName = item.dataset.display;
-        const atIndex = parseInt(menu.dataset.atIndex);
-        const textareaId = menu.dataset.textareaId;
-        const docId = menu.dataset.docId;
-        
-        let textarea = document.getElementById(textareaId);
-        if (!textarea) {
-          textarea = document.querySelector(`.reply-textarea[data-docid="${docId}"]`);
-        }
-        if (!textarea) {
-          textarea = document.querySelector('.reply-textarea');
-        }
-        
-        if (textarea) {
-          const value = textarea.value;
-          const before = value.substring(0, atIndex);
-          // 計算 @ 後面原本的文字（使用者輸入的搜尋關鍵字）
-          const searchText = before.split('@').pop() || '';
-          const afterStart = atIndex + 1 + searchText.length;
-          const after = value.substring(afterStart);
-          
-          // 插入 @人名 + 空格
-          textarea.value = before.substring(0, atIndex - searchText.length) + '@' + displayName + ' ' + after;
-          textarea.focus();
-          const newPos = before.length - searchText.length + displayName.length + 2;
-          textarea.setSelectionRange(newPos, newPos);
-          textarea.style.height = 'auto';
-          textarea.style.height = textarea.scrollHeight + 'px';
-          
-          const event = new Event('input', { bubbles: true });
-          textarea.dispatchEvent(event);
-        }
-        
-        // === 關鍵：關閉選單 ===
-        hideMentionMenu();
-        // 防止其他事件重新打開選單
-        if (mentionTimeout) {
-          clearTimeout(mentionTimeout);
-          mentionTimeout = null;
-        }
-        mentionTimeout = setTimeout(function() {
-          hideMentionMenu();
-        }, 50);
-      });
-      
-      // 防止 mousedown 搶走焦點
-      menu.addEventListener('mousedown', function(e) {
-        e.preventDefault();
-      });
-      
-      return menu;
-    }
-
-    function hideMentionMenu() {
-      const menu = document.getElementById('mentionMenu');
-      if (menu) {
-        menu.style.display = 'none';
-        menu.innerHTML = '';
-        delete menu.dataset.textareaId;
-        delete menu.dataset.atIndex;
-        delete menu.dataset.docId;
-      }
-      mentionActive = false;
-      if (mentionTimeout) {
-        clearTimeout(mentionTimeout);
-        mentionTimeout = null;
-      }
-    }
-
-    function showMentionMenu(textarea, docId, searchTerm, atIndex) {
-      const complaint = complaints.find(c => c.docId === docId);
-      if (!complaint) {
-        hideMentionMenu();
-        return;
-      }
-      
-      const canMention = isAdmin || (currentUser && complaint.userId === currentUser.uid);
-      if (!canMention) {
-        hideMentionMenu();
-        return;
-      }
-      
-      const menu = createMentionMenu();
-      const items = [];
-      const seenNames = new Set();
-      
-      // 1. 加入「投訴者」（如果非本人）
-      if (!currentUser || complaint.userId !== currentUser.uid) {
-        if (!seenNames.has('投訴者')) {
-          items.push({ name: '投訴者', display: '投訴者', role: 'complainant' });
-          seenNames.add('投訴者');
-        }
-      }
-      
-      // 2. 從回覆中提取所有管理員
-      complaint.replies.forEach(r => {
-        if (r.isAdmin && !r.isDeleted) {
-          const roleName = r.authorRole || '管理員';
-          let display = '';
-          
-          if (roleName === '版主') {
-            display = '版主';
-          } else if (roleName === '所有權') {
-            display = '所有權';
-          } else if (roleName === '副版主') {
-            display = '副版主';
-          } else if (roleName === '小編') {
-            display = r.authorDisplayName || '小編';
-          } else {
-            display = r.authorDisplayName || '管理員';
-          }
-          
-          if (!seenNames.has(display) && display) {
-            items.push({ name: display, display: display, role: roleName });
-            seenNames.add(display);
-          }
-        }
-      });
-      
-      // 如果選單是空的，顯示提示
-      if (items.length === 0) {
-        menu.innerHTML = '<div class="mention-item no-result">尚無可標記的對象</div>';
-        menu.style.display = 'block';
-        const rect = textarea.getBoundingClientRect();
-        menu.style.left = Math.max(10, rect.left) + 'px';
-        menu.style.top = Math.max(10, rect.top + 20) + 'px';
-        mentionActive = true;
-        return;
-      }
-      
-      // 過濾搜尋
-      let filtered = items;
-      if (searchTerm && searchTerm.trim()) {
-        const lowerSearch = searchTerm.toLowerCase();
-        filtered = items.filter(item => 
-          item.display.toLowerCase().includes(lowerSearch)
-        );
-      }
-      
-      // 如果過濾後沒有結果，顯示全部
-      if (filtered.length === 0) {
-        filtered = items;
-      }
-      
-      // 渲染選單
-      menu.innerHTML = filtered.map(item => 
-        `<div class="mention-item" data-name="${item.name}" data-display="${item.display}">@${item.display}</div>`
-      ).join('');
-      
-      // 定位選單
-      const rect = textarea.getBoundingClientRect();
-      const lineHeight = parseInt(getComputedStyle(textarea).lineHeight) || 20;
-      const textBefore = textarea.value.substring(0, atIndex);
-      const lines = textBefore.split('\n').length;
-      
-      let topPos = rect.top + Math.min((lines - 1) * lineHeight, 120);
-      let leftPos = Math.max(10, rect.left);
-      
-      const menuHeight = Math.min(filtered.length * 32 + 10, 150);
-      if (topPos + menuHeight > window.innerHeight - 20) {
-        topPos = window.innerHeight - menuHeight - 20;
-      }
-      
-      menu.style.left = leftPos + 'px';
-      menu.style.top = Math.max(10, topPos) + 'px';
-      menu.style.display = 'block';
-      
-      const textareaId = textarea.id || 'replyTextarea_' + Date.now();
-      if (!textarea.id) textarea.id = textareaId;
-      menu.dataset.textareaId = textareaId;
-      menu.dataset.atIndex = atIndex;
-      menu.dataset.docId = docId;
-      mentionActive = true;
-    }
-
-    function handleMentionInput(textarea) {
-      const value = textarea.value;
-      const cursorPos = textarea.selectionStart;
-      const textBefore = value.substring(0, cursorPos);
-      const atIndex = textBefore.lastIndexOf('@');
-      
-      // 檢查 @ 是否有效（前面是空格、換行或開頭）
-      const isValidAt = atIndex !== -1 && 
-        (atIndex === 0 || value[atIndex - 1] === ' ' || value[atIndex - 1] === '\n' || value[atIndex - 1] === '>');
-      
-      if (isValidAt) {
-        const searchTerm = textBefore.substring(atIndex + 1);
-        const container = textarea.closest('.complaint-item');
-        const docId = container?.dataset.docid;
-        if (!docId) { 
-          hideMentionMenu(); 
-          return; 
-        }
-        
-        const complaint = complaints.find(c => c.docId === docId);
-        if (!complaint) { 
-          hideMentionMenu(); 
-          return; 
-        }
-        
-        const canMention = isAdmin || (currentUser && complaint.userId === currentUser.uid);
-        if (!canMention) { 
-          hideMentionMenu(); 
-          return; 
-        }
-        
-        showMentionMenu(textarea, docId, searchTerm, atIndex);
-      } else {
-        // 如果游標不在 @ 後面，或是 @ 無效，關閉選單
-        hideMentionMenu();
-      }
-    }
-
     // ============================================================
-    // 23. 回覆輸入監聽
+    // 23. 回覆輸入監聽 (已移除 @ 邏輯)
     // ============================================================
-
-    document.addEventListener('input', function(e) {
-      if (e.target.classList.contains('reply-textarea')) {
-        handleMentionInput(e.target);
-      }
-    });
-
-    // 點擊其他地方選單消失（包括點擊選單本身以外）
-    document.addEventListener('click', function(e) {
-      const menu = document.getElementById('mentionMenu');
-      if (menu && menu.style.display === 'block') {
-        const isClickOnMenu = e.target.closest('#mentionMenu');
-        const isClickOnTextarea = e.target.closest('.reply-textarea');
-        if (!isClickOnMenu && !isClickOnTextarea) {
-          hideMentionMenu();
-        }
-      }
-    });
-
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Escape') {
-        hideMentionMenu();
-      }
-    });
 
     // ============================================================
     // 24. Email 通知
@@ -2928,7 +2660,7 @@
     }
 
     // ============================================================
-    // 25. 渲染（移除引用功能）
+    // 25. 渲染（移除引用功能與 @ 相關 placeholder）
     // ============================================================
 
     function render() {
@@ -3153,7 +2885,7 @@
             replyInputHtml = `
               <div class="reply-input-area">
                 <div style="flex:1;min-width:150px;display:flex;flex-direction:column;gap:6px;width:100%;">
-                  <textarea class="reply-textarea" placeholder="輸入回覆內容... (輸入 @ 可標記他人)" rows="1"></textarea>
+                  <textarea class="reply-textarea" placeholder="輸入回覆內容..." rows="1"></textarea>
                   <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
                     <button type="button" class="reply-file-btn" data-docid="${item.docId}"><i class="fas fa-image"></i> 圖片</button>
                     <input type="file" class="reply-file-input" data-docid="${item.docId}" accept="image/*,video/*" multiple style="display:none;" />
@@ -3313,30 +3045,11 @@
         return;
       }
       
-      // ========== 解析 @ 標記（支援多人） ==========
-      let mentions = [];
-      const mentionRegex = /@(\S+)/g;
-      let match;
-      while ((match = mentionRegex.exec(replyText)) !== null) {
-        const mentionedName = match[1];
-        // 檢查是否為有效的標記對象
-        const isValid = 
-          mentionedName === '投訴者' || 
-          ADMIN_ACCOUNTS.some(a => a.displayName === mentionedName) ||
-          ADMIN_ACCOUNTS.some(a => a.username === mentionedName);
-        if (isValid) {
-          // 避免重複加入同一個標記
-          if (!mentions.some(m => m.name === mentionedName)) {
-            mentions.push({ name: mentionedName });
-          }
-        }
-      }
-      
       btn.disabled = true;
       btn.textContent = '送出中...';
       
       const files = replyFiles[docId] || [];
-      const success = await sendReply(docId, replyText, files, mentions);
+      const success = await sendReply(docId, replyText, files);
       
       if (success) {
         if (isAdmin) {
@@ -3349,7 +3062,6 @@
         textarea.value = '';
         replyFiles[docId] = [];
         updateReplyPreview(docId);
-        hideMentionMenu();
       }
       
       btn.textContent = '送出回覆';
@@ -4342,7 +4054,6 @@
       console.log('🔐 驗證碼功能已啟用（14px，同一排，點擊文字可刷新）');
       console.log('✏️ 回覆編輯功能：最多5次，顯示編輯次數（管理員）');
       console.log('📌 回覆置頂功能：管理員可置頂重要回覆');
-      console.log('@ 標記功能已修復：輸入 @ 出現選單，點擊後選單消失，再按 @ 才會再次顯示');
       console.log('🕐 回覆顯示秒數');
       console.log('🗑️ 收回回覆：不限時間');
       console.log('📜 編輯歷史：管理員可查看所有編輯紀錄');
