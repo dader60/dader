@@ -3051,7 +3051,7 @@
     }
 
     // ============================================================
-    // 25. 渲染（一般使用者只顯示管理員回覆，不顯示版主、副版主、小編、所有權）
+    // 25. 渲染（一般使用者：管理員回覆顯示為「管理員」+ 自己的回覆）
     // ============================================================
 
     function render() {
@@ -3181,12 +3181,15 @@
           let repliesHtml = '';
           if (item.replies && item.replies.length > 0) {
             let sortedReplies = [...item.replies].filter(r => !r.isDeleted);
-            // 一般使用者只顯示「管理員」回覆，不顯示版主、副版主、小編、所有權
+            // 一般使用者：只顯示管理員回覆 + 自己的回覆
             if (!isAdmin) {
               sortedReplies = sortedReplies.filter(r => {
-                if (!r.isAdmin) return false;
-                const roleName = r.authorRole || '';
-                return roleName === '管理員';
+                // 管理員回覆 → 顯示
+                if (r.isAdmin === true) return true;
+                // 自己的回覆 → 顯示
+                if (currentUser && item.userId === currentUser.uid && !r.isAdmin) return true;
+                // 其他人的回覆 → 不顯示
+                return false;
               });
             }
             sortedReplies.sort((a, b) => {
@@ -3201,7 +3204,14 @@
                 if (r.isDeleted) return;
                 const replyId = r.id || 'reply_' + Math.random().toString(36).substr(2, 6);
                 
-                const displayName = getDisplayNameForReply(r);
+                // 一般使用者看到的管理員回覆 → 顯示名稱改為「管理員」
+                let displayName;
+                if (!isAdmin && r.isAdmin) {
+                  displayName = '管理員';
+                } else {
+                  displayName = getDisplayNameForReply(r);
+                }
+                
                 let displayClass = '';
                 if (!r.isAdmin) displayClass = 'complainant';
                 else {
@@ -4545,7 +4555,7 @@
       console.log('📊 總瀏覽次數功能已啟用（total_views 即時同步，重新整理算一次）');
       console.log('📦 自動備份功能已啟用（投訴、回覆、狀態變更、補充資料、刪除）');
       console.log('🔒 備份紀錄權限：僅所有權可存取');
-      console.log('👁️ 一般使用者介面：回覆僅顯示「管理員」回覆，不顯示版主、副版主、小編、所有權');
+      console.log('👁️ 一般使用者介面：管理員回覆顯示為「管理員」+ 自己的回覆');
     }
 
     init();
