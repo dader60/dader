@@ -2670,7 +2670,6 @@
         const complaint = complaints.find(c => c.docId === supplementComplaintId);
         if (complaint) { 
           await sendSupplementEmail(complaint, content, fileUrls);
-          // 📦 備份補充資料
           await addBackupRecord('補充資料', complaint, {
             content: content,
             operator: currentUser ? (currentUser.displayName || currentUser.email || '使用者') : '使用者',
@@ -3052,7 +3051,7 @@
     }
 
     // ============================================================
-    // 25. 渲染（移除引用功能與 @ 相關 placeholder）
+    // 25. 渲染（一般使用者只顯示管理員回覆，不顯示版主、副版主、小編、所有權）
     // ============================================================
 
     function render() {
@@ -3182,93 +3181,103 @@
           let repliesHtml = '';
           if (item.replies && item.replies.length > 0) {
             let sortedReplies = [...item.replies].filter(r => !r.isDeleted);
+            // 一般使用者只顯示「管理員」回覆，不顯示版主、副版主、小編、所有權
+            if (!isAdmin) {
+              sortedReplies = sortedReplies.filter(r => {
+                if (!r.isAdmin) return false;
+                const roleName = r.authorRole || '';
+                return roleName === '管理員';
+              });
+            }
             sortedReplies.sort((a, b) => {
               if (a.isPinned && !b.isPinned) return -1;
               if (!a.isPinned && b.isPinned) return 1;
               return (b.createdAt || 0) - (a.createdAt || 0);
             });
             
-            repliesHtml = '<div class="reply-list">';
-            sortedReplies.forEach((r) => {
-              if (r.isDeleted) return;
-              const replyId = r.id || 'reply_' + Math.random().toString(36).substr(2, 6);
-              
-              const displayName = getDisplayNameForReply(r);
-              let displayClass = '';
-              if (!r.isAdmin) displayClass = 'complainant';
-              else {
-                const roleName = r.authorRole || '管理員';
-                if (roleName === '版主') displayClass = 'moderator';
-                else if (roleName === '所有權') displayClass = 'owner';
-                else if (roleName === '副版主') displayClass = 'vice';
-                else if (roleName === '小編') displayClass = 'editor';
-                else displayClass = 'admin';
-              }
-              
-              let isMe = false;
-              if (currentUser && !r.isAdmin && item.userId === currentUser.uid) isMe = true;
-              if (isAdmin && r.isAdmin) {
-                const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
-                if (adminInfo && r.authorDisplayName === adminInfo.displayName) isMe = true;
-              }
-              
-              const replyClass = r.isAdmin ? 'reply-item reply-admin' : 'reply-item';
-              const meClass = isMe ? ' reply-author me' : '';
-              
-              const timeStr = formatDateTimeWithSeconds(r.date, r.time);
-              const editBadge = getEditBadge(r, isAdmin);
-              const pinnedBadge = r.isPinned ? '<span class="pinned-badge"><i class="fas fa-thumbtack"></i> 置頂</span>' : '';
-              
-              let replyFilesHtml = '';
-              if (r.files && r.files.length > 0) {
-                replyFilesHtml = '<div class="reply-files">';
-                r.files.forEach(url => {
-                  const isVideo = url.match(/\.(mp4|mov|avi|webm)/i) || url.includes('video');
-                  if (isVideo) {
-                    replyFilesHtml += `<div class="reply-file video-thumb" onclick="window.open('${url}','_blank')" style="width:60px;height:60px;border-radius:8px;background:#1a1a2e;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid #e6ecf5;margin-right:4px;"><i class="fas fa-play-circle" style="color:white;font-size:1.5rem;"></i></div>`;
-                  } else {
-                    replyFilesHtml += `<img src="${url}" alt="回覆圖片" onclick="window.open('${url}','_blank')" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid #e6ecf5;cursor:pointer;margin-right:4px;" />`;
-                  }
-                });
-                replyFilesHtml += '</div>';
-              }
-              
-              let actionButtons = '';
-              
-              if (isAdmin && r.editHistory && r.editHistory.length > 0) {
-                actionButtons += `<button class="reply-history-btn" onclick="showEditHistory('${item.docId}', '${replyId}')"><i class="fas fa-history"></i> 歷史</button>`;
-              }
-              
-              if (isAdmin) {
-                actionButtons += `<button class="reply-pin-btn" onclick="togglePinReply('${item.docId}', '${replyId}')">
-                  <i class="fas ${r.isPinned ? 'fa-thumbtack' : 'fa-thumbtack'}" style="${r.isPinned ? 'color:#c52a2a;transform:rotate(45deg);' : 'color:#8a9db0;'}"></i>
-                  ${r.isPinned ? '取消置頂' : '置頂'}
-                </button>`;
-              }
-              
-              if (isMe && !r.isDeleted) {
-                actionButtons += `<button class="reply-edit-btn" onclick="editReply('${item.docId}', '${replyId}')"><i class="fas fa-edit"></i> 編輯</button>`;
-              }
-              
-              if (isMe && !r.isDeleted) {
-                actionButtons += `<button class="reply-delete-btn" onclick="deleteReply('${item.docId}', '${replyId}')"><i class="fas fa-trash-alt"></i> 收回</button>`;
-              }
-              
-              repliesHtml += `
-                <div class="${replyClass}" data-reply-id="${replyId}">
-                  <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
-                    <span class="reply-author ${displayClass}${meClass}">${escapeHtml(displayName)}</span>
-                    <span class="reply-time">${timeStr}</span>
-                    ${editBadge}
-                    ${pinnedBadge}
-                    <span style="margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;">${actionButtons}</span>
+            if (sortedReplies.length > 0) {
+              repliesHtml = '<div class="reply-list">';
+              sortedReplies.forEach((r) => {
+                if (r.isDeleted) return;
+                const replyId = r.id || 'reply_' + Math.random().toString(36).substr(2, 6);
+                
+                const displayName = getDisplayNameForReply(r);
+                let displayClass = '';
+                if (!r.isAdmin) displayClass = 'complainant';
+                else {
+                  const roleName = r.authorRole || '管理員';
+                  if (roleName === '版主') displayClass = 'moderator';
+                  else if (roleName === '所有權') displayClass = 'owner';
+                  else if (roleName === '副版主') displayClass = 'vice';
+                  else if (roleName === '小編') displayClass = 'editor';
+                  else displayClass = 'admin';
+                }
+                
+                let isMe = false;
+                if (currentUser && !r.isAdmin && item.userId === currentUser.uid) isMe = true;
+                if (isAdmin && r.isAdmin) {
+                  const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
+                  if (adminInfo && r.authorDisplayName === adminInfo.displayName) isMe = true;
+                }
+                
+                const replyClass = r.isAdmin ? 'reply-item reply-admin' : 'reply-item';
+                const meClass = isMe ? ' reply-author me' : '';
+                
+                const timeStr = formatDateTimeWithSeconds(r.date, r.time);
+                const editBadge = getEditBadge(r, isAdmin);
+                const pinnedBadge = r.isPinned ? '<span class="pinned-badge"><i class="fas fa-thumbtack"></i> 置頂</span>' : '';
+                
+                let replyFilesHtml = '';
+                if (r.files && r.files.length > 0) {
+                  replyFilesHtml = '<div class="reply-files">';
+                  r.files.forEach(url => {
+                    const isVideo = url.match(/\.(mp4|mov|avi|webm)/i) || url.includes('video');
+                    if (isVideo) {
+                      replyFilesHtml += `<div class="reply-file video-thumb" onclick="window.open('${url}','_blank')" style="width:60px;height:60px;border-radius:8px;background:#1a1a2e;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:1px solid #e6ecf5;margin-right:4px;"><i class="fas fa-play-circle" style="color:white;font-size:1.5rem;"></i></div>`;
+                    } else {
+                      replyFilesHtml += `<img src="${url}" alt="回覆圖片" onclick="window.open('${url}','_blank')" style="width:60px;height:60px;object-fit:cover;border-radius:8px;border:1px solid #e6ecf5;cursor:pointer;margin-right:4px;" />`;
+                    }
+                  });
+                  replyFilesHtml += '</div>';
+                }
+                
+                let actionButtons = '';
+                
+                if (isAdmin && r.editHistory && r.editHistory.length > 0) {
+                  actionButtons += `<button class="reply-history-btn" onclick="showEditHistory('${item.docId}', '${replyId}')"><i class="fas fa-history"></i> 歷史</button>`;
+                }
+                
+                if (isAdmin) {
+                  actionButtons += `<button class="reply-pin-btn" onclick="togglePinReply('${item.docId}', '${replyId}')">
+                    <i class="fas ${r.isPinned ? 'fa-thumbtack' : 'fa-thumbtack'}" style="${r.isPinned ? 'color:#c52a2a;transform:rotate(45deg);' : 'color:#8a9db0;'}"></i>
+                    ${r.isPinned ? '取消置頂' : '置頂'}
+                  </button>`;
+                }
+                
+                if (isMe && !r.isDeleted) {
+                  actionButtons += `<button class="reply-edit-btn" onclick="editReply('${item.docId}', '${replyId}')"><i class="fas fa-edit"></i> 編輯</button>`;
+                }
+                
+                if (isMe && !r.isDeleted) {
+                  actionButtons += `<button class="reply-delete-btn" onclick="deleteReply('${item.docId}', '${replyId}')"><i class="fas fa-trash-alt"></i> 收回</button>`;
+                }
+                
+                repliesHtml += `
+                  <div class="${replyClass}" data-reply-id="${replyId}">
+                    <div style="display:flex;align-items:center;flex-wrap:wrap;gap:4px;">
+                      <span class="reply-author ${displayClass}${meClass}">${escapeHtml(displayName)}</span>
+                      <span class="reply-time">${timeStr}</span>
+                      ${editBadge}
+                      ${pinnedBadge}
+                      <span style="margin-left:auto;display:flex;gap:4px;flex-wrap:wrap;">${actionButtons}</span>
+                    </div>
+                    <div class="reply-text">${escapeHtml(r.text)}</div>
+                    ${replyFilesHtml}
                   </div>
-                  <div class="reply-text">${escapeHtml(r.text)}</div>
-                  ${replyFilesHtml}
-                </div>
-              `;
-            });
-            repliesHtml += '</div>';
+                `;
+              });
+              repliesHtml += '</div>';
+            }
           }
           
           let showReplyInput = isAdmin || (currentUser && item.userId === currentUser.uid);
@@ -3448,7 +3457,6 @@
           const complaintData = complaints.find(c => c.docId === docId);
           if (complaintData) {
             await sendReplyToComplainant(complaintData, replyText);
-            // 📦 備份管理員回覆
             await addBackupRecord('回覆', complaintData, {
               content: replyText,
               operator: `${getAdminRoleName(currentAdminUsername)} ${getAdminDisplayName(currentAdminUsername)}`,
@@ -3459,7 +3467,6 @@
           showToast('✅ 回覆已送出，投訴者將收到 Email 通知');
         } else {
           showToast('✅ 回覆已送出');
-          // 📦 備份投訴者回覆
           await addBackupRecord('回覆', complaint, {
             content: replyText,
             operator: currentUser ? (currentUser.displayName || currentUser.email || '使用者') : '使用者',
@@ -3633,7 +3640,6 @@
           changePwdBtn.classList.add('show');
           const role = getAdminRole(currentAdminUsername) || 'editor';
           loginLogsBtn.classList.add('show');
-          // 僅所有權顯示備份紀錄
           if (role === 'owner') {
             backupBtn.classList.add('show');
           } else {
@@ -3644,7 +3650,6 @@
           } else {
             viewPwdBtn.classList.remove('show');
           }
-          // 版主與所有權皆可管理驗證資料
           const manageBtnContainer = document.getElementById('manageVerifyBtnContainer');
           if (role === 'owner' || role === 'moderator') {
             manageBtnContainer.style.display = 'flex';
@@ -4141,13 +4146,11 @@
           viewPwdBtn.classList.add('show');
         } else { viewPwdBtn.classList.remove('show'); }
         document.getElementById('viewLoginLogsBtn').classList.add('show');
-        // 僅所有權顯示備份紀錄
         if (found.role === 'owner') {
           document.getElementById('viewBackupBtn').classList.add('show');
         } else {
           document.getElementById('viewBackupBtn').classList.remove('show');
         }
-        // 版主與所有權皆可管理驗證資料
         const manageBtnContainer = document.getElementById('manageVerifyBtnContainer');
         if (found.role === 'owner' || found.role === 'moderator') {
           manageBtnContainer.style.display = 'flex';
@@ -4367,7 +4370,6 @@
         const success = await addComplaint(newComplaint);
         if (success) {
           sendNewComplaintEmail(newComplaint).catch(err => console.error('Email 發送失敗:', err));
-          // 📦 備份新投訴
           await addBackupRecord('投訴', newComplaint, {
             content: description,
             operator: currentUser ? (currentUser.displayName || currentUser.email || '使用者') : '使用者',
@@ -4411,7 +4413,6 @@
       }
       const success = await updateStatus(docId, newStatus, supplementInfo);
       if (success) {
-        // 📦 備份狀態變更
         const complaint = complaints.find(c => c.docId === docId);
         if (complaint) {
           await addBackupRecord('狀態變更', complaint, {
@@ -4443,7 +4444,6 @@
       if (confirm(`確定刪除投訴 #${id} 嗎？`)) {
         const complaint = complaints.find(c => c.docId === docId);
         if (complaint) {
-          // 📦 備份刪除紀錄
           await addBackupRecord('刪除', complaint, {
             content: `投訴 #${id} 已被刪除`,
             operator: `${getAdminRoleName(currentAdminUsername)} ${getAdminDisplayName(currentAdminUsername)}`,
@@ -4513,7 +4513,6 @@
       listenComplaints();
       listenBackupRecords();
       
-      // 初始化總瀏覽次數：先監聽，再加一（確保即時同步）
       listenTotalViews();
       await incrementTotalViews();
       
@@ -4546,6 +4545,7 @@
       console.log('📊 總瀏覽次數功能已啟用（total_views 即時同步，重新整理算一次）');
       console.log('📦 自動備份功能已啟用（投訴、回覆、狀態變更、補充資料、刪除）');
       console.log('🔒 備份紀錄權限：僅所有權可存取');
+      console.log('👁️ 一般使用者介面：回覆僅顯示「管理員」回覆，不顯示版主、副版主、小編、所有權');
     }
 
     init();
