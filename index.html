@@ -409,21 +409,6 @@
     .edit-history-item .history-time .version-tag { background: #2a5b7a; color: white; padding: 1px 8px; border-radius: 10px; font-size: 0.6rem; margin-right: 6px; display: inline-block; }
     .edit-history-item .history-text { color: #2a405b; white-space: pre-wrap; word-break: break-word; }
 
-    /* 隱藏的圖片 / 影片 */
-    .hidden-media-item { display: none !important; }
-
-    /* 更多圖片按鈕（可點擊） */
-    .complaint-images .more-badge {
-      cursor: pointer;
-      user-select: none;
-      transition: 0.15s;
-    }
-    .complaint-images .more-badge:hover {
-      background: #dbe6f5;
-      color: #1f3a57;
-      transform: scale(1.05);
-    }
-
     .fixed-footer {
       position: fixed;
       bottom: 0;
@@ -2817,7 +2802,6 @@
         return;
       }
 
-      // 權限：當事人 + 所有權 + 版主
       let isAuthor = false;
       if (isAdmin && reply.isAdmin) {
         const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
@@ -2835,7 +2819,6 @@
         return;
       }
 
-      // 依時間排序：最新在最上面
       const sorted = [...reply.editHistory].sort((a, b) => {
         const ta = new Date(`${a.date} ${a.time}`).getTime() || 0;
         const tb = new Date(`${b.date} ${b.time}`).getTime() || 0;
@@ -2947,41 +2930,18 @@
             }
           }
 
+          // ★ 圖片全部顯示（不限制前 4 張）
           let imagesHtml = '';
           if (item.imageUrls && item.imageUrls.length > 0) {
-            const total = item.imageUrls.length;
-            const initialShow = 4;
-            const showUrls = item.imageUrls.slice(0, initialShow);
-            const remaining = total - initialShow;
-
-            const buildMediaItem = (url, idx, isHidden) => {
+            imagesHtml = '<div class="complaint-images">';
+            item.imageUrls.forEach((url, idx) => {
               const isVideo = url.startsWith('data:video') || url.match(/\.(mp4|mov|avi|webm|mkv|flv|wmv)/i) || url.includes('video');
-              const hiddenClass = isHidden ? ' hidden-media-item' : '';
               if (isVideo) {
-                return `<div class="video-thumb-item${hiddenClass}" onclick="openVideoPlayer('${item.docId}', ${idx})"><i class="fas fa-play-circle" style="font-size:2rem;color:white;opacity:0.9;text-shadow:0 2px 10px rgba(0,0,0,0.5);"></i><span style="position:absolute;bottom:2px;right:4px;background:rgba(0,0,0,0.7);color:white;font-size:0.45rem;padding:1px 4px;border-radius:3px;">影片</span></div>`;
+                imagesHtml += `<div class="video-thumb-item" onclick="openVideoPlayer('${item.docId}', ${idx})"><i class="fas fa-play-circle" style="font-size:2rem;color:white;opacity:0.9;text-shadow:0 2px 10px rgba(0,0,0,0.5);"></i><span style="position:absolute;bottom:2px;right:4px;background:rgba(0,0,0,0.7);color:white;font-size:0.45rem;padding:1px 4px;border-radius:3px;">影片</span></div>`;
+              } else {
+                imagesHtml += `<img src="${url}" alt="投訴圖片" onclick="openLightbox('${item.docId}', ${idx})" />`;
               }
-              return `<img src="${url}" alt="投訴圖片" class="complaint-image${hiddenClass}" onclick="openLightbox('${item.docId}', ${idx})" />`;
-            };
-
-            let visibleHtml = '';
-            showUrls.forEach((url, idx) => {
-              visibleHtml += buildMediaItem(url, idx, false);
             });
-
-            let hiddenHtml = '';
-            if (remaining > 0) {
-              item.imageUrls.slice(initialShow).forEach((url, i) => {
-                const realIdx = initialShow + i;
-                hiddenHtml += buildMediaItem(url, realIdx, true);
-              });
-            }
-
-            imagesHtml = `<div class="complaint-images" data-docid="${item.docId}">`;
-            imagesHtml += visibleHtml;
-            if (remaining > 0) {
-              imagesHtml += `<div class="more-badge" onclick="toggleMoreImages(this, event)">+${remaining}</div>`;
-            }
-            imagesHtml += hiddenHtml;
             imagesHtml += '</div>';
           }
 
@@ -3209,28 +3169,6 @@
         btn.addEventListener('click', handleReply);
       });
     }
-
-    // ============================================================
-    // 圖片展開 / 收起
-    // ============================================================
-
-    window.toggleMoreImages = function(badgeEl, event) {
-      if (event) event.stopPropagation();
-      const container = badgeEl.closest('.complaint-images');
-      if (!container) return;
-      const hiddenItems = container.querySelectorAll('.hidden-media-item');
-      const isExpanded = badgeEl.dataset.expanded === 'true';
-
-      if (isExpanded) {
-        hiddenItems.forEach(el => el.classList.add('hidden-media-item'));
-        badgeEl.dataset.expanded = 'false';
-        badgeEl.textContent = '+' + hiddenItems.length;
-      } else {
-        hiddenItems.forEach(el => el.classList.remove('hidden-media-item'));
-        badgeEl.dataset.expanded = 'true';
-        badgeEl.textContent = '收起';
-      }
-    };
 
     // ============================================================
     // 26. 回覆處理（含備份）
@@ -4423,7 +4361,7 @@
       console.log('✏️ 編輯歷史彈窗：當事人 + 所有權 + 版主可查看，最新在上');
       console.log('🗑️ 刪除 / 清空：先刪除成功才寫備份');
       console.log('🚫 驗證碼已移除');
-      console.log('🖼️ 圖片顯示：前 4 張 + 展開全部');
+      console.log('🖼️ 圖片：全部直接顯示');
     }
 
     init();
