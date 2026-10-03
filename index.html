@@ -1104,6 +1104,141 @@
     const replyFiles = {};
     let totalViewsListener = null;
     let backupRecords = [];
+    let hasRestoredAdminSession = false;
+
+    // ============================================================
+    // 閒置自動登出（1 小時）+ 倒數計時
+    // ============================================================
+    const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
+    const IDLE_WARNING_MS = 5 * 60 * 1000;
+    let idleTimer = null;
+    let idleCountdownInterval = null;
+    let idleDeadline = 0;
+    let idleCountdownBarEl = null;
+    let idleLogoutTimer = null;
+
+    function createIdleCountdownBar() {
+      if (idleCountdownBarEl) return;
+      const bar = document.createElement('div');
+      bar.id = 'idleCountdownBar';
+      bar.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background: linear-gradient(90deg, #c52a2a, #8e44ad);
+        color: white;
+        text-align: center;
+        padding: 10px 16px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        z-index: 99999;
+        box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        gap: 14px;
+        flex-wrap: wrap;
+      `;
+      bar.innerHTML = `
+        <span><i class="fas fa-hourglass-half"></i> 閒置自動登出倒數：<strong id="idleCountdownText">--:--</strong></span>
+        <button id="idleStayBtn" style="background:#ffffff;color:#c52a2a;border:none;border-radius:40px;padding:5px 16px;font-weight:600;cursor:pointer;font-size:0.85rem;">
+          <i class="fas fa-user-check"></i> 保持登入
+        </button>
+        <button id="idleLogoutBtn" style="background:transparent;color:#ffffff;border:1px solid rgba(255,255,255,0.6);border-radius:40px;padding:5px 16px;font-weight:500;cursor:pointer;font-size:0.85rem;">
+          <i class="fas fa-sign-out-alt"></i> 立即登出
+        </button>
+      `;
+      document.body.appendChild(bar);
+      idleCountdownBarEl = bar;
+
+      document.getElementById('idleStayBtn').addEventListener('click', function() {
+        resetIdleTimer();
+        showToast('✅ 已保持登入，計時重新開始');
+      });
+      document.getElementById('idleLogoutBtn').addEventListener('click', function() {
+        performAdminLogout(true);
+      });
+    }
+
+    function resetIdleTimer() {
+      if (!isAdmin || !currentAdminUsername) return;
+      idleDeadline = Date.now() + IDLE_TIMEOUT_MS;
+
+      if (idleTimer) clearTimeout(idleTimer);
+      if (idleCountdownInterval) clearInterval(idleCountdownInterval);
+      if (idleLogoutTimer) clearTimeout(idleLogoutTimer);
+
+      if (idleCountdownBarEl) {
+        idleCountdownBarEl.style.display = 'none';
+      }
+
+      idleTimer = setTimeout(() => {
+        if (!isAdmin || !currentAdminUsername) return;
+        if (idleCountdownBarEl) idleCountdownBarEl.style.display = 'flex';
+        updateIdleCountdown();
+        idleCountdownInterval = setInterval(updateIdleCountdown, 1000);
+      }, IDLE_TIMEOUT_MS - IDLE_WARNING_MS);
+
+      idleLogoutTimer = setTimeout(() => {
+        if (!isAdmin || !currentAdminUsername) return;
+        showToast('⏰ 閒置超過 1 小時，已自動登出', true);
+        performAdminLogout(false);
+      }, IDLE_TIMEOUT_MS);
+    }
+
+    function updateIdleCountdown() {
+      if (!idleDeadline) return;
+      const remain = Math.max(0, idleDeadline - Date.now());
+      const totalSec = Math.floor(remain / 1000);
+      const mm = String(Math.floor(totalSec / 60)).padStart(2, '0');
+      const ss = String(totalSec % 60).padStart(2, '0');
+      const textEl = document.getElementById('idleCountdownText');
+      if (textEl) textEl.textContent = `${mm}:${ss}`;
+      if (remain <= 0) {
+        if (idleCountdownInterval) clearInterval(idleCountdownInterval);
+        if (idleCountdownBarEl) idleCountdownBarEl.style.display = 'none';
+      }
+    }
+
+    function clearIdleTimer() {
+      if (idleTimer) { clearTimeout(idleTimer); idleTimer = null; }
+      if (idleLogoutTimer) { clearTimeout(idleLogoutTimer); idleLogoutTimer = null; }
+      if (idleCountdownInterval) { clearInterval(idleCountdownInterval); idleCountdownInterval = null; }
+      idleDeadline = 0;
+      if (idleCountdownBarEl) idleCountdownBarEl.style.display = 'none';
+    }
+
+    async function performAdminLogout(manual = false) {
+      clearIdleTimer();
+      if (isAdmin && currentAdminUsername) {
+        try {
+          await db.collection('adminSessions').doc(currentAdminUsername).delete();
+        } catch (e) {}
+      }
+      isAdmin = false;
+      currentAdminUsername = '';
+      sessionStorage.setItem('isAdmin', 'false');
+      sessionStorage.removeItem('currentAdminUsername');
+      const adminLoginBtn = document.getElementById('adminLoginBtn');
+      if (adminLoginBtn) {
+        adminLoginBtn.textContent = '管理';
+        adminLoginBtn.className = 'btn-admin-login';
+      }
+      document.getElementById('viewLoginLogsBtn').classList.remove('show');
+      document.getElementById('changePasswordBtn').classList.remove('show');
+      document.getElementById('viewPasswordsBtn').classList.remove('show');
+      document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+      document.getElementById('viewBackupBtn').classList.remove('show');
+      const roleDisplay = document.getElementById('userRoleDisplay');
+      if (roleDisplay) {
+        if (currentUser) { roleDisplay.textContent = '一般使用者'; roleDisplay.className = 'user-role'; }
+        else { roleDisplay.textContent = ''; roleDisplay.className = 'user-role'; }
+      }
+      updateUI(currentUser);
+      render();
+      if (manual) showToast('已登出管理模式');
+    }
 
     // ============================================================
     // 瀏覽次數計算
@@ -1116,10 +1251,8 @@
         if (doc.exists) {
           const current = doc.data().count || 0;
           await docRef.update({ count: current + 1 });
-          console.log('📊 總瀏覽次數已增加:', current + 1);
         } else {
           await docRef.set({ count: 1 });
-          console.log('📊 總瀏覽次數已初始化為 1');
         }
       } catch (error) {
         console.error('❌ 更新總瀏覽次數失敗:', error);
@@ -1177,7 +1310,6 @@
           })
         };
         await db.collection('backup_records').add(record);
-        console.log('📦 備份紀錄已新增:', type, complaint.title);
       } catch (error) {
         console.error('❌ 新增備份紀錄失敗:', error);
       }
@@ -1196,7 +1328,6 @@
           snapshot.forEach(doc => {
             backupRecords.push({ id: doc.id, ...doc.data() });
           });
-          console.log('📦 備份紀錄已載入:', backupRecords.length, '筆');
           if (document.getElementById('backupOverlay').classList.contains('active')) {
             renderBackupTable();
           }
@@ -1347,6 +1478,7 @@
         if (data.type === 'force_logout' && data.username === currentAdminUsername) {
           if (data.forcedBy === currentAdminUsername && data.tabId === currentTabId) return;
           if (isAdmin) {
+            clearIdleTimer();
             isAdmin = false;
             sessionStorage.setItem('isAdmin', 'false');
             sessionStorage.removeItem('currentAdminUsername');
@@ -1515,13 +1647,28 @@
     }
 
     // ============================================================
-    // 5. 登入紀錄
+    // 5. 登入紀錄（避免 5 分鐘內重複寫入）
     // ============================================================
 
     async function recordLogin(user, isAdminLogin = false, adminUsername = null) {
       try {
+        const targetUserId = user ? user.uid : adminUsername;
+
+        const recentSnapshot = await db.collection('loginLogs')
+          .where('userId', '==', targetUserId)
+          .orderBy('loginTime', 'desc')
+          .limit(1)
+          .get();
+        if (!recentSnapshot.empty) {
+          const last = recentSnapshot.docs[0].data();
+          if (Date.now() - (last.loginTime || 0) < 5 * 60 * 1000) {
+            console.log('⏭️ 5 分鐘內已有登入紀錄，略過重複寫入:', targetUserId);
+            return;
+          }
+        }
+
         let logData = {
-          userId: user ? user.uid : adminUsername,
+          userId: targetUserId,
           userType: isAdminLogin ? 'admin' : 'google',
           displayName: '',
           email: '',
@@ -1650,14 +1797,9 @@
               showOnlineBadge = true;
               buttonText = '🔒 強制登出';
             } else if (role === 'moderator') {
-              if (targetRole === 'vice' || targetRole === 'editor') {
-                canForceLogoutTarget = true;
-                showOnlineBadge = true;
-                buttonText = '🔒 強制登出';
-              } else {
-                canForceLogoutTarget = false;
-                showOnlineBadge = false;
-              }
+              canForceLogoutTarget = true;
+              showOnlineBadge = true;
+              buttonText = '🔒 強制登出';
             } else {
               canForceLogoutTarget = false;
               showOnlineBadge = false;
@@ -1713,7 +1855,7 @@
         if (role === 'owner') {
           roleInfo = '👑 所有權：可查看所有管理員，可強制登出所有管理員';
         } else if (role === 'moderator') {
-          roleInfo = '📋 版主：可查看所有管理員，可強制登出副版主 + 小編';
+          roleInfo = '📋 版主：可查看所有管理員，可強制登出所有管理員（含所有權、版主、副版主、小編）';
         } else if (role === 'vice') {
           roleInfo = '📌 副版主：僅可查看自己，可強制登出自己（帳號被冒用時）';
         } else if (role === 'editor') {
@@ -1803,6 +1945,7 @@
 
         if (isAdmin && currentAdminUsername === username) {
           if (!isOtherTab || !isSameSession) {
+            clearIdleTimer();
             isAdmin = false;
             sessionStorage.setItem('isAdmin', 'false');
             sessionStorage.removeItem('currentAdminUsername');
@@ -1866,6 +2009,7 @@
           if (data.forcedBy === currentAdminUsername && data.tabId === currentTabId) return;
           const timeDiff = Date.now() - data.timestamp;
           if (timeDiff < 15000) {
+            clearIdleTimer();
             isAdmin = false;
             sessionStorage.setItem('isAdmin', 'false');
             sessionStorage.removeItem('currentAdminUsername');
@@ -1927,6 +2071,20 @@
           } catch (e) {}
         }
       });
+
+      let lastActivityReset = 0;
+      const activityHandler = () => {
+        const now = Date.now();
+        if (now - lastActivityReset > 30000) {
+          lastActivityReset = now;
+          if (isAdmin && currentAdminUsername && idleDeadline) {
+            resetIdleTimer();
+          }
+        }
+      };
+      ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'].forEach(evt => {
+        document.addEventListener(evt, activityHandler, { passive: true });
+      });
     }
 
     function startOnlineStatusListener() {
@@ -1949,22 +2107,14 @@
         const doc = await docRef.get();
         if (doc.exists) {
           const pwdMap = doc.data();
-          console.log('📥 從 Firestore 載入密碼:', Object.keys(pwdMap));
           let updatedCount = 0;
           DEFAULT_ADMINS.forEach(admin => {
             if (pwdMap[admin.username] && pwdMap[admin.username] !== admin.password) {
-              console.log(`🔄 更新密碼: ${admin.username} -> ${pwdMap[admin.username]}`);
               admin.password = pwdMap[admin.username];
               updatedCount++;
             }
           });
-          if (updatedCount > 0) {
-            console.log(`✅ 已更新 ${updatedCount} 個帳號的密碼`);
-          } else {
-            console.log('✅ 密碼已是最新，無需更新');
-          }
         } else {
-          console.log('📤 Firestore 中無密碼資料，上傳預設密碼...');
           await saveAdminsToFirestore();
         }
         ADMIN_ACCOUNTS = DEFAULT_ADMINS;
@@ -1986,7 +2136,6 @@
           pwdMap[admin.username] = admin.password;
         });
         await db.collection('config').doc('adminPasswords').set(pwdMap);
-        console.log('✅ 密碼已儲存到 Firestore，共', Object.keys(pwdMap).length, '個帳號');
         return true;
       } catch (error) {
         console.error('❌ 儲存密碼失敗:', error);
@@ -2004,7 +2153,6 @@
       admin.password = newPassword;
       const success = await saveAdminsToFirestore();
       if (success) {
-        console.log(`✅ 密碼已變更: ${username} -> ${newPassword}`);
         updateAllPasswordDisplays();
         if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
           renderPasswordList();
@@ -2024,17 +2172,12 @@
       }
       window.passwordListener = db.collection('config').doc('adminPasswords')
         .onSnapshot((doc) => {
-          if (!doc.exists || !isPasswordLoaded) {
-            console.log('⏳ 密碼文件不存在或尚未載入');
-            return;
-          }
+          if (!doc.exists || !isPasswordLoaded) return;
           const pwdMap = doc.data();
-          console.log('📡 收到 Firestore 密碼更新通知');
           let changed = false;
           let changedUsername = null;
           DEFAULT_ADMINS.forEach(admin => {
             if (pwdMap[admin.username] && pwdMap[admin.username] !== admin.password) {
-              console.log(`🔄 密碼已變更: ${admin.username} -> ${pwdMap[admin.username]}`);
               admin.password = pwdMap[admin.username];
               changed = true;
               changedUsername = admin.username;
@@ -2065,6 +2208,7 @@
 
     function forceLogoutAdmin(username) {
       if (isAdmin && currentAdminUsername === username) {
+        clearIdleTimer();
         isAdmin = false;
         sessionStorage.setItem('isAdmin', 'false');
         sessionStorage.removeItem('currentAdminUsername');
@@ -2205,7 +2349,6 @@
         }
         if (url) {
           urls.push(url);
-          console.log(`✅ 影片上傳成功: ${file.name} (${(file.size / 1024 / 1024).toFixed(1)}MB)`);
         } else {
           showToast(`⚠️ 影片「${file.name}」上傳失敗，請使用影片連結`, true);
         }
@@ -2653,7 +2796,7 @@
     }
 
     // ============================================================
-    // 18. 編輯回覆（含次數限制、編輯歷史）
+    // 18. 編輯回覆
     // ============================================================
 
     async function editReply(docId, replyId) {
@@ -2712,7 +2855,7 @@
     }
 
     // ============================================================
-    // 19. 收回回覆（不限時間）
+    // 19. 收回回覆
     // ============================================================
 
     async function deleteReply(docId, replyId) {
@@ -2790,7 +2933,7 @@
     }
 
     // ============================================================
-    // 21. 查看編輯歷史（當事人 + 所有權 + 版主，彈窗顯示，最新在上）
+    // 21. 查看編輯歷史
     // ============================================================
 
     function showEditHistory(docId, replyId) {
@@ -2930,7 +3073,6 @@
             }
           }
 
-          // ★ 圖片全部顯示（不限制前 4 張）
           let imagesHtml = '';
           if (item.imageUrls && item.imageUrls.length > 0) {
             imagesHtml = '<div class="complaint-images">';
@@ -3171,7 +3313,7 @@
     }
 
     // ============================================================
-    // 26. 回覆處理（含備份）
+    // 26. 回覆處理
     // ============================================================
 
     document.addEventListener('change', function(e) {
@@ -3700,7 +3842,7 @@
     });
 
     // ============================================================
-    // 32. 管理驗證資料 (版主與所有權可管理)
+    // 32. 管理驗證資料
     // ============================================================
 
     document.getElementById('manageVerifyDataBtn').addEventListener('click', async function() {
@@ -3767,6 +3909,27 @@
       if (!username) { showToast('請選擇管理員帳號', true); return; }
       if (!displayName) { showToast('請輸入姓名', true); return; }
       if (!birthday) { showToast('請選擇生日', true); return; }
+
+      const existingData = await loadVerifyData();
+      const existing = existingData.find(d => d.username === username);
+
+      if (existing) {
+        const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === username);
+        const displayLabel = adminInfo ? adminInfo.displayName : username;
+        const confirmMsg = `⚠️ 「${displayLabel}」已有驗證資料！\n\n` +
+          `原本資料：\n` +
+          `姓名：${existing.displayName}\n` +
+          `生日：${existing.birthday}\n\n` +
+          `新資料：\n` +
+          `姓名：${displayName}\n` +
+          `生日：${birthday}\n\n` +
+          `確定要取代「${displayLabel}」的驗證資料嗎？`;
+        if (!confirm(confirmMsg)) {
+          showToast('已取消，未變更驗證資料');
+          return;
+        }
+      }
+
       const result = await saveVerifyData(username, displayName, birthday);
       if (result.success) {
         showToast(`✅ 驗證資料已${result.action === 'update' ? '更新' : '新增'}`);
@@ -3868,6 +4031,7 @@
         isAdmin = false;
         sessionStorage.setItem('isAdmin', 'false');
         sessionStorage.removeItem('currentAdminUsername');
+        clearIdleTimer();
         updateUI(null);
         showToast('已登出');
         render();
@@ -3883,23 +4047,7 @@
 
     adminLoginBtnEl.addEventListener('click', function() {
       if (isAdmin === true) {
-        isAdmin = false;
-        sessionStorage.setItem('isAdmin', 'false');
-        sessionStorage.removeItem('currentAdminUsername');
-        this.textContent = '管理';
-        this.className = 'btn-admin-login';
-        const roleDisplay = document.getElementById('userRoleDisplay');
-        if (roleDisplay) {
-          if (currentUser) { roleDisplay.textContent = '一般使用者'; roleDisplay.className = 'user-role'; }
-          else { roleDisplay.textContent = ''; roleDisplay.className = 'user-role'; }
-        }
-        document.getElementById('changePasswordBtn').classList.remove('show');
-        document.getElementById('viewPasswordsBtn').classList.remove('show');
-        document.getElementById('viewLoginLogsBtn').classList.remove('show');
-        document.getElementById('viewBackupBtn').classList.remove('show');
-        document.getElementById('manageVerifyBtnContainer').style.display = 'none';
-        updateUI(currentUser);
-        showToast('已登出管理模式');
+        performAdminLogout(true);
         render();
       } else {
         adminOverlay.classList.add('active');
@@ -3953,6 +4101,8 @@
         startHeartbeat();
         startOnlineStatusListener();
         listenForcedLogout();
+        createIdleCountdownBar();
+        resetIdleTimer();
         showToast(`👋 ${fullDisplayName} 您好，歡迎使用投訴系統`);
         render();
       } else {
@@ -4105,7 +4255,7 @@
     });
 
     // ============================================================
-    // 39. 提交投訴（含備份）
+    // 39. 提交投訴
     // ============================================================
 
     document.getElementById('complaintForm').addEventListener('submit', async function(e) {
@@ -4179,7 +4329,7 @@
     });
 
     // ============================================================
-    // 40. 狀態變更（含備份）
+    // 40. 狀態變更
     // ============================================================
 
     document.getElementById('complaintList').addEventListener('change', async function(e) {
@@ -4212,13 +4362,12 @@
     });
 
     // ============================================================
-    // 41. 刪除投訴（先刪除成功才寫備份）
+    // 41. 刪除投訴
     // ============================================================
 
     async function deleteComplaint(docId) {
       try {
         await db.collection('complaints').doc(docId).delete();
-        console.log('✅ 投訴已刪除:', docId);
         return true;
       } catch (error) {
         console.error('❌ 刪除投訴失敗:', error);
@@ -4239,7 +4388,6 @@
         const batch = db.batch();
         snapshot.forEach(doc => { batch.delete(doc.ref); });
         await batch.commit();
-        console.log('✅ 已清空所有投訴，共', snapshot.size, '筆');
         return { success: true, deleted: deletedList };
       } catch (error) {
         console.error('❌ 清空投訴失敗:', error);
@@ -4282,7 +4430,7 @@
     document.getElementById('filterStatus').addEventListener('change', render);
 
     // ============================================================
-    // 43. 清空全部（先清空成功才寫備份）
+    // 43. 清空全部
     // ============================================================
 
     document.getElementById('clearAllBtn').addEventListener('click', async function() {
@@ -4313,18 +4461,23 @@
     // ============================================================
 
     auth.onAuthStateChanged((user) => {
-      if (user !== currentUser) currentUser = user;
+      const userChanged = (user !== currentUser);
+      currentUser = user;
+
       if (!user) {
         isAdmin = false;
         sessionStorage.setItem('isAdmin', 'false');
         sessionStorage.removeItem('currentAdminUsername');
+        clearIdleTimer();
+        hasRestoredAdminSession = false;
         if (forcedLogoutUnsubscribe) {
           forcedLogoutUnsubscribe();
           forcedLogoutUnsubscribe = null;
         }
       } else {
         const storedAdmin = sessionStorage.getItem('isAdmin');
-        if (storedAdmin === 'true') {
+        if (storedAdmin === 'true' && !hasRestoredAdminSession) {
+          hasRestoredAdminSession = true;
           isAdmin = true;
           const storedUsername = sessionStorage.getItem('currentAdminUsername');
           if (storedUsername) currentAdminUsername = storedUsername;
@@ -4348,11 +4501,32 @@
       listenTotalViews();
       await incrementTotalViews();
 
-      if (isAdmin && currentAdminUsername) {
+      if (isAdmin && currentAdminUsername && ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername)) {
+        const adminLoginBtn = document.getElementById('adminLoginBtn');
+        adminLoginBtn.textContent = '登出管理';
+        adminLoginBtn.className = 'btn-admin-login active';
+        const roleDisplay = document.getElementById('userRoleDisplay');
+        if (roleDisplay) { roleDisplay.textContent = '管理員'; roleDisplay.className = 'user-role admin-role'; }
+        const found = ADMIN_ACCOUNTS.find(a => a.username === currentAdminUsername);
+        document.getElementById('changePasswordBtn').classList.add('show');
+        const viewPwdBtn = document.getElementById('viewPasswordsBtn');
+        if (found.role === 'owner' || found.role === 'moderator' || found.role === 'vice') {
+          viewPwdBtn.classList.add('show');
+        }
+        document.getElementById('viewLoginLogsBtn').classList.add('show');
+        if (found.role === 'owner') {
+          document.getElementById('viewBackupBtn').classList.add('show');
+        }
+        const manageBtnContainer = document.getElementById('manageVerifyBtnContainer');
+        if (found.role === 'owner' || found.role === 'moderator') {
+          manageBtnContainer.style.display = 'flex';
+        }
         await recordAdminSession(currentAdminUsername);
         startHeartbeat();
         startOnlineStatusListener();
         listenForcedLogout();
+        createIdleCountdownBar();
+        resetIdleTimer();
       }
 
       console.log('✅ 靠北達德投訴系統已啟動');
@@ -4362,6 +4536,9 @@
       console.log('🗑️ 刪除 / 清空：先刪除成功才寫備份');
       console.log('🚫 驗證碼已移除');
       console.log('🖼️ 圖片：全部直接顯示');
+      console.log('🔒 版主可強制登出所有管理員（含所有權）');
+      console.log('⏰ 閒置 1 小時自動登出，最後 5 分鐘顯示倒數');
+      console.log('🔄 重新整理不重複寫入登入紀錄；5 分鐘內同帳號只寫一次');
     }
 
     init();
