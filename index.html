@@ -568,7 +568,7 @@
       <div class="subhead">
         <span><i class="fas fa-flag" style="color:#c52a2a; margin-right: 6px;"></i> 登入後即可投訴，管理員將即時處理</span>
         <div style="display:flex; gap:10px; flex-wrap:wrap;">
-          <span class="badge-count new-badge">
+          <span class="badge-count new-badge" id="newComplaintBadge">
             <i class="fas fa-bell"></i> 新投訴 <span id="newCount">0</span>
           </span>
           <span class="badge-count">
@@ -3799,6 +3799,7 @@
       const form = document.getElementById('complaintForm');
       const loginRequired = document.getElementById('loginRequiredMsg');
       const submitNotice = document.getElementById('submitNotice');
+      const newBadge = document.getElementById('newComplaintBadge');
 
       if (submitNotice) {
         submitNotice.innerHTML = `<i class="fas fa-shield-alt"></i> 您的投訴將安全儲存於雲端`;
@@ -3837,6 +3838,8 @@
           } else {
             manageBtnContainer.style.display = 'none';
           }
+          // 管理員顯示「新投訴」
+          if (newBadge) newBadge.style.display = 'inline-flex';
         } else {
           nameDisplay.textContent = `${displayName}`;
           welcomeLine.innerHTML = `<i class="fas fa-smile" style="color:#c52a2a;"></i> ${displayName} 您好，歡迎使用投訴系統`;
@@ -3848,6 +3851,8 @@
           loginLogsBtn.classList.remove('show');
           backupBtn.classList.remove('show');
           document.getElementById('manageVerifyBtnContainer').style.display = 'none';
+          // 一般使用者隱藏「新投訴」
+          if (newBadge) newBadge.style.display = 'none';
         }
         googleBtn.style.display = 'none';
         googleBtn2.style.display = 'none';
@@ -3873,6 +3878,8 @@
         viewPwdBtn.classList.remove('show');
         form.style.display = 'none';
         loginRequired.style.display = 'block';
+        // 未登入隱藏「新投訴」
+        if (newBadge) newBadge.style.display = 'none';
         if (isAdmin === true) {
           isAdmin = false;
           sessionStorage.setItem('isAdmin', 'false');
@@ -4777,6 +4784,7 @@
       console.log('🔄 重新整理不重複寫入登入紀錄；5 分鐘內同帳號只寫一次');
       console.log('🟢 頁尾總瀏覽次數左側新增閃爍綠色燈');
       console.log('👤 投訴者在線狀態燈：僅管理員可見（綠燈閃爍／灰色離線）');
+      console.log('🔔 「新投訴 X」僅管理員可見；一般使用者與未登入者只看「總投訴 X」');
     }
 
     init();
