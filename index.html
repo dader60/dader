@@ -409,6 +409,48 @@
     .edit-history-item .history-time .version-tag { background: #2a5b7a; color: white; padding: 1px 8px; border-radius: 10px; font-size: 0.6rem; margin-right: 6px; display: inline-block; }
     .edit-history-item .history-text { color: #2a405b; white-space: pre-wrap; word-break: break-word; }
 
+    /* 投訴者在線狀態燈 */
+    .complainant-status-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-left: 5px;
+      vertical-align: middle;
+      flex-shrink: 0;
+    }
+    .complainant-status-dot.online {
+      background: #22c55e;
+      box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+      animation: complainantPulse 1.6s infinite;
+    }
+    .complainant-status-dot.offline {
+      background: #9ca3af;
+      opacity: 1;
+      animation: none;
+      box-shadow: none;
+    }
+    @keyframes complainantPulse {
+      0% {
+        background: #22c55e;
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+        opacity: 1;
+      }
+      50% {
+        background: #4ade80;
+        box-shadow: 0 0 0 5px rgba(34, 197, 94, 0);
+        opacity: 0.7;
+      }
+      100% {
+        background: #22c55e;
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+        opacity: 1;
+      }
+    }
+    @media (max-width: 768px) {
+      .complainant-status-dot { width: 6px; height: 6px; margin-left: 4px; }
+    }
+
     .fixed-footer {
       position: fixed;
       bottom: 0;
@@ -434,7 +476,7 @@
     .fixed-footer .footer-views .views-number.updating { color: #ffd966; animation: viewsPulse 0.6s ease-in-out; }
     @keyframes viewsPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); } }
 
-    /* 閃爍綠色燈（📊 左邊） */
+    /* 頁尾閃爍綠色燈 */
     .fixed-footer .footer-views .live-dot {
       display: inline-block;
       width: 9px;
@@ -448,21 +490,9 @@
       flex-shrink: 0;
     }
     @keyframes livePulse {
-      0% {
-        background: #22c55e;
-        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
-        opacity: 1;
-      }
-      50% {
-        background: #4ade80;
-        box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
-        opacity: 0.6;
-      }
-      100% {
-        background: #22c55e;
-        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
-        opacity: 1;
-      }
+      0% { background: #22c55e; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7); opacity: 1; }
+      50% { background: #4ade80; box-shadow: 0 0 0 6px rgba(34, 197, 94, 0); opacity: 0.6; }
+      100% { background: #22c55e; box-shadow: 0 0 0 0 rgba(34, 197, 94, 0); opacity: 1; }
     }
 
     @media (max-width: 600px) {
@@ -1247,7 +1277,7 @@
       clearIdleTimer();
       if (isAdmin && currentAdminUsername) {
         try {
-          await db.collection('adminSessions').doc(currentAdminUsername).delete();
+          await db.collection('adminSessions').doc(currentAdminUsername + '_' + currentSessionId).delete();
         } catch (e) {}
       }
       isAdmin = false;
@@ -1526,7 +1556,11 @@
             document.getElementById('viewBackupBtn').classList.remove('show');
             updateUI(currentUser);
             render();
-            db.collection('adminSessions').doc(currentAdminUsername).delete().catch(() => {});
+            db.collection('adminSessions').where('username', '==', currentAdminUsername).get().then(snap => {
+              const batch = db.batch();
+              snap.forEach(d => batch.delete(d.ref));
+              batch.commit().catch(() => {});
+            }).catch(() => {});
             if (data.forcedBy === currentAdminUsername) {
               showToast(`🔒 您已在同瀏覽器的其他分頁強制登出自己`, true);
             } else {
@@ -1616,27 +1650,37 @@
 
     async function recordAdminSession(username) {
       try {
-        await db.collection('adminSessions').doc(username).set({
+        const now = Date.now();
+        const docId = username + '_' + currentSessionId;
+        await db.collection('adminSessions').doc(docId).set({
           username: username,
           sessionId: currentSessionId,
           tabId: currentTabId,
-          lastActive: Date.now(),
+          lastActive: now,
           isOnline: true,
-          loginTime: Date.now(),
+          loginTime: now,
           displayName: getAdminDisplayName(username),
           role: getAdminRole(username)
-        });
+        }, { merge: true });
       } catch (error) { console.error('記錄 Session 失敗:', error); }
     }
 
     async function updateAdminHeartbeat(username) {
       try {
-        await db.collection('adminSessions').doc(username).update({
-          lastActive: Date.now(),
+        const now = Date.now();
+        const docId = username + '_' + currentSessionId;
+        await db.collection('adminSessions').doc(docId).set({
+          username: username,
+          sessionId: currentSessionId,
+          tabId: currentTabId,
+          lastActive: now,
           isOnline: true,
-          tabId: currentTabId
-        });
-      } catch (error) { try { await recordAdminSession(username); } catch (e) {} }
+          displayName: getAdminDisplayName(username),
+          role: getAdminRole(username)
+        }, { merge: true });
+      } catch (error) {
+        try { await recordAdminSession(username); } catch (e) {}
+      }
     }
 
     async function getAdminOnlineStatus() {
@@ -1644,18 +1688,35 @@
         const snapshot = await db.collection('adminSessions').get();
         const status = {};
         const now = Date.now();
+        const STALE_MS = 60 * 1000;
+        const staleDocs = [];
+
         snapshot.forEach(doc => {
           const data = doc.data();
-          const isOnline = (now - (data.lastActive || 0)) < 30000;
-          status[doc.id] = {
-            isOnline: isOnline,
-            sessionId: data.sessionId,
-            tabId: data.tabId || '',
-            displayName: data.displayName,
-            role: data.role,
-            lastActive: data.lastActive
-          };
+          const uname = data.username || doc.id;
+          const isOnline = (now - (data.lastActive || 0)) < STALE_MS;
+
+          if (!status[uname] || (data.lastActive || 0) > (status[uname].lastActive || 0)) {
+            status[uname] = {
+              isOnline: isOnline,
+              sessionId: data.sessionId,
+              tabId: data.tabId || '',
+              displayName: data.displayName,
+              role: data.role,
+              lastActive: data.lastActive,
+              loginTime: data.loginTime
+            };
+          }
+
+          if (!isOnline) staleDocs.push(doc.ref);
         });
+
+        if (staleDocs.length > 0) {
+          const batch = db.batch();
+          staleDocs.forEach(ref => batch.delete(ref));
+          batch.commit().catch(() => {});
+        }
+
         return status;
       } catch (error) { console.error('獲取在線狀態失敗:', error); return {}; }
     }
@@ -1664,20 +1725,122 @@
       return db.collection('adminSessions').onSnapshot((snapshot) => {
         const status = {};
         const now = Date.now();
+        const STALE_MS = 60 * 1000;
         snapshot.forEach(doc => {
           const data = doc.data();
-          const isOnline = (now - (data.lastActive || 0)) < 30000;
-          status[doc.id] = {
-            isOnline: isOnline,
-            sessionId: data.sessionId,
-            tabId: data.tabId || '',
-            displayName: data.displayName,
-            role: data.role,
-            lastActive: data.lastActive
-          };
+          const uname = data.username || doc.id;
+          const isOnline = (now - (data.lastActive || 0)) < STALE_MS;
+
+          if (!status[uname] || (data.lastActive || 0) > (status[uname].lastActive || 0)) {
+            status[uname] = {
+              isOnline: isOnline,
+              sessionId: data.sessionId,
+              tabId: data.tabId || '',
+              displayName: data.displayName,
+              role: data.role,
+              lastActive: data.lastActive,
+              loginTime: data.loginTime
+            };
+          }
         });
         callback(status);
       }, (error) => { console.error('監聽在線狀態失敗:', error); });
+    }
+
+    // ============================================================
+    // 投訴者在線狀態
+    // ============================================================
+    let complainantSessionsCache = {};
+    let complainantSessionsListener = null;
+
+    async function recordComplainantSession(user) {
+      if (!user || !user.uid) return;
+      try {
+        const now = Date.now();
+        await db.collection('complainantSessions').doc(user.uid).set({
+          userId: user.uid,
+          displayName: user.displayName || user.email || '使用者',
+          email: user.email || '',
+          lastActive: now,
+          isOnline: true,
+          loginTime: now
+        }, { merge: true });
+      } catch (error) { console.error('記錄投訴者 Session 失敗:', error); }
+    }
+
+    async function updateComplainantHeartbeat(user) {
+      if (!user || !user.uid) return;
+      try {
+        const now = Date.now();
+        await db.collection('complainantSessions').doc(user.uid).set({
+          userId: user.uid,
+          displayName: user.displayName || user.email || '使用者',
+          email: user.email || '',
+          lastActive: now,
+          isOnline: true
+        }, { merge: true });
+      } catch (error) { console.error('更新投訴者心跳失敗:', error); }
+    }
+
+    async function clearComplainantSession(user) {
+      if (!user || !user.uid) return;
+      try {
+        await db.collection('complainantSessions').doc(user.uid).delete();
+      } catch (error) { console.error('清除投訴者 Session 失敗:', error); }
+    }
+
+    function listenComplainantSessions() {
+      if (complainantSessionsListener) {
+        complainantSessionsListener();
+        complainantSessionsListener = null;
+      }
+      complainantSessionsListener = db.collection('complainantSessions')
+        .onSnapshot((snapshot) => {
+          const status = {};
+          const now = Date.now();
+          const STALE_MS = 60 * 1000;
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const isOnline = (now - (data.lastActive || 0)) < STALE_MS;
+            status[doc.id] = {
+              isOnline: isOnline,
+              displayName: data.displayName,
+              lastActive: data.lastActive
+            };
+          });
+          complainantSessionsCache = status;
+          if (typeof render === 'function') render();
+        }, (error) => { console.error('監聽投訴者在線狀態失敗:', error); });
+    }
+
+    function isComplainantOnline(userId) {
+      if (!userId) return false;
+      const s = complainantSessionsCache[userId];
+      if (!s) return false;
+      return s.isOnline === true;
+    }
+
+    function startComplainantHeartbeat() {
+      setInterval(() => {
+        if (currentUser) {
+          updateComplainantHeartbeat(currentUser);
+        }
+      }, 10000);
+      window.addEventListener('beforeunload', () => {
+        if (currentUser) {
+          db.collection('complainantSessions').doc(currentUser.uid).delete().catch(() => {});
+        }
+      });
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible' && currentUser) {
+          updateComplainantHeartbeat(currentUser);
+        } else if (document.visibilityState === 'hidden' && currentUser) {
+          db.collection('complainantSessions').doc(currentUser.uid).update({
+            isOnline: false,
+            lastActive: Date.now()
+          }).catch(() => {});
+        }
+      });
     }
 
     // ============================================================
@@ -1696,7 +1859,6 @@
         if (!recentSnapshot.empty) {
           const last = recentSnapshot.docs[0].data();
           if (Date.now() - (last.loginTime || 0) < 5 * 60 * 1000) {
-            console.log('⏭️ 5 分鐘內已有登入紀錄，略過重複寫入:', targetUserId);
             return;
           }
         }
@@ -1764,6 +1926,26 @@
             }
           }
         });
+
+        if (role === 'owner' || role === 'moderator') {
+          Object.keys(onlineStatus).forEach(uname => {
+            if (!loginData.find(d => d.userId === uname)) {
+              const info = ADMIN_ACCOUNTS.find(a => a.username === uname);
+              if (info) {
+                loginData.push({
+                  id: 'session_' + uname,
+                  userId: uname,
+                  userType: 'admin',
+                  displayName: info.displayName,
+                  email: uname,
+                  loginTime: onlineStatus[uname].loginTime || Date.now(),
+                  date: getToday(),
+                  time: getNowTime()
+                });
+              }
+            }
+          });
+        }
 
         const seen = new Set();
         loginData = loginData.filter(data => {
@@ -1957,7 +2139,12 @@
         const batch = db.batch();
         snapshot.forEach(doc => { batch.delete(doc.ref); });
         await batch.commit();
-        await db.collection('adminSessions').doc(username).delete();
+
+        const sessionsSnap = await db.collection('adminSessions').where('username', '==', username).get();
+        const sessBatch = db.batch();
+        sessionsSnap.forEach(d => sessBatch.delete(d.ref));
+        await sessBatch.commit();
+
         await db.collection('forceLogoutSignals').doc(username).set({
           timestamp: Date.now(),
           forcedBy: currentAdminUsername,
@@ -2055,7 +2242,11 @@
             document.getElementById('viewPasswordsBtn').classList.remove('show');
             document.getElementById('manageVerifyBtnContainer').style.display = 'none';
             document.getElementById('viewBackupBtn').classList.remove('show');
-            db.collection('adminSessions').doc(currentAdminUsername).delete().catch(() => {});
+            db.collection('adminSessions').where('username', '==', currentAdminUsername).get().then(snap => {
+              const batch = db.batch();
+              snap.forEach(d => batch.delete(d.ref));
+              batch.commit().catch(() => {});
+            }).catch(() => {});
             updateUI(currentUser);
             render();
             document.getElementById('loginLogsOverlay').classList.remove('active');
@@ -2082,14 +2273,11 @@
         if (isAdmin && currentAdminUsername) {
           await updateAdminHeartbeat(currentAdminUsername);
         }
-      }, 15000);
+      }, 10000);
       window.addEventListener('beforeunload', async () => {
         if (isAdmin && currentAdminUsername) {
           try {
-            await db.collection('adminSessions').doc(currentAdminUsername).update({
-              isOnline: false,
-              lastActive: Date.now()
-            });
+            await db.collection('adminSessions').doc(currentAdminUsername + '_' + currentSessionId).delete();
           } catch (e) {}
         }
       });
@@ -2098,10 +2286,7 @@
           await updateAdminHeartbeat(currentAdminUsername);
         } else if (document.visibilityState === 'hidden' && isAdmin && currentAdminUsername) {
           try {
-            await db.collection('adminSessions').doc(currentAdminUsername).update({
-              isOnline: false,
-              lastActive: Date.now()
-            });
+            await db.collection('adminSessions').doc(currentAdminUsername + '_' + currentSessionId).delete();
           } catch (e) {}
         }
       });
@@ -2259,7 +2444,11 @@
         document.getElementById('viewLoginLogsBtn').classList.remove('show');
         document.getElementById('manageVerifyBtnContainer').style.display = 'none';
         document.getElementById('viewBackupBtn').classList.remove('show');
-        db.collection('adminSessions').doc(username).delete().catch(() => {});
+        db.collection('adminSessions').where('username', '==', username).get().then(snap => {
+          const batch = db.batch();
+          snap.forEach(d => batch.delete(d.ref));
+          batch.commit().catch(() => {});
+        }).catch(() => {});
         updateUI(currentUser);
         render();
         showToast(`🔒 您已被強制登出（密碼已變更），請重新登入`, true);
@@ -3310,7 +3499,10 @@
                   ${isAdmin ? '<span class="admin-badge">管理</span>' : ''}
                 </div>
                 <div class="complaint-meta">
-                  <span><i class="fas fa-user"></i> ${escapeHtml(item.userName)}</span>
+                  <span>
+                    <i class="fas fa-user"></i> ${escapeHtml(item.userName)}
+                    <span class="complainant-status-dot ${isComplainantOnline(item.userId) ? 'online' : 'offline'}" title="${isComplainantOnline(item.userId) ? '投訴者在線' : '投訴者離線'}"></span>
+                  </span>
                   ${item.igName ? `<span><i class="fab fa-instagram"></i> ${escapeHtml(item.igName)}</span>` : ''}
                   ${isAdmin && item.userEmail ? `<span><i class="fas fa-envelope" style="color:#c52a2a;"></i> ${escapeHtml(item.userEmail)}</span>` : ''}
                   <span><i class="fas fa-tag"></i> ${escapeHtml(item.category)}</span>
@@ -3994,12 +4186,25 @@
     // 33. 登入紀錄按鈕
     // ============================================================
 
-    document.getElementById('viewLoginLogsBtn').addEventListener('click', function() {
+    document.getElementById('viewLoginLogsBtn').addEventListener('click', async function() {
       document.getElementById('loginLogsOverlay').classList.add('active');
-      loadLoginLogs();
+      await loadLoginLogs();
+      if (window._loginLogsRefreshTimer) clearInterval(window._loginLogsRefreshTimer);
+      window._loginLogsRefreshTimer = setInterval(() => {
+        if (document.getElementById('loginLogsOverlay').classList.contains('active')) {
+          loadLoginLogs();
+        } else {
+          clearInterval(window._loginLogsRefreshTimer);
+          window._loginLogsRefreshTimer = null;
+        }
+      }, 5000);
     });
     document.getElementById('loginLogsCloseBtn').addEventListener('click', function() {
       document.getElementById('loginLogsOverlay').classList.remove('active');
+      if (window._loginLogsRefreshTimer) {
+        clearInterval(window._loginLogsRefreshTimer);
+        window._loginLogsRefreshTimer = null;
+      }
     });
     document.getElementById('refreshLogsBtn').addEventListener('click', function() {
       loadLoginLogs();
@@ -4049,6 +4254,7 @@
         const displayName = currentUser.displayName || currentUser.email || '使用者';
         showToast(`👋 ${displayName} 您好，歡迎使用投訴系統`);
         await recordLogin(currentUser, false);
+        await recordComplainantSession(currentUser);
         render();
       } catch (error) {
         console.error('Google 登入失敗:', error);
@@ -4060,6 +4266,9 @@
 
     document.getElementById('logoutBtn').addEventListener('click', async function() {
       try {
+        if (currentUser) {
+          await clearComplainantSession(currentUser);
+        }
         await auth.signOut();
         currentUser = null;
         isAdmin = false;
@@ -4494,7 +4703,7 @@
     // 44. Firebase Auth 監聽
     // ============================================================
 
-    auth.onAuthStateChanged((user) => {
+    auth.onAuthStateChanged(async (user) => {
       const userChanged = (user !== currentUser);
       currentUser = user;
 
@@ -4517,6 +4726,9 @@
           if (storedUsername) currentAdminUsername = storedUsername;
           listenForcedLogout();
         }
+        if (userChanged) {
+          await recordComplainantSession(user);
+        }
       }
       updateUI(user);
       setTimeout(render, 100);
@@ -4531,6 +4743,8 @@
       listenAdminPasswords();
       listenComplaints();
       listenBackupRecords();
+      listenComplainantSessions();
+      startComplainantHeartbeat();
 
       listenTotalViews();
       await incrementTotalViews();
@@ -4574,6 +4788,7 @@
       console.log('⏰ 閒置 1 小時自動登出，最後 5 分鐘顯示倒數');
       console.log('🔄 重新整理不重複寫入登入紀錄；5 分鐘內同帳號只寫一次');
       console.log('🟢 頁尾總瀏覽次數左側新增閃爍綠色燈');
+      console.log('👤 投訴者名稱旁顯示在線狀態燈（綠燈閃爍 / 灰色離線）');
     }
 
     init();
