@@ -2355,6 +2355,32 @@
       }
     }
 
+    // 批次更新多個帳號密碼（一次寫入，避免中間狀態）
+    async function batchUpdatePasswords(passwordMap) {
+      try {
+        const pwdMap = {};
+        DEFAULT_ADMINS.forEach(admin => {
+          pwdMap[admin.username] = passwordMap[admin.username] !== undefined
+            ? passwordMap[admin.username]
+            : admin.password;
+        });
+        await db.collection('config').doc('adminPasswords').set(pwdMap);
+        DEFAULT_ADMINS.forEach(admin => {
+          if (passwordMap[admin.username] !== undefined) {
+            admin.password = passwordMap[admin.username];
+          }
+        });
+        updateAllPasswordDisplays();
+        if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
+          renderPasswordList();
+        }
+        return true;
+      } catch (error) {
+        console.error('❌ 批次更新密碼失敗:', error);
+        return false;
+      }
+    }
+
     async function updateAdminPasswordInFirestore(username, newPassword) {
       const admin = DEFAULT_ADMINS.find(a => a.username === username);
       if (!admin) { console.error('❌ 找不到帳號:', username); return false; }
@@ -2400,11 +2426,10 @@
             if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
               renderPasswordList();
             }
+            // 只有當事人才提示 + 強制登出，其他管理員不顯示任何通知
             if (isAdmin && currentAdminUsername === changedUsername) {
-              showToast(`🔒 您的密碼已在其他瀏覽器變更，請重新登入`, true);
+              showToast(`🔒 您的密碼已被變更，請重新登入`, true);
               forceLogoutAdmin(changedUsername);
-            } else {
-              showToast(`📢 管理員「${changedUsername}」的密碼已在其他瀏覽器變更`, false);
             }
           }
         }, (error) => { console.error('❌ 監聽密碼變更失敗:', error); });
@@ -4179,23 +4204,25 @@
 
         const oldPwd = getAdminPassword(oldUsername) || getDefaultPassword(oldUsername);
 
+        // 批次一次寫入兩邊密碼
+        const passwordMap = {};
+        passwordMap[username] = oldPwd;
+        passwordMap[oldUsername] = getDefaultPassword(oldUsername);
+        const pwdOk = await batchUpdatePasswords(passwordMap);
+
         await deleteVerifyData(oldUsername);
         await deleteVerifyData(username);
         await saveVerifyData(username, displayName, birthday);
-
-        if (oldPwd && newInfo) {
-          newInfo.password = oldPwd;
-          await saveAdminsToFirestore();
-          updateAllPasswordDisplays();
-        }
-
-        await resetAdminPasswordToDefault(oldUsername);
 
         if (isAdmin && currentAdminUsername === oldUsername) {
           forceLogoutAdmin(oldUsername);
         }
 
-        showToast(`✅ 已將「${oldLabel}」驗證資料改為「${newLabel}」，密碼同步完成`);
+        if (pwdOk) {
+          showToast(`✅ 已將「${oldLabel}」驗證資料改為「${newLabel}」，密碼已即時同步`);
+        } else {
+          showToast(`⚠️ 驗證資料已轉移，但密碼同步失敗，請手動確認`, true);
+        }
         pendingOldUsername = null;
         await refreshVerifyDataList();
         return;
@@ -4238,14 +4265,17 @@
       const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === username);
       const displayLabel = adminInfo ? adminInfo.displayName : username;
       const confirmMsg = `⚠️ 確定要刪除「${displayLabel}」的驗證資料嗎？\n\n` +
-        `刪除後，該管理員的密碼將還原為預設密碼！\n\n` +
+        `刪除後，該管理員的密碼將立即還原為預設密碼！\n\n` +
         `（${username}）`;
       if (!confirm(confirmMsg)) return;
       const result = await deleteVerifyData(username);
       if (result.success) {
-        const resetOk = await resetAdminPasswordToDefault(username);
-        if (resetOk) {
-          showToast(`✅ 已刪除「${displayLabel}」驗證資料，密碼已還原為預設`);
+        const defaultPwd = getDefaultPassword(username);
+        const passwordMap = {};
+        passwordMap[username] = defaultPwd;
+        const pwdOk = await batchUpdatePasswords(passwordMap);
+        if (pwdOk) {
+          showToast(`✅ 已刪除「${displayLabel}」驗證資料，密碼已即時還原為預設`);
         } else {
           showToast(`✅ 已刪除「${displayLabel}」驗證資料（密碼還原失敗，請手動確認）`, true);
         }
@@ -4868,8 +4898,9 @@
       console.log('🟢 頁尾總瀏覽次數左側新增閃爍綠色燈');
       console.log('👤 投訴者在線狀態燈：僅管理員可見（綠燈閃爍／灰色離線）');
       console.log('🔔 「新投訴 X」僅管理員可見；一般使用者與未登入者只看「總投訴 X」');
-      console.log('🔑 刪除驗證資料 → 該帳號密碼還原為預設');
-      console.log('🔄 編輯驗證資料時改帳號 → 密碼即時連動（來源密碼帶到目標，來源還原預設）');
+      console.log('🔑 刪除驗證資料 → 該帳號密碼立即還原為預設');
+      console.log('🔄 編輯驗證資料改帳號 → 密碼立即連動（批次一次寫入）');
+      console.log('🔕 只有當事人會被通知並登出；其他管理員不會看到任何提示');
     }
 
     init();
