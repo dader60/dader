@@ -1106,6 +1106,25 @@
       publicKey: "KU2Ya4rXsyHXopGAM"
     };
 
+    // ============================================================
+    // 原始預設密碼（永遠不變，不會被密碼變更覆蓋）
+    // ============================================================
+    const ORIGINAL_DEFAULT_PASSWORDS = {
+      dader60: "dader6020230527",
+      dader00: "dader6000941010@",
+      dader001: "dader6000941010@",
+      dader01: "dader6000941010@",
+      dader02: "dader6000941010@",
+      dader03: "dader6000941010@",
+      dader04: "dader6000941010@",
+      dader05: "dader600909575253@",
+      dader06: "dader600909575253@",
+      dader07: "dader600909575253@",
+      dader08: "dader600909575253@",
+      dader09: "dader600909575253@",
+      dader10: "dader600909575253@"
+    };
+
     const DEFAULT_ADMINS = [
       { username: "dader60", password: "dader6020230527", role: "owner", roleName: "所有權", displayName: "所有權" },
       { username: "dader00", password: "dader6000941010@", role: "moderator", roleName: "版主", displayName: "版主" },
@@ -1596,9 +1615,10 @@
     function getAdminRole(username) { const admin = ADMIN_ACCOUNTS.find(a => a.username === username); return admin ? admin.role : null; }
     function getAdminRoleName(username) { const admin = ADMIN_ACCOUNTS.find(a => a.username === username); return admin ? admin.roleName : '管理員'; }
     function getAdminPassword(username) { const admin = ADMIN_ACCOUNTS.find(a => a.username === username); return admin ? admin.password : null; }
+
+    // ⚠️ 從 ORIGINAL_DEFAULT_PASSWORDS 回傳，永遠是原始預設密碼
     function getDefaultPassword(username) {
-      const def = DEFAULT_ADMINS.find(a => a.username === username);
-      return def ? def.password : null;
+      return ORIGINAL_DEFAULT_PASSWORDS[username] || null;
     }
 
     function getEditBadge(reply, isAdminView, isAuthor) {
@@ -2373,14 +2393,16 @@
       try {
         const pwdMap = {};
         DEFAULT_ADMINS.forEach(admin => {
-          pwdMap[admin.username] = passwordMap[admin.username] !== undefined
-            ? passwordMap[admin.username]
+          const newPwd = passwordMap[admin.username];
+          pwdMap[admin.username] = (newPwd !== undefined && newPwd !== null)
+            ? newPwd
             : admin.password;
         });
         await db.collection('config').doc('adminPasswords').set(pwdMap);
         DEFAULT_ADMINS.forEach(admin => {
-          if (passwordMap[admin.username] !== undefined) {
-            admin.password = passwordMap[admin.username];
+          const newPwd = passwordMap[admin.username];
+          if (newPwd !== undefined && newPwd !== null) {
+            admin.password = newPwd;
           }
         });
         updateAllPasswordDisplays();
@@ -4216,12 +4238,22 @@
           return;
         }
 
-        const oldPwd = getAdminPassword(oldUsername) || getDefaultPassword(oldUsername);
+        const oldPwd = getAdminPassword(oldUsername);
+        const defaultPwd = getDefaultPassword(oldUsername);
+
+        if (!oldPwd) {
+          showToast(`❌ 找不到「${oldLabel}」目前的密碼，無法轉移`, true);
+          return;
+        }
+        if (!defaultPwd) {
+          showToast(`❌ 找不到「${oldLabel}」的預設密碼，無法還原`, true);
+          return;
+        }
 
         // 批次一次寫入兩邊密碼
         const passwordMap = {};
         passwordMap[username] = oldPwd;
-        passwordMap[oldUsername] = getDefaultPassword(oldUsername);
+        passwordMap[oldUsername] = defaultPwd;
         const pwdOk = await batchUpdatePasswords(passwordMap);
 
         await deleteVerifyData(oldUsername);
@@ -4233,7 +4265,7 @@
         }
 
         if (pwdOk) {
-          showToast(`✅ 已將「${oldLabel}」驗證資料改為「${newLabel}」，密碼已即時同步`);
+          showToast(`✅ 已將「${oldLabel}」驗證資料改為「${newLabel}」，密碼已即時同步（「${oldLabel}」已還原為預設密碼）`);
         } else {
           showToast(`⚠️ 驗證資料已轉移，但密碼同步失敗，請手動確認`, true);
         }
@@ -4285,6 +4317,10 @@
       const result = await deleteVerifyData(username);
       if (result.success) {
         const defaultPwd = getDefaultPassword(username);
+        if (!defaultPwd) {
+          showToast(`❌ 找不到「${displayLabel}」的預設密碼，無法還原`, true);
+          return;
+        }
         const passwordMap = {};
         passwordMap[username] = defaultPwd;
         const pwdOk = await batchUpdatePasswords(passwordMap);
@@ -4917,6 +4953,7 @@
       console.log('🔕 只有當事人會被通知並登出；其他管理員不會看到任何提示');
       console.log('📋 登入紀錄：只靠自己刷新；時間與帳號統一用 username 對應');
       console.log('👁️ 查看密碼視窗停留時，密碼即時更新（任何來源變更都會立即重新渲染）');
+      console.log('🔐 預設密碼改從 ORIGINAL_DEFAULT_PASSWORDS 讀取，永遠不會被變更影響');
     }
 
     init();
