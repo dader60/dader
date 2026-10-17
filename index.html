@@ -1557,11 +1557,8 @@
             }
             document.getElementById('loginLogsOverlay').classList.remove('active');
           }
-        } else if (data.type === 'refresh_online_status') {
-          if (document.getElementById('loginLogsOverlay').classList.contains('active')) {
-            loadLoginLogs();
-          }
         }
+        // 注意：已移除 refresh_online_status，登入紀錄只靠自己刷新
       };
     }
 
@@ -1574,6 +1571,15 @@
     function getNowTime() { const d = new Date(); return String(d.getHours()).padStart(2,'0') + ':' + String(d.getMinutes()).padStart(2,'0') + ':' + String(d.getSeconds()).padStart(2,'0'); }
     function getInitials(name) { if (!name) return '👤'; const parts = name.trim().split(' '); if (parts.length >= 2) return parts[0][0] + parts[1][0]; return name.substring(0,2).toUpperCase(); }
     function formatDateTimeWithSeconds(date, time) { if (!date) return ''; if (time && time.split(':').length === 2) { time = time + ':00'; } return `${date} ${time || '00:00:00'}`; }
+
+    function formatTimestamp(ts) {
+      if (!ts) return { date: '', time: '' };
+      const d = new Date(ts);
+      return {
+        date: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'),
+        time: String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0')
+      };
+    }
 
     function showToast(msg, isError = false) {
       const toast = document.getElementById('toast');
@@ -1645,16 +1651,21 @@
       try {
         const now = Date.now();
         const docId = username + '_' + currentSessionId;
-        await db.collection('adminSessions').doc(docId).set({
+        const docRef = db.collection('adminSessions').doc(docId);
+        const doc = await docRef.get();
+        const data = {
           username: username,
           sessionId: currentSessionId,
           tabId: currentTabId,
           lastActive: now,
           isOnline: true,
-          loginTime: now,
           displayName: getAdminDisplayName(username),
           role: getAdminRole(username)
-        }, { merge: true });
+        };
+        if (!doc.exists || !doc.data().loginTime) {
+          data.loginTime = now;
+        }
+        await docRef.set(data, { merge: true });
       } catch (error) { console.error('記錄 Session 失敗:', error); }
     }
 
@@ -1686,7 +1697,8 @@
 
         snapshot.forEach(doc => {
           const data = doc.data();
-          const uname = data.username || doc.id;
+          const uname = data.username;
+          if (!uname) return;
           const isOnline = (now - (data.lastActive || 0)) < STALE_MS;
 
           if (!status[uname] || (data.lastActive || 0) > (status[uname].lastActive || 0)) {
@@ -1721,7 +1733,8 @@
         const STALE_MS = 60 * 1000;
         snapshot.forEach(doc => {
           const data = doc.data();
-          const uname = data.username || doc.id;
+          const uname = data.username;
+          if (!uname) return;
           const isOnline = (now - (data.lastActive || 0)) < STALE_MS;
 
           if (!status[uname] || (data.lastActive || 0) > (status[uname].lastActive || 0)) {
@@ -1925,15 +1938,18 @@
             if (!loginData.find(d => d.userId === uname)) {
               const info = ADMIN_ACCOUNTS.find(a => a.username === uname);
               if (info) {
+                const sessionData = onlineStatus[uname];
+                const loginTime = sessionData.loginTime || Date.now();
+                const formatted = formatTimestamp(loginTime);
                 loginData.push({
                   id: 'session_' + uname,
                   userId: uname,
                   userType: 'admin',
                   displayName: info.displayName,
                   email: uname,
-                  loginTime: onlineStatus[uname].loginTime || Date.now(),
-                  date: getToday(),
-                  time: getNowTime()
+                  loginTime: loginTime,
+                  date: formatted.date,
+                  time: formatted.time
                 });
               }
             }
@@ -2190,9 +2206,6 @@
         }
 
         delete onlineStatusCache[username];
-        if (broadcastChannel) {
-          broadcastChannel.postMessage({ type: 'refresh_online_status', timestamp: Date.now() });
-        }
         setTimeout(() => loadLoginLogs(), 500);
 
       } catch (error) {
@@ -3988,7 +4001,7 @@
       if (!canChangePassword(currentAdminUsername, username)) { showToast('您沒有權限變更此帳號的密碼', true); return; }
       const newPwd = prompt(`請輸入「${username}」的新密碼（至少6個字元）：`);
       if (newPwd === null) return;
-      if (newPwd.length < 6) { showToast('密碼至少需要 6 個字元', true); return; }
+      if (newPwd.length < 6) { showToast('密碼未達 6 個字元，請至少 6 個字元', true); return; }
       if (newPwd === currentPwd) { showToast('新密碼與舊密碼相同', true); return; }
       const success = await updateAdminPasswordInFirestore(username, newPwd);
       if (success) { currentPwdEl.textContent = newPwd; showToast(`✅ 「${username}」密碼已變更為：${newPwd}（所有瀏覽器同步）`); }
@@ -4080,7 +4093,7 @@
       const newPwd = document.getElementById('verifyNewPassword').value.trim();
       const confirmPwd = document.getElementById('verifyConfirmPassword').value.trim();
       if (!newPwd || !confirmPwd) { showToast('請填寫新密碼和確認密碼', true); return; }
-      if (newPwd.length < 6) { showToast('密碼至少需要 6 個字元', true); return; }
+      if (newPwd.length < 6) { showToast('密碼未達 6 個字元，請至少 6 個字元', true); return; }
       if (newPwd !== confirmPwd) { showToast('新密碼與確認密碼不符', true); return; }
       const success = await updateAdminPasswordInFirestore(verifiedUser.username, newPwd);
       if (success) {
@@ -4513,7 +4526,7 @@
         return;
       }
       if (newPwd.length < 6) {
-        cpErrorMsg.textContent = '❌ 新密碼至少需要 6 個字元';
+        cpErrorMsg.textContent = '❌ 密碼未達 6 個字元，請至少 6 個字元';
         cpErrorMsg.classList.add('show');
         cpNew.value = '';
         cpConfirm.value = '';
@@ -4901,6 +4914,7 @@
       console.log('🔑 刪除驗證資料 → 該帳號密碼立即還原為預設');
       console.log('🔄 編輯驗證資料改帳號 → 密碼立即連動（批次一次寫入）');
       console.log('🔕 只有當事人會被通知並登出；其他管理員不會看到任何提示');
+      console.log('📋 登入紀錄：只靠自己刷新；時間與帳號統一用 username 對應');
     }
 
     init();
