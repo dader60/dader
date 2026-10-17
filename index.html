@@ -821,7 +821,7 @@
       <div class="error-msg" id="cpErrorMsg">❌ 錯誤訊息</div>
       <div class="success-msg" id="cpSuccessMsg">✅ 成功訊息</div>
       <input type="password" id="cpCurrentPassword" placeholder="請輸入目前密碼" />
-      <input type="password" id="cpNewPassword" placeholder="請輸入新密碼（至少6個字元）" />
+      <input type="password" id="cpNewPassword" placeholder="請輸入新密碼（至少6個字元，只能數字、英文、特殊符號）" />
       <input type="password" id="cpConfirmPassword" placeholder="請再次輸入新密碼" />
       <button class="btn-primary" id="cpConfirmBtn"><i class="fas fa-save"></i> 確認變更</button>
       <button class="btn-secondary" id="cpCancelBtn" style="margin-top:0.8rem; width:100%; justify-content:center;">取消</button>
@@ -877,7 +877,7 @@
       <div id="verifyChangePwdArea" style="display:none; margin-top:0.5rem; border-top:1px solid #eef3f9; padding-top:0.8rem;">
         <div class="form-row-inline">
           <label for="verifyNewPassword"><i class="fas fa-key"></i> 新密碼 <span class="required">*</span></label>
-          <input type="password" id="verifyNewPassword" placeholder="請輸入新密碼（至少6個字元）" />
+          <input type="password" id="verifyNewPassword" placeholder="請輸入新密碼（至少6個字元，只能數字、英文、特殊符號）" />
         </div>
         <div class="form-row-inline">
           <label for="verifyConfirmPassword"><i class="fas fa-check-circle"></i> 確認新密碼 <span class="required">*</span></label>
@@ -1618,6 +1618,11 @@
     // ⚠️ 從 ORIGINAL_DEFAULT_PASSWORDS 回傳，永遠是原始預設密碼
     function getDefaultPassword(username) {
       return ORIGINAL_DEFAULT_PASSWORDS[username] || null;
+    }
+
+    // ⚠️ 密碼格式檢查：只能數字、英文、特殊符號（ASCII 可見字元），不能注音、國字、Emoji、空白
+    function isValidPasswordFormat(pwd) {
+      return /^[\x21-\x7E]+$/.test(pwd);
     }
 
     function getEditBadge(reply, isAdminView, isAuthor) {
@@ -4012,9 +4017,11 @@
       const currentPwdEl = document.getElementById(`pwd_${username}`);
       const currentPwd = currentPwdEl.textContent;
       if (!canChangePassword(currentAdminUsername, username)) { showToast('您沒有權限變更此帳號的密碼', true); return; }
-      const newPwd = prompt(`請輸入「${username}」的新密碼（至少6個字元）：`);
+      const newPwd = prompt(`請輸入「${username}」的新密碼（至少 6 個字元，只能數字、英文、特殊符號）：`);
       if (newPwd === null) return;
-      if (newPwd.length < 6) { showToast('密碼未達 6 個字元，請至少 6 個字元', true); return; }
+      const newPwdLength = Array.from(newPwd).length;
+      if (newPwdLength < 6) { showToast('密碼未達 6 個字元，請至少 6 個字元', true); return; }
+      if (!isValidPasswordFormat(newPwd)) { showToast('密碼只能包含數字、英文、特殊符號，不能有注音、國字、Emoji', true); return; }
       if (newPwd === currentPwd) { showToast('新密碼與舊密碼相同', true); return; }
       const success = await updateAdminPasswordInFirestore(username, newPwd);
       if (success) { currentPwdEl.textContent = newPwd; showToast(`✅ 「${username}」密碼已變更為：${newPwd}（所有瀏覽器同步）`); }
@@ -4106,7 +4113,9 @@
       const newPwd = document.getElementById('verifyNewPassword').value.trim();
       const confirmPwd = document.getElementById('verifyConfirmPassword').value.trim();
       if (!newPwd || !confirmPwd) { showToast('請填寫新密碼和確認密碼', true); return; }
-      if (newPwd.length < 6) { showToast('密碼未達 6 個字元，請至少 6 個字元', true); return; }
+      const newPwdLength = Array.from(newPwd).length;
+      if (newPwdLength < 6) { showToast('密碼未達 6 個字元，請至少 6 個字元', true); return; }
+      if (!isValidPasswordFormat(newPwd)) { showToast('密碼只能包含數字、英文、特殊符號，不能有注音、國字、Emoji', true); return; }
       if (newPwd !== confirmPwd) { showToast('新密碼與確認密碼不符', true); return; }
       const success = await updateAdminPasswordInFirestore(verifiedUser.username, newPwd);
       if (success) {
@@ -4539,8 +4548,17 @@
         cpCurrent.focus();
         return;
       }
-      if (newPwd.length < 6) {
+      const newPwdLength = Array.from(newPwd).length;
+      if (newPwdLength < 6) {
         cpErrorMsg.textContent = '❌ 密碼未達 6 個字元，請至少 6 個字元';
+        cpErrorMsg.classList.add('show');
+        cpNew.value = '';
+        cpConfirm.value = '';
+        cpNew.focus();
+        return;
+      }
+      if (!isValidPasswordFormat(newPwd)) {
+        cpErrorMsg.textContent = '❌ 密碼只能包含數字、英文、特殊符號，不能有注音、國字、Emoji';
         cpErrorMsg.classList.add('show');
         cpNew.value = '';
         cpConfirm.value = '';
@@ -4935,6 +4953,8 @@
       console.log('📋 登入紀錄：手動刷新；每個帳號只保留最新一筆；用 pageLoadTime 精準時間');
       console.log('👁️ 查看密碼視窗停留時，密碼即時更新（任何來源變更都會立即重新渲染）');
       console.log('🔐 預設密碼改從 ORIGINAL_DEFAULT_PASSWORDS 讀取，永遠不會被變更影響');
+      console.log('🔒 密碼格式：只能數字、英文、特殊符號，不能有注音、國字、Emoji');
+      console.log('🔢 密碼長度：用 Array.from().length 計算，確保中文/Emoji 正確計算');
     }
 
     init();
