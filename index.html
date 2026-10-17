@@ -1669,9 +1669,9 @@
     async function recordAdminSession(username) {
       try {
         const now = Date.now();
+        const pageLoadTime = parseInt(sessionStorage.getItem('pageLoadTime') || now.toString());
         const docId = username + '_' + currentSessionId;
         const docRef = db.collection('adminSessions').doc(docId);
-        const doc = await docRef.get();
         const data = {
           username: username,
           sessionId: currentSessionId,
@@ -1679,11 +1679,9 @@
           lastActive: now,
           isOnline: true,
           displayName: getAdminDisplayName(username),
-          role: getAdminRole(username)
+          role: getAdminRole(username),
+          loginTime: pageLoadTime
         };
-        if (!doc.exists || !doc.data().loginTime) {
-          data.loginTime = now;
-        }
         await docRef.set(data, { merge: true });
       } catch (error) { console.error('記錄 Session 失敗:', error); }
     }
@@ -1869,33 +1867,21 @@
     }
 
     // ============================================================
-    // 5. 登入紀錄（精準時間戳）
+    // 5. 登入紀錄（精準時間戳，覆蓋同帳號紀錄）
     // ============================================================
 
     async function recordLogin(user, isAdminLogin = false, adminUsername = null) {
       try {
         const targetUserId = user ? user.uid : adminUsername;
+        const pageLoadTime = parseInt(sessionStorage.getItem('pageLoadTime') || Date.now().toString());
+        const formatted = formatTimestamp(pageLoadTime);
 
-        const recentSnapshot = await db.collection('loginLogs')
-          .where('userId', '==', targetUserId)
-          .orderBy('loginTime', 'desc')
-          .limit(1)
-          .get();
-        if (!recentSnapshot.empty) {
-          const last = recentSnapshot.docs[0].data();
-          if (Date.now() - (last.loginTime || 0) < 5 * 60 * 1000) {
-            return;
-          }
-        }
-
-        const now = Date.now();
-        const formatted = formatTimestamp(now);
         let logData = {
           userId: targetUserId,
           userType: isAdminLogin ? 'admin' : 'google',
           displayName: '',
           email: '',
-          loginTime: now,
+          loginTime: pageLoadTime,
           date: formatted.date,
           time: formatted.time
         };
@@ -1907,19 +1893,14 @@
           logData.displayName = user.displayName || user.email || '使用者';
           logData.email = user.email || '';
         }
-        await db.collection('loginLogs').add(logData);
-        const snapshot = await db.collection('loginLogs').orderBy('loginTime', 'desc').get();
-        if (snapshot.size > 200) {
-          const batch = db.batch();
-          let count = 0;
-          snapshot.forEach(doc => { count++; if (count > 200) batch.delete(doc.ref); });
-          await batch.commit();
-        }
+
+        // ⚠️ 用 set 覆蓋同一個帳號的紀錄（document ID = userId）
+        await db.collection('loginLogs').doc(targetUserId).set(logData);
       } catch (error) { console.error('❌ 儲存登入紀錄失敗:', error); }
     }
 
     // ============================================================
-    // 6. 載入登入紀錄（精準時間顯示）
+    // 6. 載入登入紀錄（精準時間顯示，每帳號只留最新一筆）
     // ============================================================
 
     async function loadLoginLogs() {
@@ -1931,10 +1912,7 @@
         const onlineStatus = await getAdminOnlineStatus();
         onlineStatusCache = onlineStatus;
 
-        const snapshot = await db.collection('loginLogs')
-          .orderBy('loginTime', 'desc')
-          .limit(200)
-          .get();
+        const snapshot = await db.collection('loginLogs').get();
 
         if (snapshot.empty) {
           listEl.innerHTML = `<div class="login-log-empty"><i class="fas fa-inbox"></i><p>尚無登入紀錄</p><span class="text-muted">登入後將會記錄在這裡</span></div>`;
@@ -1954,36 +1932,45 @@
           }
         });
 
-        // 補上線狀態中沒有登入紀錄的管理員（用 loginTime 精準時間）
+        // 去重：同一個 userId 只保留 loginTime 最新的那筆
+        const byUserId = new Map();
+        loginData.forEach(data => {
+          const existing = byUserId.get(data.userId);
+          if (!existing || (data.loginTime || 0) > (existing.loginTime || 0)) {
+            byUserId.set(data.userId, data);
+          }
+        });
+        loginData = Array.from(byUserId.values());
+
+        // 補上線狀態中沒有登入紀錄的管理員，或用 adminSessions 的 loginTime 覆蓋較新的
         if (role === 'owner' || role === 'moderator') {
           Object.keys(onlineStatus).forEach(uname => {
-            if (!loginData.find(d => d.userId === uname)) {
-              const info = ADMIN_ACCOUNTS.find(a => a.username === uname);
-              if (info) {
-                const sessionData = onlineStatus[uname];
-                const loginTime = sessionData.loginTime || Date.now();
-                const formatted = formatTimestamp(loginTime);
-                loginData.push({
-                  id: 'session_' + uname,
-                  userId: uname,
-                  userType: 'admin',
-                  displayName: info.displayName,
-                  email: uname,
-                  loginTime: loginTime,
-                  date: formatted.date,
-                  time: formatted.time
-                });
-              }
+            const info = ADMIN_ACCOUNTS.find(a => a.username === uname);
+            if (!info) return;
+            const sessionData = onlineStatus[uname];
+            const sessionLoginTime = sessionData.loginTime || Date.now();
+            const existing = loginData.find(d => d.userId === uname);
+
+            if (!existing) {
+              const formatted = formatTimestamp(sessionLoginTime);
+              loginData.push({
+                id: 'session_' + uname,
+                userId: uname,
+                userType: 'admin',
+                displayName: info.displayName,
+                email: uname,
+                loginTime: sessionLoginTime,
+                date: formatted.date,
+                time: formatted.time
+              });
+            } else if (sessionLoginTime > (existing.loginTime || 0)) {
+              const formatted = formatTimestamp(sessionLoginTime);
+              existing.loginTime = sessionLoginTime;
+              existing.date = formatted.date;
+              existing.time = formatted.time;
             }
           });
         }
-
-        const seen = new Set();
-        loginData = loginData.filter(data => {
-          if (seen.has(data.userId)) return false;
-          seen.add(data.userId);
-          return true;
-        });
 
         loginData.sort((a, b) => b.loginTime - a.loginTime);
         loginData = loginData.slice(0, 50);
@@ -2002,7 +1989,6 @@
           const displayName = data.displayName || '未知使用者';
           const isCurrentUser = data.userId === currentAdminUsername;
 
-          // 精準時間：用 loginTime 轉成日期時間
           const formatted = formatTimestamp(data.loginTime);
           const displayDate = formatted.date;
           const displayTime = formatted.time;
@@ -4888,6 +4874,9 @@
     // ============================================================
 
     async function init() {
+      // 每次頁面載入都更新 pageLoadTime
+      sessionStorage.setItem('pageLoadTime', Date.now().toString());
+
       await loadAdminsFromFirestore();
       listenAdminPasswords();
       listenComplaints();
@@ -4919,6 +4908,7 @@
           manageBtnContainer.style.display = 'flex';
         }
         await recordAdminSession(currentAdminUsername);
+        await recordLogin(null, true, currentAdminUsername);
         startHeartbeat();
         startOnlineStatusListener();
         listenForcedLogout();
@@ -4942,7 +4932,7 @@
       console.log('🔑 刪除驗證資料 → 該帳號密碼立即還原為預設');
       console.log('🔄 編輯驗證資料改帳號 → 密碼立即連動（批次一次寫入）');
       console.log('🔕 只有當事人會被通知並登出；其他管理員不會看到任何提示');
-      console.log('📋 登入紀錄：改為手動刷新；時間使用 Date.now() 精準時間戳');
+      console.log('📋 登入紀錄：手動刷新；每個帳號只保留最新一筆；用 pageLoadTime 精準時間');
       console.log('👁️ 查看密碼視窗停留時，密碼即時更新（任何來源變更都會立即重新渲染）');
       console.log('🔐 預設密碼改從 ORIGINAL_DEFAULT_PASSWORDS 讀取，永遠不會被變更影響');
     }
