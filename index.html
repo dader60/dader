@@ -439,6 +439,43 @@
       .complainant-status-dot { width: 6px; height: 6px; margin-left: 4px; }
     }
 
+    /* 密碼顯示/隱藏切換 */
+    .password-wrapper { position: relative; display: flex; align-items: center; }
+    .password-wrapper input { padding-right: 42px; }
+    .password-toggle-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      color: #8a9db0;
+      font-size: 0.95rem;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: color 0.15s;
+      z-index: 2;
+    }
+    .password-toggle-btn:hover { color: #c52a2a; }
+
+    .pwd-change-form {
+      display: none;
+      margin-top: 10px;
+      padding: 12px 14px;
+      background: #f0f7ff;
+      border-radius: 12px;
+      border: 1px solid #d7e6f5;
+    }
+    .pwd-change-form.active { display: block; }
+    .pwd-change-form .pwd-change-input-wrap { margin-bottom: 8px; }
+    .pwd-change-form .pwd-change-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .pwd-change-form .pwd-change-actions button { flex: 1; min-width: 80px; justify-content: center; }
+    .pwd-change-form .pwd-change-error { color: #c52a2a; font-size: 0.8rem; margin-bottom: 6px; display: none; }
+    .pwd-change-form .pwd-change-error.show { display: block; }
+
     .fixed-footer {
       position: fixed;
       bottom: 0;
@@ -804,7 +841,10 @@
       </div>
       <div class="form-row-inline">
         <label for="adminPassword"><i class="fas fa-lock"></i> 密碼 <span class="required">*</span></label>
-        <input type="password" id="adminPassword" placeholder="管理員密碼" />
+        <div class="password-wrapper" style="flex:1; min-width:160px;">
+          <input type="password" id="adminPassword" placeholder="管理員密碼" />
+          <button type="button" class="password-toggle-btn" data-target="adminPassword"><i class="fas fa-eye"></i></button>
+        </div>
       </div>
       <button class="btn-primary" id="adminLoginConfirmBtn"><i class="fas fa-sign-in-alt"></i> 登入</button>
       <div class="forgot-link">
@@ -820,9 +860,18 @@
       <p>變更後所有瀏覽器將同步生效</p>
       <div class="error-msg" id="cpErrorMsg">❌ 錯誤訊息</div>
       <div class="success-msg" id="cpSuccessMsg">✅ 成功訊息</div>
-      <input type="password" id="cpCurrentPassword" placeholder="請輸入目前密碼" />
-      <input type="password" id="cpNewPassword" placeholder="請輸入新密碼（至少6個字元，只能數字、英文、特殊符號）" />
-      <input type="password" id="cpConfirmPassword" placeholder="請再次輸入新密碼" />
+      <div class="password-wrapper" style="margin-bottom:0.8rem;">
+        <input type="password" id="cpCurrentPassword" placeholder="請輸入目前密碼" style="margin-bottom:0;" />
+        <button type="button" class="password-toggle-btn" data-target="cpCurrentPassword"><i class="fas fa-eye"></i></button>
+      </div>
+      <div class="password-wrapper" style="margin-bottom:0.8rem;">
+        <input type="password" id="cpNewPassword" placeholder="請輸入新密碼（至少6個字元，只能數字、英文、特殊符號）" style="margin-bottom:0;" />
+        <button type="button" class="password-toggle-btn" data-target="cpNewPassword"><i class="fas fa-eye"></i></button>
+      </div>
+      <div class="password-wrapper" style="margin-bottom:0.8rem;">
+        <input type="password" id="cpConfirmPassword" placeholder="請再次輸入新密碼" style="margin-bottom:0;" />
+        <button type="button" class="password-toggle-btn" data-target="cpConfirmPassword"><i class="fas fa-eye"></i></button>
+      </div>
       <button class="btn-primary" id="cpConfirmBtn"><i class="fas fa-save"></i> 確認變更</button>
       <button class="btn-secondary" id="cpCancelBtn" style="margin-top:0.8rem; width:100%; justify-content:center;">取消</button>
     </div>
@@ -878,11 +927,17 @@
         <div class="error-msg" id="verifyPwdErrorMsg" style="color:#c52a2a; font-size:0.85rem; margin-bottom:0.8rem; display:none;">❌ 錯誤訊息</div>
         <div class="form-row-inline">
           <label for="verifyNewPassword"><i class="fas fa-key"></i> 新密碼 <span class="required">*</span></label>
-          <input type="password" id="verifyNewPassword" placeholder="請輸入新密碼（至少6個字元，只能數字、英文、特殊符號）" />
+          <div class="password-wrapper" style="flex:1; min-width:160px;">
+            <input type="password" id="verifyNewPassword" placeholder="請輸入新密碼（至少6個字元，只能數字、英文、特殊符號）" />
+            <button type="button" class="password-toggle-btn" data-target="verifyNewPassword"><i class="fas fa-eye"></i></button>
+          </div>
         </div>
         <div class="form-row-inline">
           <label for="verifyConfirmPassword"><i class="fas fa-check-circle"></i> 確認新密碼 <span class="required">*</span></label>
-          <input type="password" id="verifyConfirmPassword" placeholder="請再次輸入新密碼" />
+          <div class="password-wrapper" style="flex:1; min-width:160px;">
+            <input type="password" id="verifyConfirmPassword" placeholder="請再次輸入新密碼" />
+            <button type="button" class="password-toggle-btn" data-target="verifyConfirmPassword"><i class="fas fa-eye"></i></button>
+          </div>
         </div>
         <button class="btn-primary" id="verifyChangePwdBtn" style="margin-top:0.5rem;">
           <i class="fas fa-save"></i> 確認變更密碼
@@ -912,6 +967,7 @@
     <div class="view-passwords-box">
       <h3><i class="fas fa-eye" style="color:#2a5b7a;"></i> 管理員密碼清單</h3>
       <p class="sub-title">根據權限顯示可查看/變更的帳號</p>
+      <div class="error-msg" id="pwdChangeErrorMsg" style="color:#c52a2a; font-size:0.85rem; margin-bottom:0.8rem; display:none; text-align:center;">❌ 錯誤訊息</div>
       <div id="passwordList"></div>
       <div class="manage-verify-btn" id="manageVerifyBtnContainer" style="display:none;">
         <button id="manageVerifyDataBtn"><i class="fas fa-user-cog"></i> 管理驗證資料</button>
@@ -3969,7 +4025,7 @@
     }
 
     // ============================================================
-    // 30. 查看密碼功能
+    // 30. 查看密碼功能（含內嵌變更表單）
     // ============================================================
 
     const viewPwdBtnEl = document.getElementById('viewPasswordsBtn');
@@ -3979,6 +4035,9 @@
 
     function renderPasswordList() {
       passwordListEl.innerHTML = '';
+      const errEl = document.getElementById('pwdChangeErrorMsg');
+      if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+
       ADMIN_ACCOUNTS.forEach(a => {
         const roleName = ROLE_NAMES[a.role] || '管理員';
         const canView = canViewPassword(currentAdminUsername, a.username);
@@ -4003,30 +4062,112 @@
             <span class="pwd-display" id="pwd_${a.username}">${escapeHtml(a.password)}</span>
             ${actionHtml}
           </div>
+          <div class="pwd-change-form" id="pwdChangeForm_${a.username}" data-username="${a.username}">
+            <div class="pwd-change-error" id="pwdChangeError_${a.username}"></div>
+            <div class="pwd-change-input-wrap">
+              <div class="password-wrapper">
+                <input type="password" id="pwdNewInput_${a.username}" placeholder="請輸入新密碼（至少6個字元，只能數字、英文、特殊符號）" />
+                <button type="button" class="password-toggle-btn" data-target="pwdNewInput_${a.username}"><i class="fas fa-eye"></i></button>
+              </div>
+            </div>
+            <div class="pwd-change-actions">
+              <button type="button" class="btn-primary" style="font-size:0.8rem; padding:0.5rem 0.8rem; margin-top:0;" data-action="confirmPwdChange" data-username="${a.username}"><i class="fas fa-save"></i> 確認</button>
+              <button type="button" class="btn-secondary" style="font-size:0.8rem; padding:0.5rem 0.8rem; margin-top:0;" data-action="cancelPwdChange" data-username="${a.username}">取消</button>
+            </div>
+          </div>
         `;
         passwordListEl.appendChild(div);
       });
+
       document.querySelectorAll('.btn-change-pwd').forEach(btn => {
-        btn.removeEventListener('click', handleChangePwd);
-        btn.addEventListener('click', handleChangePwd);
+        btn.removeEventListener('click', handleShowPwdChangeForm);
+        btn.addEventListener('click', handleShowPwdChangeForm);
+      });
+      document.querySelectorAll('[data-action="confirmPwdChange"]').forEach(btn => {
+        btn.removeEventListener('click', handleConfirmPwdChange);
+        btn.addEventListener('click', handleConfirmPwdChange);
+      });
+      document.querySelectorAll('[data-action="cancelPwdChange"]').forEach(btn => {
+        btn.removeEventListener('click', handleCancelPwdChange);
+        btn.addEventListener('click', handleCancelPwdChange);
       });
     }
 
-    async function handleChangePwd(e) {
+    function handleShowPwdChangeForm(e) {
       const btn = e.currentTarget;
       const username = btn.dataset.username;
+      // 關閉其他已展開的表單
+      document.querySelectorAll('.pwd-change-form.active').forEach(f => {
+        if (f.dataset.username !== username) f.classList.remove('active');
+      });
+      const form = document.getElementById(`pwdChangeForm_${username}`);
+      if (form) {
+        form.classList.toggle('active');
+        const input = document.getElementById(`pwdNewInput_${username}`);
+        if (input && form.classList.contains('active')) {
+          input.value = '';
+          input.focus();
+        }
+        const errEl = document.getElementById(`pwdChangeError_${username}`);
+        if (errEl) { errEl.textContent = ''; errEl.classList.remove('show'); }
+        const mainErr = document.getElementById('pwdChangeErrorMsg');
+        if (mainErr) { mainErr.style.display = 'none'; mainErr.textContent = ''; }
+      }
+    }
+
+    function handleCancelPwdChange(e) {
+      const btn = e.currentTarget;
+      const username = btn.dataset.username;
+      const form = document.getElementById(`pwdChangeForm_${username}`);
+      if (form) form.classList.remove('active');
+    }
+
+    async function handleConfirmPwdChange(e) {
+      const btn = e.currentTarget;
+      const username = btn.dataset.username;
+      const input = document.getElementById(`pwdNewInput_${username}`);
+      const errEl = document.getElementById(`pwdChangeError_${username}`);
+      const mainErr = document.getElementById('pwdChangeErrorMsg');
+      if (mainErr) { mainErr.style.display = 'none'; mainErr.textContent = ''; }
+      if (errEl) { errEl.textContent = ''; errEl.classList.remove('show'); }
+
+      if (!canChangePassword(currentAdminUsername, username)) {
+        if (errEl) { errEl.textContent = '❌ 您沒有權限變更此帳號的密碼'; errEl.classList.add('show'); }
+        else if (mainErr) { mainErr.textContent = '❌ 您沒有權限變更此帳號的密碼'; mainErr.style.display = 'block'; }
+        return;
+      }
+
+      const newPwd = (input.value || '').trim();
       const currentPwdEl = document.getElementById(`pwd_${username}`);
-      const currentPwd = currentPwdEl.textContent;
-      if (!canChangePassword(currentAdminUsername, username)) { alert('您沒有權限變更此帳號的密碼'); return; }
-      const newPwd = prompt(`請輸入「${username}」的新密碼（至少 6 個字元，只能數字、英文、特殊符號）：`);
-      if (newPwd === null) return;
+      const currentPwd = currentPwdEl ? currentPwdEl.textContent : '';
+
       const newPwdLength = Array.from(newPwd).length;
-      if (newPwdLength < 6) { alert('密碼未達 6 個字元，請至少 6 個字元'); return; }
-      if (!isValidPasswordFormat(newPwd)) { alert('密碼只能包含數字、英文、特殊符號，不能有注音、國字、Emoji'); return; }
-      if (newPwd === currentPwd) { alert('新密碼與舊密碼相同'); return; }
+      if (newPwdLength < 6) {
+        if (errEl) { errEl.textContent = '❌ 密碼未達 6 個字元，請至少 6 個字元'; errEl.classList.add('show'); }
+        return;
+      }
+      if (!isValidPasswordFormat(newPwd)) {
+        if (errEl) { errEl.textContent = '❌ 密碼只能包含數字、英文、特殊符號，不能有注音、國字、Emoji'; errEl.classList.add('show'); }
+        return;
+      }
+      if (newPwd === currentPwd) {
+        if (errEl) { errEl.textContent = '❌ 新密碼與舊密碼相同'; errEl.classList.add('show'); }
+        return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 儲存中...';
       const success = await updateAdminPasswordInFirestore(username, newPwd);
-      if (success) { currentPwdEl.textContent = newPwd; showToast(`✅ 「${username}」密碼已變更為：${newPwd}（所有瀏覽器同步）`); }
-      else { alert('變更失敗，請稍後再試'); }
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save"></i> 確認';
+      if (success) {
+        if (currentPwdEl) currentPwdEl.textContent = newPwd;
+        const form = document.getElementById(`pwdChangeForm_${username}`);
+        if (form) form.classList.remove('active');
+        showToast(`✅ 「${username}」密碼已變更為：${newPwd}（所有瀏覽器同步）`);
+      } else {
+        if (errEl) { errEl.textContent = '❌ 變更失敗，請稍後再試'; errEl.classList.add('show'); }
+      }
     }
 
     viewPwdBtnEl.addEventListener('click', function() { renderPasswordList(); viewOverlay.classList.add('active'); });
@@ -4410,6 +4551,22 @@
     // ============================================================
     // 34. 其他事件處理
     // ============================================================
+
+    // 密碼顯示/隱藏切換（通用）
+    document.addEventListener('click', function(e) {
+      const btn = e.target.closest('.password-toggle-btn');
+      if (!btn) return;
+      const targetId = btn.dataset.target;
+      const input = document.getElementById(targetId);
+      if (!input) return;
+      if (input.type === 'password') {
+        input.type = 'text';
+        btn.innerHTML = '<i class="fas fa-eye-slash"></i>';
+      } else {
+        input.type = 'password';
+        btn.innerHTML = '<i class="fas fa-eye"></i>';
+      }
+    });
 
     async function googleLogin() {
       try {
@@ -4977,8 +5134,8 @@
       console.log('🔐 預設密碼改從 ORIGINAL_DEFAULT_PASSWORDS 讀取，永遠不會被變更影響');
       console.log('🔒 密碼格式：只能數字、英文、特殊符號，不能有注音、國字、Emoji');
       console.log('🔢 密碼長度：用 Array.from().length 計算，確保中文/Emoji 正確計算');
-      console.log('⚠️ 查看密碼變更：用 alert() 顯示錯誤，確保一定看到');
-      console.log('⚠️ 身份驗證變更密碼：在彈窗內顯示錯誤，不會直接關閉彈窗');
+      console.log('👀 登入、變更密碼、查看密碼變更、身份驗證變更密碼：都有眼睛圖示可切換顯示/隱藏');
+      console.log('📝 查看密碼變更：在彈窗內展開輸入框（含眼睛圖示），錯誤訊息直接顯示在該表單內，不用 alert');
     }
 
     init();
