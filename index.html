@@ -2426,23 +2426,24 @@
           if (!doc.exists || !isPasswordLoaded) return;
           const pwdMap = doc.data();
           let changed = false;
-          let changedUsername = null;
+          let changedUsernames = [];
           DEFAULT_ADMINS.forEach(admin => {
             if (pwdMap[admin.username] && pwdMap[admin.username] !== admin.password) {
               admin.password = pwdMap[admin.username];
               changed = true;
-              changedUsername = admin.username;
+              changedUsernames.push(admin.username);
             }
           });
           if (changed) {
             updateAllPasswordDisplays();
+            // 只要查看密碼視窗是開啟的，就立即重新渲染（不管是不是自己變更）
             if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
               renderPasswordList();
             }
             // 只有當事人才提示 + 強制登出，其他管理員不顯示任何通知
-            if (isAdmin && currentAdminUsername === changedUsername) {
+            if (isAdmin && changedUsernames.includes(currentAdminUsername)) {
               showToast(`🔒 您的密碼已被變更，請重新登入`, true);
-              forceLogoutAdmin(changedUsername);
+              forceLogoutAdmin(currentAdminUsername);
             }
           }
         }, (error) => { console.error('❌ 監聽密碼變更失敗:', error); });
@@ -4915,6 +4916,7 @@
       console.log('🔄 編輯驗證資料改帳號 → 密碼立即連動（批次一次寫入）');
       console.log('🔕 只有當事人會被通知並登出；其他管理員不會看到任何提示');
       console.log('📋 登入紀錄：只靠自己刷新；時間與帳號統一用 username 對應');
+      console.log('👁️ 查看密碼視窗停留時，密碼即時更新（任何來源變更都會立即重新渲染）');
     }
 
     init();
