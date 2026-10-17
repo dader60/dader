@@ -958,7 +958,7 @@
   <div class="login-logs-overlay" id="loginLogsOverlay">
     <div class="login-logs-box">
       <h3><i class="fas fa-history" style="color:#2a5b7a;"></i> 最近登入紀錄</h3>
-      <p class="sub-title">顯示最近 50 筆登入紀錄</p>
+      <p class="sub-title">顯示最近 50 筆登入紀錄（手動刷新）</p>
       <div id="loginLogsList" class="log-list">
         <div style="text-align:center; padding:2rem; color:#8a9db0;">
           <i class="fas fa-spinner fa-spin"></i> 載入中...
@@ -1577,7 +1577,6 @@
             document.getElementById('loginLogsOverlay').classList.remove('active');
           }
         }
-        // 注意：已移除 refresh_online_status，登入紀錄只靠自己刷新
       };
     }
 
@@ -1591,13 +1590,13 @@
     function getInitials(name) { if (!name) return '👤'; const parts = name.trim().split(' '); if (parts.length >= 2) return parts[0][0] + parts[1][0]; return name.substring(0,2).toUpperCase(); }
     function formatDateTimeWithSeconds(date, time) { if (!date) return ''; if (time && time.split(':').length === 2) { time = time + ':00'; } return `${date} ${time || '00:00:00'}`; }
 
+    // 精準時間戳轉日期時間
     function formatTimestamp(ts) {
-      if (!ts) return { date: '', time: '' };
+      if (!ts) return { date: '', time: '', full: '' };
       const d = new Date(ts);
-      return {
-        date: d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'),
-        time: String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0')
-      };
+      const date = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+      const time = String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ':' + String(d.getSeconds()).padStart(2, '0');
+      return { date, time, full: `${date} ${time}` };
     }
 
     function showToast(msg, isError = false) {
@@ -1870,7 +1869,7 @@
     }
 
     // ============================================================
-    // 5. 登入紀錄（避免 5 分鐘內重複寫入）
+    // 5. 登入紀錄（精準時間戳）
     // ============================================================
 
     async function recordLogin(user, isAdminLogin = false, adminUsername = null) {
@@ -1889,14 +1888,16 @@
           }
         }
 
+        const now = Date.now();
+        const formatted = formatTimestamp(now);
         let logData = {
           userId: targetUserId,
           userType: isAdminLogin ? 'admin' : 'google',
           displayName: '',
           email: '',
-          loginTime: Date.now(),
-          date: getToday(),
-          time: getNowTime()
+          loginTime: now,
+          date: formatted.date,
+          time: formatted.time
         };
         if (isAdminLogin && adminUsername) {
           const adminInfo = ADMIN_ACCOUNTS.find(a => a.username === adminUsername);
@@ -1918,7 +1919,7 @@
     }
 
     // ============================================================
-    // 6. 載入登入紀錄
+    // 6. 載入登入紀錄（精準時間顯示）
     // ============================================================
 
     async function loadLoginLogs() {
@@ -1953,6 +1954,7 @@
           }
         });
 
+        // 補上線狀態中沒有登入紀錄的管理員（用 loginTime 精準時間）
         if (role === 'owner' || role === 'moderator') {
           Object.keys(onlineStatus).forEach(uname => {
             if (!loginData.find(d => d.userId === uname)) {
@@ -2000,6 +2002,11 @@
           const displayName = data.displayName || '未知使用者';
           const isCurrentUser = data.userId === currentAdminUsername;
 
+          // 精準時間：用 loginTime 轉成日期時間
+          const formatted = formatTimestamp(data.loginTime);
+          const displayDate = formatted.date;
+          const displayTime = formatted.time;
+
           const statusInfo = onlineStatus[data.userId] || { isOnline: false, sessionId: null, tabId: null };
           const isOnline = statusInfo.isOnline;
           const isSameSession = statusInfo.sessionId === currentSessionId;
@@ -2036,7 +2043,6 @@
               buttonTitle = '強制登出其他瀏覽器上的自己';
             }
           } else {
-            const targetRole = getAdminRole(data.userId);
             if (role === 'owner') {
               canForceLogoutTarget = true;
               showOnlineBadge = true;
@@ -2087,7 +2093,7 @@
               </div>
               ${showActions ? `
               <div class="actions">
-                <div class="login-time"><i class="far fa-clock"></i> ${data.date || ''} ${data.time || ''}</div>
+                <div class="login-time"><i class="far fa-clock"></i> ${displayDate} ${displayTime}</div>
                 ${canForceLogoutTarget ? `<button class="${buttonClass}" data-username="${escapeHtml(data.userId)}" data-is-self="${isSelfLogout}" data-is-other-tab="${isOtherTab}" ${buttonDisabled ? 'disabled' : ''} title="${buttonTitle}"><i class="fas fa-power-off"></i> ${buttonText}</button>` : ''}
               </div>
               ` : ''}
@@ -2458,11 +2464,9 @@
           });
           if (changed) {
             updateAllPasswordDisplays();
-            // 只要查看密碼視窗是開啟的，就立即重新渲染（不管是不是自己變更）
             if (document.getElementById('viewPasswordsOverlay').classList.contains('active')) {
               renderPasswordList();
             }
-            // 只有當事人才提示 + 強制登出，其他管理員不顯示任何通知
             if (isAdmin && changedUsernames.includes(currentAdminUsername)) {
               showToast(`🔒 您的密碼已被變更，請重新登入`, true);
               forceLogoutAdmin(currentAdminUsername);
@@ -4341,28 +4345,15 @@
     });
 
     // ============================================================
-    // 33. 登入紀錄按鈕
+    // 33. 登入紀錄按鈕（手動刷新）
     // ============================================================
 
     document.getElementById('viewLoginLogsBtn').addEventListener('click', async function() {
       document.getElementById('loginLogsOverlay').classList.add('active');
       await loadLoginLogs();
-      if (window._loginLogsRefreshTimer) clearInterval(window._loginLogsRefreshTimer);
-      window._loginLogsRefreshTimer = setInterval(() => {
-        if (document.getElementById('loginLogsOverlay').classList.contains('active')) {
-          loadLoginLogs();
-        } else {
-          clearInterval(window._loginLogsRefreshTimer);
-          window._loginLogsRefreshTimer = null;
-        }
-      }, 5000);
     });
     document.getElementById('loginLogsCloseBtn').addEventListener('click', function() {
       document.getElementById('loginLogsOverlay').classList.remove('active');
-      if (window._loginLogsRefreshTimer) {
-        clearInterval(window._loginLogsRefreshTimer);
-        window._loginLogsRefreshTimer = null;
-      }
     });
     document.getElementById('refreshLogsBtn').addEventListener('click', function() {
       loadLoginLogs();
@@ -4951,7 +4942,7 @@
       console.log('🔑 刪除驗證資料 → 該帳號密碼立即還原為預設');
       console.log('🔄 編輯驗證資料改帳號 → 密碼立即連動（批次一次寫入）');
       console.log('🔕 只有當事人會被通知並登出；其他管理員不會看到任何提示');
-      console.log('📋 登入紀錄：只靠自己刷新；時間與帳號統一用 username 對應');
+      console.log('📋 登入紀錄：改為手動刷新；時間使用 Date.now() 精準時間戳');
       console.log('👁️ 查看密碼視窗停留時，密碼即時更新（任何來源變更都會立即重新渲染）');
       console.log('🔐 預設密碼改從 ORIGINAL_DEFAULT_PASSWORDS 讀取，永遠不會被變更影響');
     }
